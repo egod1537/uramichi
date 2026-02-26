@@ -1,5 +1,7 @@
-import { useEffect, useMemo, useState } from 'react'
-import { TOOL_MODES, useToolbarStore } from '../stores/toolbarStore'
+import { useEffect, useMemo } from 'react'
+import { TOOL_MODES, useToolbarStore } from '../../stores/toolbarStore'
+import Search from './Search'
+import ToolButton from './ToolButton'
 
 const toolbarButtons = [
   { key: 'undo', label: 'Undo', icon: '↩' },
@@ -12,8 +14,7 @@ const toolbarButtons = [
   { key: 'shortcuts', label: 'Keyboard Shortcuts', icon: '⌨️' },
 ]
 
-export default function TopToolbar() {
-  const [searchQuery, setSearchQuery] = useState('')
+export default function Toolbar() {
   const mode = useToolbarStore((state) => state.mode)
   const historyIndex = useToolbarStore((state) => state.historyIndex)
   const historyLength = useToolbarStore((state) => state.history.length)
@@ -91,12 +92,7 @@ export default function TopToolbar() {
       <div className="absolute top-3 left-1/2 z-20 w-[min(96vw,580px)] -translate-x-1/2">
         <div className="rounded-md bg-white shadow-[0_2px_8px_rgba(60,64,67,0.3)]">
           <div className="flex items-center gap-2 border-b border-gray-200 p-2">
-            <input
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder="지도에서 검색"
-              className="h-9 flex-1 rounded-sm border border-gray-300 px-3 text-sm focus:border-blue-500 focus:outline-none"
-            />
+            <Search />
             <button
               type="button"
               className="flex h-9 w-9 items-center justify-center rounded-sm bg-blue-500 text-white hover:bg-blue-600"
@@ -112,21 +108,15 @@ export default function TopToolbar() {
               const isDisabled = buttonDisabledState[button.key]
 
               return (
-                <button
-                  type="button"
+                <ToolButton
                   key={button.key}
-                  onClick={() => handleToolbarButtonClick(button.key)}
-                  disabled={isDisabled}
-                  className={`flex h-9 min-w-9 items-center justify-center rounded border px-2 text-sm transition ${
-                    isActive
-                      ? 'border-blue-500 bg-blue-50 text-blue-600'
-                      : 'border-transparent text-gray-700 hover:border-gray-200 hover:bg-gray-100'
-                  } ${isDisabled ? 'cursor-not-allowed opacity-40' : ''}`}
-                  title={button.label}
-                  aria-label={button.label}
-                >
-                  <span>{button.icon}</span>
-                </button>
+                  buttonKey={button.key}
+                  label={button.label}
+                  icon={button.icon}
+                  isActive={isActive}
+                  isDisabled={isDisabled}
+                  onClick={handleToolbarButtonClick}
+                />
               )
             })}
           </div>

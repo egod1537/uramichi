@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 
 export default function Search() {
   const inputRef = useRef(null)
@@ -20,8 +20,6 @@ export default function Search() {
         lng: place.geometry.location.lng(),
         address: place.formatted_address,
       })
-
-      // TODO: 핀 추가 로직
     })
   }, [])
 
@@ -30,7 +28,7 @@ export default function Search() {
       ref={inputRef}
       type="text"
       placeholder="장소 검색..."
-      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+      className="h-9 flex-1 rounded-sm border border-gray-300 px-3 text-sm focus:border-blue-500 focus:outline-none"
     />
   )
 }
