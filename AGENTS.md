@@ -110,3 +110,9 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - 기존 패널 구조를 `src/components/Sidebar/Sidebar.jsx`, `MapPanel.jsx`, `LayerPanel.jsx`로 분해해 사이드바 컨테이너 + 메타/레이어 영역으로 정리함.
 - 기본 Zustand 스토어 골격을 `src/stores/useMapStore.js`에 추가함(pins/layers/currentMode + add/remove/setter).
 - `src/utils/` 디렉터리를 생성해 유틸 분리용 경로를 확보함.
+
+[codex] 2026-02-26 태스크 2-A 메모
+- Toolbar 구현 기준 스토어를 `src/stores/useMapStore.js`로 통합하고, 모드 상태 키는 `currentMode`로 사용함.
+- Toolbar의 모드 전환/Undo/Redo/ESC/단축키 모달 제어는 `useMapStore` 액션(`setMode`, `undo`, `redo`, `resetToSelectMode`, `setShortcutModalOpen`)을 직접 호출하도록 정리함.
+- `src/components/Toolbar/Search.jsx`는 Google Places Autocomplete를 유지하면서 제어/비제어 입력 둘 다 지원하도록 props(`value`, `onValueChange`, `onPlaceSelect`)를 받도록 확장함.
+- Toolbar 아이콘 버튼은 `ToolButton.jsx`에서 회색 기본 아이콘 + 활성 시 파란 하이라이트 스타일로 맞췄고, 상단 검색줄/하단 아이콘줄 2단 레이아웃을 유지함.

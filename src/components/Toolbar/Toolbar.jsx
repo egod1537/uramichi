@@ -1,29 +1,34 @@
-import { useEffect, useMemo } from 'react'
-import { TOOL_MODES, useToolbarStore } from '../../stores/toolbarStore'
+import { useEffect, useMemo, useState } from 'react'
+import useMapStore, { TOOL_MODES } from '../../stores/useMapStore'
 import Search from './Search'
 import ToolButton from './ToolButton'
 
-const toolbarButtons = [
-  { key: 'undo', label: 'Undo', icon: '↩' },
-  { key: 'redo', label: 'Redo', icon: '↪' },
+const modeButtons = [
   { key: TOOL_MODES.SELECT, label: 'Select/Pan', icon: '🖐️' },
   { key: TOOL_MODES.ADD_MARKER, label: 'Add Marker', icon: '📍' },
   { key: TOOL_MODES.DRAW_LINE, label: 'Draw Line', icon: '✏️' },
   { key: TOOL_MODES.ADD_ROUTE, label: 'Add Route', icon: '🛤️' },
   { key: TOOL_MODES.MEASURE_DISTANCE, label: 'Measure Distance', icon: '📐' },
+]
+
+const toolbarButtons = [
+  { key: 'undo', label: 'Undo', icon: '↩' },
+  { key: 'redo', label: 'Redo', icon: '↪' },
+  ...modeButtons,
   { key: 'shortcuts', label: 'Keyboard Shortcuts', icon: '⌨️' },
 ]
 
 export default function Toolbar() {
-  const mode = useToolbarStore((state) => state.mode)
-  const historyIndex = useToolbarStore((state) => state.historyIndex)
-  const historyLength = useToolbarStore((state) => state.history.length)
-  const isShortcutModalOpen = useToolbarStore((state) => state.isShortcutModalOpen)
-  const setMode = useToolbarStore((state) => state.setMode)
-  const resetToSelectMode = useToolbarStore((state) => state.resetToSelectMode)
-  const undo = useToolbarStore((state) => state.undo)
-  const redo = useToolbarStore((state) => state.redo)
-  const setShortcutModalOpen = useToolbarStore((state) => state.setShortcutModalOpen)
+  const currentMode = useMapStore((state) => state.currentMode)
+  const historyIndex = useMapStore((state) => state.historyIndex)
+  const historyLength = useMapStore((state) => state.history.length)
+  const isShortcutModalOpen = useMapStore((state) => state.isShortcutModalOpen)
+  const setMode = useMapStore((state) => state.setMode)
+  const resetToSelectMode = useMapStore((state) => state.resetToSelectMode)
+  const undo = useMapStore((state) => state.undo)
+  const redo = useMapStore((state) => state.redo)
+  const setShortcutModalOpen = useMapStore((state) => state.setShortcutModalOpen)
+  const [searchValue, setSearchValue] = useState('')
 
   const buttonDisabledState = useMemo(
     () => ({
@@ -34,32 +39,32 @@ export default function Toolbar() {
   )
 
   useEffect(() => {
-    const handleKeydown = (event) => {
-      if (event.key === 'Escape') {
+    const handleKeydown = (keyboardEvent) => {
+      if (keyboardEvent.key === 'Escape') {
         resetToSelectMode()
       }
 
-      if (event.key.toLowerCase() === 'u') {
+      if (keyboardEvent.key.toLowerCase() === 'u') {
         undo()
       }
 
-      if (event.key.toLowerCase() === 'r') {
+      if (keyboardEvent.key.toLowerCase() === 'r') {
         redo()
       }
 
-      if (event.key.toLowerCase() === 'm') {
+      if (keyboardEvent.key.toLowerCase() === 'm') {
         setMode(TOOL_MODES.ADD_MARKER)
       }
 
-      if (event.key.toLowerCase() === 'l') {
+      if (keyboardEvent.key.toLowerCase() === 'l') {
         setMode(TOOL_MODES.DRAW_LINE)
       }
 
-      if (event.key.toLowerCase() === 't') {
+      if (keyboardEvent.key.toLowerCase() === 't') {
         setMode(TOOL_MODES.ADD_ROUTE)
       }
 
-      if (event.key.toLowerCase() === 'd') {
+      if (keyboardEvent.key.toLowerCase() === 'd') {
         setMode(TOOL_MODES.MEASURE_DISTANCE)
       }
     }
@@ -89,13 +94,13 @@ export default function Toolbar() {
 
   return (
     <>
-      <div className="absolute top-3 left-1/2 z-20 w-[min(96vw,580px)] -translate-x-1/2">
-        <div className="rounded-md bg-white shadow-[0_2px_8px_rgba(60,64,67,0.3)]">
-          <div className="flex items-center gap-2 border-b border-gray-200 p-2">
-            <Search />
+      <div className="absolute left-1/2 top-3 z-20 w-[min(96vw,560px)] -translate-x-1/2">
+        <div className="overflow-hidden rounded-sm bg-white shadow-[0_2px_8px_rgba(60,64,67,0.35)]">
+          <div className="flex items-center border-b border-gray-200 p-1.5">
+            <Search value={searchValue} onValueChange={setSearchValue} className="h-9 rounded-sm border-0" />
             <button
               type="button"
-              className="flex h-9 w-9 items-center justify-center rounded-sm bg-blue-500 text-white hover:bg-blue-600"
+              className="ml-1.5 flex h-9 w-10 items-center justify-center rounded-sm bg-blue-500 text-lg text-white hover:bg-blue-600"
               aria-label="검색"
             >
               🔍
@@ -103,8 +108,8 @@ export default function Toolbar() {
           </div>
           <div className="flex items-center gap-1 p-1.5">
             {toolbarButtons.map((button) => {
-              const isModeButton = Object.values(TOOL_MODES).includes(button.key)
-              const isActive = isModeButton && mode === button.key
+              const isModeButton = modeButtons.some((modeButton) => modeButton.key === button.key)
+              const isActive = isModeButton && currentMode === button.key
               const isDisabled = buttonDisabledState[button.key]
 
               return (

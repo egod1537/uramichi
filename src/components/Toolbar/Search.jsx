@@ -1,34 +1,45 @@
 import { useEffect, useRef } from 'react'
 
-export default function Search() {
-  const inputRef = useRef(null)
+export default function Search({ value, onValueChange, onPlaceSelect, className = '' }) {
+  const inputElementRef = useRef(null)
 
   useEffect(() => {
-    if (!inputRef.current) return
+    if (!inputElementRef.current || !window.google?.maps?.places?.Autocomplete) return
 
-    const autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, {
+    const autocompleteInstance = new window.google.maps.places.Autocomplete(inputElementRef.current, {
       fields: ['place_id', 'name', 'geometry', 'formatted_address', 'photos'],
     })
 
-    autocomplete.addListener('place_changed', () => {
-      const place = autocomplete.getPlace()
-      if (!place.geometry) return
+    const listener = autocompleteInstance.addListener('place_changed', () => {
+      const selectedPlace = autocompleteInstance.getPlace()
+      if (!selectedPlace?.geometry) return
 
-      console.log('선택한 장소:', {
-        name: place.name,
-        lat: place.geometry.location.lat(),
-        lng: place.geometry.location.lng(),
-        address: place.formatted_address,
-      })
+      onPlaceSelect?.(selectedPlace)
+      onValueChange?.(selectedPlace.formatted_address ?? selectedPlace.name ?? '')
     })
-  }, [])
+
+    return () => {
+      if (listener) {
+        window.google.maps.event.removeListener(listener)
+      }
+    }
+  }, [onPlaceSelect, onValueChange])
+
+  const inputProps =
+    value === undefined
+      ? {}
+      : {
+          value,
+          onChange: (changeEvent) => onValueChange?.(changeEvent.target.value),
+        }
 
   return (
     <input
-      ref={inputRef}
+      ref={inputElementRef}
       type="text"
-      placeholder="장소 검색..."
-      className="h-9 flex-1 rounded-sm border border-gray-300 px-3 text-sm focus:border-blue-500 focus:outline-none"
+      placeholder="Search places"
+      className={`h-9 flex-1 rounded-sm border border-gray-300 px-3 text-sm focus:border-blue-500 focus:outline-none ${className}`.trim()}
+      {...inputProps}
     />
   )
 }
