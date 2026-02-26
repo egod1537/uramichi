@@ -1,18 +1,25 @@
+import { useJsApiLoader } from '@react-google-maps/api'
 import Map from './components/Map'
+import Panel from './components/Panel'
+
+const libraries = ['places']
 
 export default function App() {
-  return (
-    <div className="h-screen w-screen flex">
-      {/* 사이드바 (나중에 핀 목록 들어갈 자리) */}
-      <div className="w-80 border-r border-gray-200 bg-white p-4">
-        <h1 className="text-xl font-bold">裏道 uramichi</h1>
-        <p className="text-sm text-gray-500 mt-1">일본 힙스터 여행 플래너</p>
-      </div>
+  const { isLoaded, loadError } = useJsApiLoader({
+    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
+    libraries,
+  })
 
-      {/* 맵 영역 */}
-      <div className="flex-1">
-        <Map />
-      </div>
+  if (loadError) return <div className="p-4 text-red-500">맵 로딩 실패</div>
+  if (!isLoaded) return <div className="p-4">로딩 중...</div>
+
+  return (
+    <div className="h-screen w-screen relative">
+      {/* 맵 (풀스크린) */}
+      <Map />
+
+      {/* 떠 있는 패널 (구글 나만의 지도 스타일) */}
+      <Panel />
     </div>
   )
 }
