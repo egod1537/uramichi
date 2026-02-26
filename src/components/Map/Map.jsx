@@ -1,6 +1,7 @@
-import { GoogleMap, Marker, Polyline } from '@react-google-maps/api'
-import { useCallback, useMemo, useState } from 'react'
+import { GoogleMap, InfoWindow, Marker, Polyline } from '@react-google-maps/api'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { TOOL_MODES, useToolbarStore } from '../../stores/toolbarStore'
+import useMapStore from '../../stores/useMapStore'
 
 const containerStyle = { width: '100%', height: '100%' }
 
@@ -48,6 +49,11 @@ export default function Map() {
   const appendMeasurePoint = useToolbarStore((state) => state.appendMeasurePoint)
   const setRouteStart = useToolbarStore((state) => state.setRouteStart)
   const commitRoutePath = useToolbarStore((state) => state.commitRoutePath)
+  const pins = useMapStore((state) => state.pins)
+  const layers = useMapStore((state) => state.layers)
+  const selectedPinId = useMapStore((state) => state.selectedPinId)
+  const selectPin = useMapStore((state) => state.selectPin)
+
 
   const measuredDistanceLabel = useMemo(() => {
     const distanceInMeters = getPathDistanceInMeters(measurePath)
@@ -55,6 +61,19 @@ export default function Map() {
     if (distanceInMeters < 1000) return `${distanceInMeters.toFixed(0)} m`
     return `${(distanceInMeters / 1000).toFixed(2)} km`
   }, [measurePath])
+
+  const visiblePins = useMemo(() => {
+    const visibleLayerIdSet = new Set(
+      layers.filter((layerItem) => layerItem.visible).map((layerItem) => layerItem.id),
+    )
+
+    return pins.filter((pinItem) => visibleLayerIdSet.has(pinItem.layerId))
+  }, [pins, layers])
+
+  const selectedPin = useMemo(
+    () => visiblePins.find((pinItem) => pinItem.id === selectedPinId) ?? null,
+    [visiblePins, selectedPinId],
+  )
 
   const onLoad = useCallback((loadedMap) => setMapInstance(loadedMap), [])
   const onUnmount = useCallback(() => setMapInstance(null), [])
@@ -78,6 +97,12 @@ export default function Map() {
     },
     [commitRoutePath],
   )
+
+  useEffect(() => {
+    if (!mapInstance || !selectedPin) return
+
+    mapInstance.panTo(selectedPin.position)
+  }, [mapInstance, selectedPin])
 
   const handleMapClick = useCallback(
     (event) => {
@@ -137,6 +162,23 @@ export default function Map() {
         {markers.map((markerPoint, markerIndex) => (
           <Marker key={`marker-${markerIndex}`} position={markerPoint} />
         ))}
+
+        {visiblePins.map((pinItem) => (
+          <Marker
+            key={pinItem.id}
+            position={pinItem.position}
+            onClick={() => selectPin(pinItem.id)}
+          />
+        ))}
+
+        {selectedPin && (
+          <InfoWindow
+            position={selectedPin.position}
+            onCloseClick={() => selectPin(null)}
+          >
+            <div className="text-sm">{selectedPin.name}</div>
+          </InfoWindow>
+        )}
 
         {linePath.length > 1 && (
           <Polyline
