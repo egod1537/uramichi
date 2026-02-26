@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import Search from '../Toolbar/Search'
 import LayerPanel from './LayerPanel'
 import MapPanel from './MapPanel'
 
@@ -11,46 +10,26 @@ export default function Sidebar() {
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="absolute top-4 left-4 z-10 rounded-lg bg-white p-3 shadow-lg hover:bg-gray-50"
+        className="absolute left-4 top-4 z-20 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 shadow"
       >
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-        >
-          <line x1="3" y1="6" x2="21" y2="6" />
-          <line x1="3" y1="12" x2="21" y2="12" />
-          <line x1="3" y1="18" x2="21" y2="18" />
-        </svg>
+        패널 열기
       </button>
     )
   }
 
   return (
-    <div className="absolute top-4 left-4 z-10 flex max-h-[calc(100vh-2rem)] w-80 flex-col overflow-hidden rounded-lg bg-white shadow-lg">
-      <div className="flex items-center justify-between border-b border-gray-100 p-3">
-        <h2 className="text-sm font-semibold text-gray-700">Sidebar</h2>
-        <button type="button" onClick={() => setIsOpen(false)} className="rounded p-1 hover:bg-gray-100">
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <polyline points="15 18 9 12 15 6" />
-          </svg>
+    <aside className="absolute left-4 top-4 z-20 flex h-[calc(100vh-2rem)] w-[360px] flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg">
+      <div className="flex items-center justify-end border-b border-gray-200 px-2 py-1">
+        <button
+          type="button"
+          onClick={() => setIsOpen(false)}
+          className="rounded px-2 py-1 text-xs text-gray-500 hover:bg-gray-100"
+        >
+          닫기
         </button>
       </div>
       <MapPanel />
-      <div className="border-b border-gray-100 p-3">
-        <Search />
-      </div>
       <LayerPanel />
-    </div>
+    </aside>
   )
 }
