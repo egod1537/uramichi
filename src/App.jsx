@@ -1,6 +1,7 @@
 import { useJsApiLoader } from '@react-google-maps/api'
-import Map from './components/Map'
-import TopToolbar from './components/TopToolbar'
+import Map from './components/Map/Map'
+import Sidebar from './components/Sidebar/Sidebar'
+import Toolbar from './components/Toolbar/Toolbar'
 
 const libraries = ['places', 'geometry']
 
@@ -16,7 +17,8 @@ export default function App() {
   return (
     <div className="relative h-screen w-screen bg-[#82c7d7]">
       <Map />
-      <TopToolbar />
+      <Sidebar />
+      <Toolbar />
     </div>
   )
 }
