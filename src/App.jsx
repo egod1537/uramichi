@@ -1,8 +1,8 @@
 import { useJsApiLoader } from '@react-google-maps/api'
 import Map from './components/Map'
-import Panel from './components/Panel'
+import TopToolbar from './components/TopToolbar'
 
-const libraries = ['places']
+const libraries = ['places', 'geometry']
 
 export default function App() {
   const { isLoaded, loadError } = useJsApiLoader({
@@ -14,12 +14,9 @@ export default function App() {
   if (!isLoaded) return <div className="p-4">로딩 중...</div>
 
   return (
-    <div className="h-screen w-screen relative">
-      {/* 맵 (풀스크린) */}
+    <div className="relative h-screen w-screen bg-[#82c7d7]">
       <Map />
-
-      {/* 떠 있는 패널 (구글 나만의 지도 스타일) */}
-      <Panel />
+      <TopToolbar />
     </div>
   )
 }

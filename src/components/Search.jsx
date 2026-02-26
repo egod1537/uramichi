@@ -6,7 +6,7 @@ export default function Search() {
   useEffect(() => {
     if (!inputRef.current) return
 
-    const autocomplete = new google.maps.places.Autocomplete(inputRef.current, {
+    const autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, {
       fields: ['place_id', 'name', 'geometry', 'formatted_address', 'photos'],
     })
 
