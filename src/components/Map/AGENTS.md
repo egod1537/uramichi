@@ -57,3 +57,7 @@
 - `PoiDetailOverlay`에 `지도에 추가` 버튼을 추가하고, 클릭 시 `Map.jsx`의 `handleAddPoiToMap`으로 현재 POI 좌표 기반 핀 생성(`addMarker(position, patch)`)을 실행하도록 연결함.
 - 평점 라벨은 `평점 텍스트`에서 별(★/☆) + 숫자 표기로 변경해 시각적으로 바로 인지되도록 조정함.
 - 오버레이 루트에 `onMouseDown/onClick stopPropagation`을 추가해 오버레이 내부 버튼 클릭이 지도 클릭 이벤트로 전파되지 않게 처리함.
+[codex] 2026-02-27 선그리기/거리측정 독립 분리 메모
+- `Map.jsx`에서 기존 단일 훅(`useMeasureInteraction`) 의존을 제거하고, 선그리기 전용 훅(`useLineInteraction`)과 거리측정 전용 훅(`useDistanceMeasureInteraction`)을 각각 구독하도록 분리함.
+- 우클릭 종료 트리거(`triggerMeasureComplete`)도 모드별로 분기해, `DRAW_LINE`은 선 저장 완료 경로만, `MEASURE_DISTANCE`는 측정 드래프트 종료 경로만 호출하도록 독립시킴.
+- 지도 드래프트 라벨/프리뷰/포인트 드래그 핸들러 전달 역시 모드별 active 핸들러 선택 방식으로 분리해 두 도구가 서로의 완료/저장 로직을 공유하지 않도록 정리함.
