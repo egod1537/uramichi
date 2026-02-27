@@ -7,6 +7,7 @@ function PinLayer({
   selectedPin,
   selectedPinId,
   currentMode,
+  isPinInteractionBlocked,
   draggingPinId,
   onPinMouseDown,
   onPinClick,
@@ -20,6 +21,7 @@ function PinLayer({
         <PinMarker
           key={pinItem.id}
           pin={pinItem}
+          isInteractionBlocked={isPinInteractionBlocked}
           onMouseDown={onPinMouseDown}
           onClick={(event) => onPinClick(pinItem.id, event)}
           indexLabel={currentMode === TOOL_MODES.ADD_ROUTE ? String(pinIndex + 1) : ''}
