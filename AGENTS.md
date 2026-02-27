@@ -464,3 +464,5 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 [codex] 2026-02-27 핀 추가 드래그 임계값 메모
 - `src/components/Map/Map.jsx`에서 ADD_MARKER 모드일 때 마우스 다운/업의 화면 좌표 이동량(px)을 계산하고, 임계값(6px) 이상 드래그한 경우 mouse up 시 `addMarker`를 호출하지 않도록 조정함.
 - 지도 패닝 후 mouse up으로 핀이 의도치 않게 생성되던 문제를 완화함.
+[codex] 2026-02-27 지도 아이콘 필터 접힘 너비 축소 메모
+- `src/components/Map/Map.jsx`의 핀 아이콘 필터 컨테이너 접힘 상태 클래스를 `w-[min(92vw,360px)] justify-between`에서 `w-auto gap-2`로 변경해, 접혀 있을 때 필요한 최소 가로 너비만 차지하도록 조정함.
