@@ -3,13 +3,29 @@ import TOOL_MODES from '../utils/toolModes'
 import HistoryManager from '../utils/HistoryManager'
 import ProjectManager from '../utils/ProjectManager'
 
-const initialProjectState = ProjectManager.createInitialProjectState()
 const defaultTravelMode = 'WALKING'
+
+const createLegacyLineId = (lineCount, legacyIndex) => `line-legacy-${Date.now()}-${lineCount + legacyIndex + 1}`
+
+const convertLegacyMeasurementsToLines = (measurementList = [], currentLineCount = 0) =>
+  measurementList.map((measurementItem, measurementIndex) => ({
+    ...measurementItem,
+    id: measurementItem.id || createLegacyLineId(currentLineCount, measurementIndex),
+    shapeType: measurementItem.shapeType || 'line',
+  }))
+
+const normalizeLineList = (lineList = [], measurementList = []) =>
+  lineList.concat(convertLegacyMeasurementsToLines(measurementList, lineList.length))
+
+const rawInitialProjectState = ProjectManager.createInitialProjectState()
+const initialProjectState = {
+  ...rawInitialProjectState,
+  lines: normalizeLineList(rawInitialProjectState.lines || [], rawInitialProjectState.measurements || []),
+}
 
 const createSnapshotFromState = (state) => ({
   markers: state.markers,
   lines: state.lines,
-  measurements: state.measurements,
   routes: state.routes,
   linePath: state.linePath,
   routePaths: state.routePaths,
@@ -99,11 +115,14 @@ const useProjectStore = create((set) => ({
     }),
   commitSnapshot: (nextSnapshot) =>
     set((state) => {
-      const committedHistory = HistoryManager.commit(state.history, state.historyIndex, nextSnapshot)
+      const normalizedSnapshot = {
+        ...nextSnapshot,
+        lines: normalizeLineList(nextSnapshot.lines || [], nextSnapshot.measurements || []),
+      }
+      const committedHistory = HistoryManager.commit(state.history, state.historyIndex, normalizedSnapshot)
       return {
         markers: committedHistory.snapshot.markers,
         lines: committedHistory.snapshot.lines,
-        measurements: committedHistory.snapshot.measurements,
         routes: committedHistory.snapshot.routes,
         linePath: committedHistory.snapshot.linePath,
         routePaths: committedHistory.snapshot.routePaths,
@@ -274,33 +293,6 @@ const useProjectStore = create((set) => ({
         ...committedHistory.snapshot,
         draftLinePoints: [],
         selectedLineId: lineData.id,
-        history: committedHistory.history,
-        historyIndex: committedHistory.historyIndex,
-        lastEditedAt: new Date().toISOString(),
-      }
-    }),
-  addMeasurement: (measurementData) =>
-    set((state) => {
-      const committedHistory = HistoryManager.commit(state.history, state.historyIndex, {
-        ...createSnapshotFromState(state),
-        measurements: [...state.measurements, measurementData],
-      })
-      return {
-        ...committedHistory.snapshot,
-        history: committedHistory.history,
-        historyIndex: committedHistory.historyIndex,
-        lastEditedAt: new Date().toISOString(),
-      }
-    }),
-  removeMeasurement: (measurementId) =>
-    set((state) => {
-      const nextMeasurementList = state.measurements.filter((measurementItem) => measurementItem.id !== measurementId)
-      const committedHistory = HistoryManager.commit(state.history, state.historyIndex, {
-        ...createSnapshotFromState(state),
-        measurements: nextMeasurementList,
-      })
-      return {
-        ...committedHistory.snapshot,
         history: committedHistory.history,
         historyIndex: committedHistory.historyIndex,
         lastEditedAt: new Date().toISOString(),
@@ -478,7 +470,6 @@ const useProjectStore = create((set) => ({
       const nextPins = state.pins.filter((pinItem) => pinItem.layerId !== layerId)
       const removedLineIdSet = new Set(state.lines.filter((lineItem) => lineItem.layerId === layerId).map((lineItem) => lineItem.id))
       const nextLines = state.lines.filter((lineItem) => lineItem.layerId !== layerId)
-      const nextMeasurementList = state.measurements.filter((measurementItem) => measurementItem.layerId !== layerId)
       const nextRoutes = state.routes.filter((routeItem) => routeItem.layerId !== layerId)
       const nextRoutePaths = nextRoutes.map((routeItem) => routeItem.path || [])
       const nextActiveLayerId = state.activeLayerId === layerId ? nextLayers[0]?.id ?? null : state.activeLayerId
@@ -486,7 +477,6 @@ const useProjectStore = create((set) => ({
         ...createSnapshotFromState(state),
         markers: createMarkersFromPins(nextPins),
         lines: nextLines,
-        measurements: nextMeasurementList,
         routes: nextRoutes,
         routePaths: nextRoutePaths,
       })
