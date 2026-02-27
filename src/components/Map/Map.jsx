@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Circle, GoogleMap, OverlayView, Polyline } from '@react-google-maps/api'
 import TOOL_MODES from '../../utils/toolModes'
 import { COLOR_PRESETS } from '../../utils/constants'
-import useProjectStore from '../../stores/useProjectStore'
+import useProjectStore, { createRouteId } from '../../stores/useProjectStore'
 import PinMarker from './PinMarker'
 import PinPopup from './PinPopup'
 import { formatDistanceLabel, getMidpoint, getPathDistanceInMeters } from '../../utils/geo'
@@ -66,7 +66,27 @@ const getNextLineColor = (currentColor) => {
   return lineColorSequence[(currentColorIndex + 1) % lineColorSequence.length]
 }
 
-const createRouteEntity = (routeResult, routePath, startPoint, endPoint, activeLayerId, travelMode, routeCount) => {
+const createRouteEntity = (
+  routeId,
+  routeData,
+  startPoint,
+  endPoint,
+  activeLayerId,
+  travelMode,
+) => ({
+  id: routeId,
+  layerId: activeLayerId,
+  start: startPoint,
+  end: endPoint,
+  travelMode,
+  summary: routeData.summary || '',
+  path: routeData.path,
+  distanceMeters: routeData.distanceMeters ?? 0,
+  durationSeconds: routeData.durationSeconds ?? 0,
+  lineName: routeData.lineName || '',
+})
+
+const createRouteCacheData = (routeResult, routePath) => {
   const primaryRoute = routeResult.routes?.[0]
   const firstLeg = primaryRoute?.legs?.[0]
   const firstTransitStep = firstLeg?.steps?.find((stepItem) => stepItem.travel_mode === 'TRANSIT')
@@ -74,17 +94,28 @@ const createRouteEntity = (routeResult, routePath, startPoint, endPoint, activeL
     firstTransitStep?.transit?.line?.short_name || firstTransitStep?.transit?.line?.name || firstTransitStep?.instructions || ''
 
   return {
-    id: `route-${Date.now()}-${routeCount + 1}`,
-    layerId: activeLayerId,
-    start: startPoint,
-    end: endPoint,
-    travelMode,
-    summary: primaryRoute?.summary || '',
     path: routePath,
     distanceMeters: firstLeg?.distance?.value ?? 0,
     durationSeconds: firstLeg?.duration?.value ?? 0,
+    summary: primaryRoute?.summary || '',
     lineName: transitLineName,
   }
+}
+
+const hasRouteIdConflict = (routeId, routeList) => routeList.some((routeItem) => routeItem.id === routeId)
+
+const createUniqueRouteId = (routeList) => {
+  const routeIdSet = new Set(routeList.map((routeItem) => routeItem.id))
+  let retryCount = 0
+  let generatedRouteId = createRouteId(routeList.length)
+
+  while (routeIdSet.has(generatedRouteId) && retryCount < 5) {
+    generatedRouteId = createRouteId(routeList.length + retryCount + 1)
+    retryCount += 1
+  }
+
+  if (routeIdSet.has(generatedRouteId)) return null
+  return generatedRouteId
 }
 
 function Map() {
@@ -183,15 +214,23 @@ function Map() {
 
   const requestRoute = useCallback(
     (startPoint, endPoint, travelMode) => {
-      const cachedRouteData = directionsCache.get(startPoint, endPoint, travelMode)
-      if (cachedRouteData) {
-        addRoute(cachedRouteData)
-        return
-      }
-
       const routeLayerId = activeLayerId || layers[0]?.id || null
       if (!routeLayerId) {
         setRouteStart(null)
+        return
+      }
+
+      const buildRouteEntity = (routeData) => {
+        const routeId = createUniqueRouteId(routes)
+        if (!routeId || hasRouteIdConflict(routeId, routes)) return null
+        return createRouteEntity(routeId, routeData, startPoint, endPoint, routeLayerId, travelMode)
+      }
+
+      const cachedRouteData = directionsCache.get(startPoint, endPoint, travelMode)
+      if (cachedRouteData) {
+        const cachedRouteEntity = buildRouteEntity(cachedRouteData)
+        if (!cachedRouteEntity) return
+        addRoute(cachedRouteEntity)
         return
       }
 
@@ -201,12 +240,14 @@ function Map() {
         const overviewPath = result.routes[0]?.overview_path ?? []
         if (!overviewPath.length) return
         const normalizedPath = overviewPath.map((locationPoint) => ({ lat: locationPoint.lat(), lng: locationPoint.lng() }))
-        const routeEntity = createRouteEntity(result, normalizedPath, startPoint, endPoint, routeLayerId, travelMode, routes.length)
-        directionsCache.set(startPoint, endPoint, travelMode, routeEntity)
-        addRoute(routeEntity)
+        const routeCacheData = createRouteCacheData(result, normalizedPath)
+        directionsCache.set(startPoint, endPoint, travelMode, routeCacheData)
+        const createdRouteEntity = buildRouteEntity(routeCacheData)
+        if (!createdRouteEntity) return
+        addRoute(createdRouteEntity)
       })
     },
-    [activeLayerId, addRoute, layers, routes.length, setRouteStart],
+    [activeLayerId, addRoute, layers, routes, setRouteStart],
   )
 
   const handleMapClick = useCallback(
@@ -380,6 +421,15 @@ function Map() {
 
   useEffect(() => {
     const handleDeleteKeyDown = (event) => {
+      const eventTarget = event.target
+      const isInputControlTarget =
+        eventTarget instanceof HTMLElement
+        && (eventTarget.tagName === 'INPUT'
+          || eventTarget.tagName === 'TEXTAREA'
+          || eventTarget.tagName === 'SELECT'
+          || eventTarget.isContentEditable)
+      if (isInputControlTarget && event.key !== 'Escape') return
+
       if (event.key === 'Escape') {
         if (currentMode === TOOL_MODES.MEASURE_DISTANCE) {
           setHoverMeasurePoint(null)

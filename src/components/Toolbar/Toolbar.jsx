@@ -26,6 +26,15 @@ function Toolbar({ currentMode, historyIndex, historyLength }) {
 
   const handleKeydown = useCallback(
     (event) => {
+      const eventTarget = event.target
+      const isInputControlTarget =
+        eventTarget instanceof HTMLElement
+        && (eventTarget.tagName === 'INPUT'
+          || eventTarget.tagName === 'TEXTAREA'
+          || eventTarget.tagName === 'SELECT'
+          || eventTarget.isContentEditable)
+      if (isInputControlTarget && event.key !== 'Escape') return
+
       const loweredKey = event.key.toLowerCase()
       if (event.key === 'Escape') resetToSelectMode()
       if (loweredKey === 'z') undo()
