@@ -1,0 +1,19 @@
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
+
+const useEditorStore = create(
+  persist(
+    (set) => ({
+      isShortcutModalOpen: false,
+      sidebarOpen: true,
+      testbedSelectedComponentKey: null,
+      setShortcutModalOpen: (isOpen) => set({ isShortcutModalOpen: isOpen }),
+      toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
+      setSidebarOpen: (isOpen) => set({ sidebarOpen: isOpen }),
+      setTestbedSelectedComponentKey: (componentKey) => set({ testbedSelectedComponentKey: componentKey }),
+    }),
+    { name: 'uramichi-editor-store' },
+  ),
+)
+
+export default useEditorStore
