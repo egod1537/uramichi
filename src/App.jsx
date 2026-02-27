@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import React from 'react'
 import { LoadScript } from '@react-google-maps/api'
 import Map from './components/Map/Map'
 import Sidebar from './components/Sidebar/Sidebar'
@@ -13,45 +13,85 @@ import { initializeLocalization } from './utils/L'
 
 const libraries = ['places', 'geometry']
 
-function App() {
-  const currentRoute = getRoute()
-  const currentMode = useProjectStore((state) => state.currentMode)
-  const historyIndex = useProjectStore((state) => state.historyIndex)
-  const historyLength = useProjectStore((state) => state.history.length)
-  const [chatPanelOpen, setChatPanelOpen] = useState(false)
+class App extends React.Component {
+  state = {
+    chatPanelOpen: false,
+    currentMode: useProjectStore.getState().currentMode,
+    historyIndex: useProjectStore.getState().historyIndex,
+    historyLength: useProjectStore.getState().history.length,
+  }
 
-  useEffect(() => {
+  componentDidMount() {
     initializeLocalization()
-  }, [])
+    this.unsubscribeProjectStore = useProjectStore.subscribe((state) => {
+      this.setState({
+        currentMode: state.currentMode,
+        historyIndex: state.historyIndex,
+        historyLength: state.history.length,
+      })
+    })
+  }
 
-  if (currentRoute === 'testbed') {
+  componentWillUnmount() {
+    if (this.unsubscribeProjectStore) {
+      this.unsubscribeProjectStore()
+    }
+  }
+
+  handleOpenChatPanel = () => {
+    this.setState({ chatPanelOpen: true })
+  }
+
+  handleCloseChatPanel = () => {
+    this.setState({ chatPanelOpen: false })
+  }
+
+  renderTestbed() {
     return (
       <LoadScript
         googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
         libraries={libraries}
         loadingElement={<div className="p-4">로딩 중...</div>}
       >
-        <Testbed currentMode={currentMode} historyIndex={historyIndex} historyLength={historyLength} />
+        <Testbed
+          currentMode={this.state.currentMode}
+          historyIndex={this.state.historyIndex}
+          historyLength={this.state.historyLength}
+        />
       </LoadScript>
     )
   }
 
-  return (
-    <LoadScript
-      googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
-      libraries={libraries}
-      loadingElement={<div className="p-4">로딩 중...</div>}
-    >
-      <div className="relative h-screen w-screen bg-[#82c7d7]">
-        <Map />
-        <Sidebar />
-        <Toolbar currentMode={currentMode} historyIndex={historyIndex} historyLength={historyLength} />
-        <UserButton />
-        {!chatPanelOpen && <ChatButton onClick={() => setChatPanelOpen(true)} />}
-        <ChatPanel isOpen={chatPanelOpen} onClose={() => setChatPanelOpen(false)} />
-      </div>
-    </LoadScript>
-  )
+  renderMainPage() {
+    return (
+      <LoadScript
+        googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
+        libraries={libraries}
+        loadingElement={<div className="p-4">로딩 중...</div>}
+      >
+        <div className="relative h-screen w-screen bg-[#82c7d7]">
+          <Map />
+          <Sidebar />
+          <Toolbar
+            currentMode={this.state.currentMode}
+            historyIndex={this.state.historyIndex}
+            historyLength={this.state.historyLength}
+          />
+          <UserButton />
+          {!this.state.chatPanelOpen && <ChatButton onClick={this.handleOpenChatPanel} />}
+          <ChatPanel isOpen={this.state.chatPanelOpen} onClose={this.handleCloseChatPanel} />
+        </div>
+      </LoadScript>
+    )
+  }
+
+  render() {
+    const currentRoute = getRoute()
+    if (currentRoute === 'testbed') {
+      return this.renderTestbed()
+    }
+    return this.renderMainPage()
+  }
 }
 
 export default App

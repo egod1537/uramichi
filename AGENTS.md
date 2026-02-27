@@ -380,3 +380,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `src/components/Sidebar/LayerPanel.jsx`에서 레이어 드래그 프리뷰 상태(`layerDropPreview`)를 관리해 hover 위치(위/아래/맨끝)에 따라 파란 가로선을 표시하고, 리스트 맨 끝 드롭 존을 별도로 추가함.
 - `src/components/Sidebar/LayerRow.jsx`에서 레이어/핀 드래그 중 커서 절반 위치 기준으로 `before/after`를 판별하고, 드롭 예정 위치에 파란 가로선 프리뷰를 렌더링함.
 - 같은 파일에서 핀 목록 하단에 맨끝 드롭 존(`end`)을 추가해 마지막 위치로 이동이 가능하도록 보강함.
+
+[codex] 2026-02-27 클래스 선호 반영 메모
+- 사용자 선호에 맞춰 상태/액션 중심 컴포넌트(`App`, `Toolbar`, `Search`, `ChatPanel`, `UserButton`)를 `React.Component` 기반 클래스로 재전환함.
+- 단순 렌더링 위주의 컴포넌트는 기존 함수형을 유지하고, 상태/사이드이펙트가 있는 컴포넌트부터 우선 변환하는 기준을 AGENTS 문맥에 추가함.
