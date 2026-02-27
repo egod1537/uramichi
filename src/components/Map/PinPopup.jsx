@@ -142,7 +142,12 @@ function PinPopup({ pin }) {
 
   return (
     <OverlayView position={pin.position} mapPaneName={overlayPane}>
-      <div ref={popupContainerRef} className="relative -translate-x-1/2 -translate-y-[calc(100%+22px)]">
+      <div
+        ref={popupContainerRef}
+        onMouseDown={(event) => event.stopPropagation()}
+        onClick={(event) => event.stopPropagation()}
+        className="relative -translate-x-1/2 -translate-y-[calc(100%+22px)]"
+      >
         <div className="w-[300px] max-w-[300px] rounded-2xl bg-white p-4 shadow-2xl">
           <div className="mb-3 flex items-start gap-2">
             <span className="mt-0.5 text-xl">{categoryPreset.icon}</span>

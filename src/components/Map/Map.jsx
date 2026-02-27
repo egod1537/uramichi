@@ -203,6 +203,11 @@ function Map() {
 
   const handleMapClick = useCallback(
     (event) => {
+      if (isPinClickInProgress) {
+        setIsPinClickInProgress(false)
+        return
+      }
+
       const latitude = event.latLng?.lat()
       const longitude = event.latLng?.lng()
       if (latitude === undefined || longitude === undefined) return
@@ -234,10 +239,6 @@ function Map() {
       }
 
       if (currentMode === TOOL_MODES.SELECT) {
-        if (isPinClickInProgress) {
-          setIsPinClickInProgress(false)
-          return
-        }
         selectPin(null)
         selectLine(null)
         clearPinSelection()
@@ -261,14 +262,18 @@ function Map() {
 
   const handlePinClick = useCallback(
     (pinId, event) => {
-      if (currentMode !== TOOL_MODES.SELECT) return
+      setIsPinClickInProgress(true)
+
+      if (currentMode !== TOOL_MODES.SELECT) {
+        selectPin(pinId)
+        return
+      }
+
       selectLine(null)
       if (event?.domEvent?.shiftKey) {
-        setIsPinClickInProgress(true)
         togglePinInSelection(pinId)
         return
       }
-      setIsPinClickInProgress(true)
       selectPin(pinId)
     },
     [currentMode, selectLine, selectPin, togglePinInSelection, setIsPinClickInProgress],
@@ -399,7 +404,7 @@ function Map() {
             pin={pinItem}
             onClick={(event) => handlePinClick(pinItem.id, event)}
             indexLabel={currentMode === TOOL_MODES.ADD_ROUTE ? String(pinIndex + 1) : ''}
-            draggable={currentMode === TOOL_MODES.SELECT}
+            draggable={currentMode === TOOL_MODES.SELECT && selectedPinId === pinItem.id}
             isDragging={draggingPinId === pinItem.id}
             onDragStart={() => handlePinDragStart(pinItem.id)}
             onDrag={(event) => handlePinDrag(pinItem.id, event)}
