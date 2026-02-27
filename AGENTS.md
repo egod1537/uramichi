@@ -255,6 +255,10 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - 핀 드래그는 Select 모드에서만 활성화되도록 `PinMarker`에 `draggable` 제어를 추가했고, 드래그 중에는 반투명 스타일(`opacity-60`)을 적용함.
 - 드래그 중 좌표 반영은 `updatePin(id, { position })`로 처리하고, 드래그 완료 시점에만 `commitMarkerDrag(...)`를 호출하도록 분리해 히스토리 커밋 타이밍을 고정함.
 
+[codex] 2026-02-27 Sidebar 다중 선택 액션 작업 메모
+- `src/components/Sidebar/LayerPanel.jsx`에 `selectedPinIds` 기반 선택 개수 배지와 일괄 삭제(`removePins`)·대상 레이어 선택 후 일괄 이동(`movePinsToLayer`) UI를 추가함.
+- `src/stores/useProjectStore.js`에 `movePinsToLayer(pinIds, layerId)` 액션을 추가해 다중 핀 레이어 이동을 스토어 단일 경로로 처리함.
+- `src/components/Sidebar/LayerRow.jsx`의 핀 항목에 우클릭 메뉴를 추가하고 단건 삭제를 `removePin` 액션으로 연결해 Map의 키보드/팝업 삭제와 동일 액션 경로를 사용하도록 맞춤.
 [codex] 2026-02-27 거리 측정 분리 구현 메모
 - `src/utils/geo.js`를 추가해 Haversine 기반 점간 거리/경로 총거리/중간점/단위 포맷(m, km) 유틸을 분리함.
 - `src/components/Map/Map.jsx`에서 measure 모드 클릭 시 `draftMeasurePoints` 경로를 누적하고, 각 구간 중간점 Overlay 라벨 + 마지막 지점 총거리 Overlay 라벨을 렌더링하도록 연결함.

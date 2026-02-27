@@ -133,6 +133,26 @@ const useProjectStore = create((set) => ({
         lastEditedAt: new Date().toISOString(),
       }
     }),
+  movePinsToLayer: (pinIds, layerId) =>
+    set((state) => {
+      if (!layerId) return state
+      const hasTargetLayer = state.layers.some((layerItem) => layerItem.id === layerId)
+      if (!hasTargetLayer) return state
+      const selectedPinIdSet = new Set(pinIds)
+      if (!selectedPinIdSet.size) return state
+      return {
+        pins: state.pins.map((pinItem) =>
+          selectedPinIdSet.has(pinItem.id)
+            ? {
+                ...pinItem,
+                layerId,
+              }
+            : pinItem,
+        ),
+        activeLayerId: layerId,
+        lastEditedAt: new Date().toISOString(),
+      }
+    }),
   addLine: (lineData) =>
     set((state) => {
       const committedHistory = HistoryManager.commit(state.history, state.historyIndex, {
