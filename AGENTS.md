@@ -468,3 +468,12 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `src/components/Chat/ChatButton.jsx`의 FAB 아이콘을 인라인 SVG 대신 `public/claude.svg` 파일을 로드하는 `<img src="/claude.svg">`로 교체함.
 [codex] 2026-02-27 AI 챗 버튼 배경색 조정 메모
 - `src/components/Chat/ChatButton.jsx`의 FAB 배경색을 흰색(`bg-white`)으로 변경하고 hover 색상을 `hover:bg-gray-100`으로 조정함.
+[codex] 2026-02-27 RouteService 분리 메모
+- `src/utils/RouteService.js`를 추가해 경로 요청 빌드(`getRouteRequest`), 응답 정규화(`createRouteCacheData`), route id 충돌 방지(`createUniqueRouteId`/`hasRouteIdConflict`), 최종 route 엔티티 생성(`createRouteEntityOrNull`)을 한 곳으로 모음.
+- `src/components/Map/Map.jsx`의 `requestRoute`는 서비스 호출 결과를 받아 성공 시 `addRoute`만 호출하고, 실패(null) 시 `setRouteStart(null)`로 종료하도록 단순화함.
+[codex] 2026-02-27 클래스 전환 우선순위 기준 메모
+- 클래스 컴포넌트 전환 우선순위는 "훅 사용량이 많거나(특히 `useState`/`useEffect`/`useCallback` 다수), 상태 구독 지점이 많은 컴포넌트"를 먼저 대상으로 잡음.
+- 현재 우선 검토 대상은 `src/components/Map/Map.jsx`, `src/components/Map/PinPopup.jsx`, `src/components/Sidebar/LayerRow.jsx`, `src/components/Sidebar/LayerPanel.jsx`로 정리함.
+- 다음 검토 대상(중간 우선순위)은 `src/components/Sidebar/MapPanel.jsx`, `src/pages/Testbed.jsx`, `src/components/Map/PinMarker.jsx`, `src/components/Sidebar/Sidebar.jsx`로 기록함.
+[codex] 2026-02-27 지도 아이콘 필터 접힘 너비 축소 메모
+- `src/components/Map/Map.jsx`의 핀 아이콘 필터 컨테이너 접힘 상태 클래스를 `w-[min(92vw,360px)] justify-between`에서 `w-auto gap-2`로 변경해, 접혀 있을 때 필요한 최소 가로 너비만 차지하도록 조정함.
