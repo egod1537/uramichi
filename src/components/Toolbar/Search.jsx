@@ -1,4 +1,5 @@
 import React from 'react'
+import useProjectStore from '../../stores/useProjectStore'
 
 class Search extends React.Component {
   searchInputRef = React.createRef()
@@ -7,11 +8,22 @@ class Search extends React.Component {
     if (!this.searchInputRef.current || !window.google?.maps?.places) return
 
     this.placesAutocomplete = new window.google.maps.places.Autocomplete(this.searchInputRef.current, {
-      fields: ['place_id', 'name', 'geometry', 'formatted_address', 'photos'],
+      fields: ['place_id', 'name', 'geometry', 'formatted_address', 'photos', 'rating'],
     })
 
     this.placeChangedListener = this.placesAutocomplete.addListener('place_changed', () => {
-      this.placesAutocomplete.getPlace()
+      const selectedPlace = this.placesAutocomplete.getPlace()
+      const selectedLatitude = selectedPlace?.geometry?.location?.lat?.()
+      const selectedLongitude = selectedPlace?.geometry?.location?.lng?.()
+      if (selectedLatitude === undefined || selectedLongitude === undefined) return
+
+      useProjectStore.getState().requestPoiFromSearch({
+        placeId: selectedPlace.place_id || null,
+        position: { lat: selectedLatitude, lng: selectedLongitude },
+        name: selectedPlace.name || '',
+        address: selectedPlace.formatted_address || '',
+        rating: typeof selectedPlace.rating === 'number' ? selectedPlace.rating : null,
+      })
     })
   }
 

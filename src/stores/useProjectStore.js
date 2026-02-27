@@ -77,6 +77,7 @@ const reorderPinsByLayer = (pinList, layerId, sourcePinId, targetPinId, dropPosi
 const useProjectStore = create((set) => ({
   ...initialProjectState,
   selectedLineId: null,
+  poiSearchRequest: null,
   setMode: (nextMode) =>
     set((state) => ({
       currentMode: nextMode,
@@ -164,6 +165,8 @@ const useProjectStore = create((set) => ({
       }
     }),
   clearPinSelection: () => set({ selectedPinId: null, selectedPinIds: [] }),
+  requestPoiFromSearch: (poiSearchRequest) => set({ poiSearchRequest }),
+  consumePoiSearchRequest: () => set({ poiSearchRequest: null }),
   togglePinIconFilter: (iconKey) =>
     set((state) => ({
       pinIconFilters: state.pinIconFilters.includes(iconKey)
