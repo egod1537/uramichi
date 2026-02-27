@@ -4,6 +4,10 @@ import useUserStore from '../../stores/useUserStore'
 class UserButton extends React.Component {
   containerRef = React.createRef()
 
+  googleSignInScriptPromise = null
+
+  googleSignInInitialized = false
+
   state = {
     isDropdownOpen: false,
     toastMessage: '',
@@ -62,6 +66,104 @@ class UserButton extends React.Component {
     }
   }
 
+  decodeJwtPayload(jwtToken) {
+    const tokenPartList = jwtToken.split('.')
+    if (tokenPartList.length < 2) return null
+    const payload = tokenPartList[1].replace(/-/g, '+').replace(/_/g, '/')
+    const decodedPayload = window.atob(payload)
+    const normalizedPayload = decodeURIComponent(
+      decodedPayload
+        .split('')
+        .map((character) => `%${`00${character.charCodeAt(0).toString(16)}`.slice(-2)}`)
+        .join(''),
+    )
+
+    return JSON.parse(normalizedPayload)
+  }
+
+  loadGoogleSignInScript() {
+    if (window.google?.accounts?.id) {
+      return Promise.resolve()
+    }
+    if (this.googleSignInScriptPromise) {
+      return this.googleSignInScriptPromise
+    }
+
+    this.googleSignInScriptPromise = new Promise((resolve, reject) => {
+      const existingScriptElement = document.querySelector('script[data-google-identity="true"]')
+      if (existingScriptElement) {
+        existingScriptElement.addEventListener('load', () => resolve(), { once: true })
+        existingScriptElement.addEventListener('error', () => reject(new Error('Google script load failed')), { once: true })
+        return
+      }
+
+      const googleScriptElement = document.createElement('script')
+      googleScriptElement.src = 'https://accounts.google.com/gsi/client'
+      googleScriptElement.async = true
+      googleScriptElement.defer = true
+      googleScriptElement.dataset.googleIdentity = 'true'
+      googleScriptElement.onload = () => resolve()
+      googleScriptElement.onerror = () => reject(new Error('Google script load failed'))
+      document.head.appendChild(googleScriptElement)
+    })
+
+    return this.googleSignInScriptPromise
+  }
+
+  handleGoogleCredentialResponse = (response) => {
+    if (!response?.credential) {
+      this.setState({ toastMessage: 'Google 로그인에 실패했습니다' })
+      return
+    }
+
+    const profilePayload = this.decodeJwtPayload(response.credential)
+    if (!profilePayload) {
+      this.setState({ toastMessage: 'Google 계정 정보를 읽지 못했습니다' })
+      return
+    }
+
+    useUserStore.getState().login({
+      provider: 'google',
+      idToken: response.credential,
+      displayName: profilePayload.name || '',
+      email: profilePayload.email || '',
+      avatarUrl: profilePayload.picture || '',
+    })
+  }
+
+  initializeGoogleSignIn() {
+    const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
+    if (!googleClientId) {
+      this.setState({ toastMessage: 'VITE_GOOGLE_CLIENT_ID 설정이 필요합니다' })
+      return false
+    }
+    if (!window.google?.accounts?.id) {
+      this.setState({ toastMessage: 'Google 로그인 SDK를 불러오지 못했습니다' })
+      return false
+    }
+    if (!this.googleSignInInitialized) {
+      window.google.accounts.id.initialize({
+        client_id: googleClientId,
+        callback: this.handleGoogleCredentialResponse,
+      })
+      this.googleSignInInitialized = true
+    }
+
+    return true
+  }
+
+  handleGoogleLogin = async () => {
+    try {
+      await this.loadGoogleSignInScript()
+      const isInitialized = this.initializeGoogleSignIn()
+      if (!isInitialized) return
+
+      window.google.accounts.id.prompt()
+    } catch {
+      this.setState({ toastMessage: 'Google 로그인 창을 열지 못했습니다' })
+    }
+  }
+
   getProfileInitial() {
     const safeName = this.state.displayName?.trim()
     if (!safeName) return '?'
@@ -76,7 +178,7 @@ class UserButton extends React.Component {
 
   handleProfileButtonClick = () => {
     if (!this.state.isLoggedIn) {
-      this.setState({ toastMessage: '로그인 기능 준비 중' })
+      this.handleGoogleLogin()
       return
     }
 
@@ -86,6 +188,9 @@ class UserButton extends React.Component {
   }
 
   handleLogout = () => {
+    if (window.google?.accounts?.id) {
+      window.google.accounts.id.disableAutoSelect()
+    }
     useUserStore.getState().logout()
     this.setState({ isDropdownOpen: false })
   }
