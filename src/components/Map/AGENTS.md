@@ -61,3 +61,6 @@
 - `Map.jsx`에서 기존 단일 훅(`useMeasureInteraction`) 의존을 제거하고, 선그리기 전용 훅(`useLineInteraction`)과 거리측정 전용 훅(`useDistanceMeasureInteraction`)을 각각 구독하도록 분리함.
 - 우클릭 종료 트리거(`triggerMeasureComplete`)도 모드별로 분기해, `DRAW_LINE`은 선 저장 완료 경로만, `MEASURE_DISTANCE`는 측정 드래프트 종료 경로만 호출하도록 독립시킴.
 - 지도 드래프트 라벨/프리뷰/포인트 드래그 핸들러 전달 역시 모드별 active 핸들러 선택 방식으로 분리해 두 도구가 서로의 완료/저장 로직을 공유하지 않도록 정리함.
+[codex] 2026-02-27 Map 드래프트 분리 후속 메모
+- `Map.jsx`의 드래프트 렌더 입력값을 모드별로 분기해 `DRAW_LINE`은 `linePath`, `MEASURE_DISTANCE`는 `measurePath`를 사용하도록 변경함.
+- 모드 이벤트 컨텍스트에 `appendLinePoint`와 `appendMeasurePoint`를 모두 전달하되, 각 컨트롤러가 자기 모드 액션만 호출하도록 유지해 입력 경로 충돌을 제거함.

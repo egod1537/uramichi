@@ -539,3 +539,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 [codex] 2026-02-27 chat 404 대응 메모
 - `vite.config.js`의 Claude 프록시 플러그인에 `configurePreviewServer`를 추가해 `vite preview` 환경에서도 `/api/chat/claude` 경로가 404 없이 동작하도록 맞춤.
 - dev/preview 공통으로 동일 핸들러를 재사용하도록 `handleClaudeRequest`를 분리해 라우트 동작 일관성을 유지함.
+[codex] 2026-02-27 선/거리 드래프트 경로 완전 분리 메모
+- 기존에 선그리기와 거리측정이 공용으로 사용하던 `measurePath` 드래프트를 분리해, 선그리기는 `linePath`, 거리측정은 `measurePath`만 사용하도록 상태 흐름을 분리함.
+- `lineController`/`useLineInteraction`/`Map.jsx`에서 선 도구 입력·프리뷰·드래그·완료가 `appendLinePoint`/`setLinePath`/`cancelDraftLine` 경로로만 동작하도록 정리함.
+- 모드 전환 동기화(`syncDraftByMode`)도 `DRAW_LINE` 진입 시 거리 드래프트를 정리하고, `MEASURE_DISTANCE` 진입 시 선 드래프트를 정리하도록 상호 독립 규칙으로 갱신함.

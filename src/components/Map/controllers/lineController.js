@@ -3,13 +3,13 @@ import TOOL_MODES from '../../../utils/toolModes'
 export const handleLineMapClick = ({ currentMode, clickedPoint, actions }) => {
   if (currentMode !== TOOL_MODES.DRAW_LINE || !clickedPoint) return false
   actions.setHoverMeasurePoint(null)
-  actions.appendMeasurePoint(clickedPoint)
+  actions.appendLinePoint(clickedPoint)
   return true
 }
 
 export const handleLineMapMouseMove = ({ currentMode, clickedPoint, state, actions }) => {
   if (currentMode !== TOOL_MODES.DRAW_LINE) return false
-  if (!state.measurePath.length || state.draggingMeasurePointIndex !== null || !clickedPoint) return false
+  if (!state.linePath.length || state.draggingMeasurePointIndex !== null || !clickedPoint) return false
   actions.setHoverMeasurePoint(clickedPoint)
   return true
 }
@@ -17,26 +17,26 @@ export const handleLineMapMouseMove = ({ currentMode, clickedPoint, state, actio
 export const handleLineDraftComplete = ({ currentMode, state, actions }) => {
   if (currentMode !== TOOL_MODES.DRAW_LINE) return false
   actions.setHoverMeasurePoint(null)
-  if (state.measurePath.length < 2) {
-    actions.cancelDraftMeasure()
+  if (state.linePath.length < 2) {
+    actions.cancelDraftLine()
     return true
   }
   const targetLayerId = state.activeLayerId || state.layers[0]?.id || null
   if (!targetLayerId) {
-    actions.cancelDraftMeasure()
+    actions.cancelDraftLine()
     return true
   }
-  actions.addMeasurement(state.createMeasurementEntity(state.measurePath, targetLayerId, state.measurements.length))
-  actions.cancelDraftMeasure()
+  actions.addMeasurement(state.createMeasurementEntity(state.linePath, targetLayerId, state.measurements.length))
+  actions.cancelDraftLine()
   actions.setMode(TOOL_MODES.SELECT)
   return true
 }
 
 export const handleLineMeasurePointDrag = ({ currentMode, pointIndex, clickedPoint, state, actions }) => {
   if (currentMode !== TOOL_MODES.DRAW_LINE || !clickedPoint) return false
-  const nextMeasurePointList = state.measurePath.map((measurePointItem, measurePointIndex) =>
-    measurePointIndex === pointIndex ? clickedPoint : measurePointItem,
+  const nextLinePointList = state.linePath.map((linePointItem, linePointIndex) =>
+    linePointIndex === pointIndex ? clickedPoint : linePointItem,
   )
-  actions.setMeasurePath(nextMeasurePointList)
+  actions.setLinePath(nextLinePointList)
   return true
 }
