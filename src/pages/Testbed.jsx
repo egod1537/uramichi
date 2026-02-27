@@ -4,6 +4,7 @@ import Search from '../components/Toolbar/Search'
 import Sidebar from '../components/Sidebar/Sidebar'
 import MapPanel from '../components/Sidebar/MapPanel'
 import LayerPanel from '../components/Sidebar/LayerPanel'
+import ColorPalette from '../components/common/ColorPalette'
 import useEditorStore from '../stores/useEditorStore'
 
 const componentLabelMap = {
@@ -13,6 +14,7 @@ const componentLabelMap = {
   sidebar: 'Sidebar',
   mapPanel: 'MapPanel',
   layerPanel: 'LayerPanel',
+  colorPalette: 'ColorPalette',
 }
 
 function Testbed({ currentMode, historyIndex, historyLength }) {
@@ -67,6 +69,11 @@ function Testbed({ currentMode, historyIndex, historyLength }) {
         {selectedComponentKey === 'sidebar' && <Sidebar />}
         {selectedComponentKey === 'mapPanel' && <MapPanel />}
         {selectedComponentKey === 'layerPanel' && <LayerPanel />}
+        {selectedComponentKey === 'colorPalette' && (
+          <div className="p-4">
+            <ColorPalette />
+          </div>
+        )}
       </div>
     </div>
   )
