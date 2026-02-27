@@ -405,3 +405,5 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 [codex] 2026-02-27 지도 핀 아이콘 필터 폭 자동 맞춤 메모
 - `src/components/Map/Map.jsx`의 하단 핀 아이콘 필터 바를 고정 폭(`w-[min(92vw,860px)]`)에서 내용 기반 `inline-flex + max-w` 구조로 변경해 우측 여백이 과하게 비는 문제를 줄임.
 - 아이콘 버튼 영역은 `flex-1` 확장 대신 `max-w-[56vw] overflow-x-auto`로 제한해, 버튼 수에 맞춰 폭이 자연스럽게 늘고 좁은 화면에서는 가로 스크롤로 대응하도록 조정함.
+[codex] 2026-02-27 지도 스크롤 줌 제스처 메모
+- `src/components/Map/Map.jsx`의 `mapOptions`에 `gestureHandling: 'greedy'`를 추가해 Ctrl 키 없이 마우스 휠만으로 확대/축소가 동작하도록 설정함.
