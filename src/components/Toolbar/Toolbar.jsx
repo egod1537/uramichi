@@ -6,14 +6,14 @@ import useEditorStore from '../../stores/useEditorStore'
 import useProjectStore from '../../stores/useProjectStore'
 
 const toolbarButtons = [
-  { key: 'undo', label: 'Undo', icon: '↩', tooltip: 'Undo (Z)', shortcut: 'Z' },
-  { key: 'redo', label: 'Redo', icon: '↪', tooltip: 'Redo (Y)', shortcut: 'Y' },
-  { key: TOOL_MODES.SELECT, label: 'Select/Pan', icon: '🖐️', tooltip: 'Select/Pan (Q)', shortcut: 'Q' },
-  { key: TOOL_MODES.ADD_MARKER, label: 'Add Marker', icon: '📍', tooltip: 'Add Marker (W)', shortcut: 'W' },
-  { key: TOOL_MODES.DRAW_LINE, label: 'Draw Line', icon: '✏️', tooltip: 'Draw Line (E)', shortcut: 'E' },
-  { key: TOOL_MODES.ADD_ROUTE, label: 'Add Route', icon: '🛤️', tooltip: 'Add Route (R)', shortcut: 'R' },
-  { key: TOOL_MODES.MEASURE_DISTANCE, label: 'Measure Distance', icon: '📐', tooltip: 'Measure Distance (T)', shortcut: 'T' },
-  { key: 'shortcuts', label: 'Keyboard Shortcuts', icon: '⌨️', tooltip: 'Keyboard Shortcuts' },
+  { key: 'undo', label: 'Undo', icon: '↩', tooltip: '실행 취소 (Z)', shortcut: 'Z' },
+  { key: 'redo', label: 'Redo', icon: '↪', tooltip: '다시 실행 (Y)', shortcut: 'Y' },
+  { key: TOOL_MODES.SELECT, label: 'Select/Pan', icon: '🖐️', tooltip: '선택/이동 (Q)', shortcut: 'Q' },
+  { key: TOOL_MODES.ADD_MARKER, label: 'Add Marker', icon: '📍', tooltip: '핀 추가 (W)', shortcut: 'W' },
+  { key: TOOL_MODES.DRAW_LINE, label: 'Draw Line', icon: '✏️', tooltip: '선 그리기 (E)', shortcut: 'E' },
+  { key: TOOL_MODES.ADD_ROUTE, label: 'Add Route', icon: '🛤️', tooltip: '경로 추가 (R)', shortcut: 'R' },
+  { key: TOOL_MODES.MEASURE_DISTANCE, label: 'Measure Distance', icon: '📐', tooltip: '거리 측정 (T)', shortcut: 'T' },
+  { key: 'shortcuts', label: 'Keyboard Shortcuts', icon: '⌨️', tooltip: '단축키 목록' },
 ]
 
 class Toolbar extends React.Component {
