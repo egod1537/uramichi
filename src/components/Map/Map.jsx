@@ -65,7 +65,7 @@ function Map() {
   const setRouteStart = useProjectStore((state) => state.setRouteStart)
   const setRouteTravelMode = useProjectStore((state) => state.setRouteTravelMode)
   const addRoute = useProjectStore((state) => state.addRoute)
-  const addMeasurement = useProjectStore((state) => state.addMeasurement)
+  const addLine = useProjectStore((state) => state.addLine)
   const selectPin = useProjectStore((state) => state.selectPin)
   const selectLine = useProjectStore((state) => state.selectLine)
   const togglePinInSelection = useProjectStore((state) => state.togglePinInSelection)
@@ -183,10 +183,10 @@ function Map() {
     draggingMeasurePointIndex,
     activeLayerId,
     layers,
-    measurements,
+    lines,
     setHoverMeasurePoint,
     cancelDraftLine,
-    addMeasurement,
+    addLine,
     setLinePath,
     setDraggingMeasurePointIndex,
     setMode,

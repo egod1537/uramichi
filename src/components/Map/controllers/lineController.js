@@ -47,7 +47,7 @@ export const handleLineDraftComplete = ({ currentMode, state, actions }) => {
     actions.cancelDraftLine()
     return true
   }
-  actions.addMeasurement(state.createMeasurementEntity(state.linePath, targetLayerId, state.measurements.length))
+  actions.addLine(state.createLineEntity(state.linePath, targetLayerId, state.lines.length))
   actions.cancelDraftLine()
   actions.setMode(TOOL_MODES.SELECT)
   return true

@@ -104,3 +104,7 @@
 [codex] 2026-02-27 거리 측정 상호작용 차단/우클릭 종료 유지 메모
 - `PinMarker`에서 측정 모드 상호작용 차단 시 핀 클릭 이벤트를 소비하지 않고 `clickable={false}`로 내려, 측정 좌클릭이 핀 선택 대신 지도 꼭짓점 추가로 이어지도록 조정함.
 - 거리 측정 우클릭 종료는 Select 모드 전환 없이 `MEASURE_DISTANCE` 모드 유지 방향으로 정리함.
+[codex] 2026-02-27 draw_line 커밋 액션 정합성 메모
+- `controllers/lineController.js`의 선 종료 커밋을 `addMeasurement`에서 `addLine`으로 교체해 draw_line 결과가 `lines` 엔티티로 저장되도록 정리함.
+- `Map.jsx`에서 `useLineInteraction` 전달 액션도 `addLine`으로 연결해 컨트롤러-훅-스토어 액션 경로를 일치시킴.
+- Select 모드 선 선택/삭제/색상변경 경로(`selectedLineId`, `removeLine`, `updateLine`)는 그대로 유지되어 신규 선에도 동일하게 적용됨을 빌드/코드 경로로 확인함.
