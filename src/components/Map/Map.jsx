@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { GoogleMap, Polyline } from '@react-google-maps/api'
+import { GoogleMap, Marker, Polyline } from '@react-google-maps/api'
 import TOOL_MODES from '../../utils/toolModes'
 import { COLOR_PRESETS } from '../../utils/constants'
 import useProjectStore from '../../stores/useProjectStore'
@@ -41,6 +41,7 @@ const routeTravelModeList = [
 ]
 
 const ADD_MARKER_DRAG_THRESHOLD_PX = 6
+const LINE_VERTEX_PIXEL_SIZE = 10
 
 const getNextLineColor = (currentColor) => {
   const currentColorIndex = lineColorSequence.indexOf(currentColor)
@@ -51,6 +52,7 @@ const getNextLineColor = (currentColor) => {
 function Map() {
   const mapInstanceRef = useRef(null)
   const addMarkerMouseDownPositionRef = useRef(null)
+  const shouldIgnoreNextMapClickRef = useRef(false)
   const currentMode = useProjectStore((state) => state.currentMode)
   const lines = useProjectStore((state) => state.lines)
   const measurements = useProjectStore((state) => state.measurements)
@@ -246,6 +248,11 @@ function Map() {
 
   const handleMapClick = useCallback(
     (event) => {
+      if (shouldIgnoreNextMapClickRef.current) {
+        shouldIgnoreNextMapClickRef.current = false
+        return
+      }
+
       if (isPinClickInProgress) {
         setIsPinClickInProgress(false)
         return
@@ -278,6 +285,15 @@ function Map() {
       isPinClickInProgress,
       clearPoiDetail,
     ],
+  )
+
+  const handleMapRightClick = useCallback(
+    (event) => {
+      event?.domEvent?.preventDefault?.()
+      shouldIgnoreNextMapClickRef.current = true
+      triggerMeasureComplete()
+    },
+    [triggerMeasureComplete],
   )
 
   const handleMapMouseDown = useCallback((event) => {
@@ -431,7 +447,7 @@ function Map() {
         onMouseMove={handleMapMouseMove}
         onMouseDown={handleMapMouseDown}
         onDblClick={handleMapDoubleClick}
-        onRightClick={triggerMeasureComplete}
+        onRightClick={handleMapRightClick}
         options={{ ...mapOptions, disableDoubleClickZoom: currentMode === TOOL_MODES.DRAW_LINE }}
       >
         {visiblePins.map((pinItem, pinIndex) => (
@@ -466,6 +482,24 @@ function Map() {
             }}
           />
         ))}
+
+        {visibleLines.map((lineItem) =>
+          lineItem.points.map((linePoint, pointIndex) => (
+            <Marker
+              key={`${lineItem.id}-vertex-${pointIndex}`}
+              position={linePoint}
+              icon={{
+                path: window.google.maps.SymbolPath.CIRCLE,
+                scale: LINE_VERTEX_PIXEL_SIZE / 2,
+                fillColor: '#ffffff',
+                fillOpacity: 1,
+                strokeColor: lineItem.color || COLOR_PRESETS.primaryBlue,
+                strokeWeight: 2,
+              }}
+              clickable={false}
+            />
+          )),
+        )}
 
         {routePaths.map((routePath, routeIndex) => (
           <Polyline key={`route-${routeIndex}`} path={routePath} options={{ strokeColor: COLOR_PRESETS.routeGreen, strokeWeight: 4, clickable: false }} />
