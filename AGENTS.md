@@ -319,3 +319,8 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - 헤더에서 `key`를 제외한 언어 코드를 자동 감지하고, 번역 빈 값은 key 문자열로 대체해 누락 표시가 되도록 처리함.
 - 실행 결과 리포트에 총 key 수, 언어별 완료/누락 수, 누락 key 목록을 출력하도록 추가함.
 - `package.json`에 `locale:pull` 스크립트를 등록해 `pnpm run locale:pull`로 실행 가능하게 연결함.
+
+[codex] 2026-02-27 Toolbar qwert 단축키 작업 메모
+- `src/components/Toolbar/Toolbar.jsx`의 툴바 단축키를 요청한 QWERT 순서로 재배치함(Select=Q, Add Marker=W, Draw Line=E, Add Route=R, Measure Distance=T)하고 Undo/Redo는 Z/Y로 분리함.
+- 단축키 모달 안내 문구와 각 버튼 tooltip 문구를 새 키맵과 동일하게 업데이트함.
+- `src/components/Toolbar/ToolButton.jsx`에 `shortcut` 표시를 추가해 아이콘 오른쪽에 단축키 문자가 함께 보이도록 반영함.

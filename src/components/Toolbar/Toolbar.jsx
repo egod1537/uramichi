@@ -6,13 +6,13 @@ import useEditorStore from '../../stores/useEditorStore'
 import useProjectStore from '../../stores/useProjectStore'
 
 const toolbarButtons = [
-  { key: 'undo', label: 'Undo', icon: '↩', tooltip: 'Undo (U)' },
-  { key: 'redo', label: 'Redo', icon: '↪', tooltip: 'Redo (R)' },
-  { key: TOOL_MODES.SELECT, label: 'Select/Pan', icon: '🖐️', tooltip: 'Select/Pan (Esc)' },
-  { key: TOOL_MODES.ADD_MARKER, label: 'Add Marker', icon: '📍', tooltip: 'Add Marker (M)' },
-  { key: TOOL_MODES.DRAW_LINE, label: 'Draw Line', icon: '✏️', tooltip: 'Draw Line (L)' },
-  { key: TOOL_MODES.ADD_ROUTE, label: 'Add Route', icon: '🛤️', tooltip: 'Add Route (T)' },
-  { key: TOOL_MODES.MEASURE_DISTANCE, label: 'Measure Distance', icon: '📐', tooltip: 'Measure Distance (D)' },
+  { key: 'undo', label: 'Undo', icon: '↩', tooltip: 'Undo (Z)', shortcut: 'Z' },
+  { key: 'redo', label: 'Redo', icon: '↪', tooltip: 'Redo (Y)', shortcut: 'Y' },
+  { key: TOOL_MODES.SELECT, label: 'Select/Pan', icon: '🖐️', tooltip: 'Select/Pan (Q)', shortcut: 'Q' },
+  { key: TOOL_MODES.ADD_MARKER, label: 'Add Marker', icon: '📍', tooltip: 'Add Marker (W)', shortcut: 'W' },
+  { key: TOOL_MODES.DRAW_LINE, label: 'Draw Line', icon: '✏️', tooltip: 'Draw Line (E)', shortcut: 'E' },
+  { key: TOOL_MODES.ADD_ROUTE, label: 'Add Route', icon: '🛤️', tooltip: 'Add Route (R)', shortcut: 'R' },
+  { key: TOOL_MODES.MEASURE_DISTANCE, label: 'Measure Distance', icon: '📐', tooltip: 'Measure Distance (T)', shortcut: 'T' },
   { key: 'shortcuts', label: 'Keyboard Shortcuts', icon: '⌨️', tooltip: 'Keyboard Shortcuts' },
 ]
 
@@ -28,12 +28,13 @@ function Toolbar({ currentMode, historyIndex, historyLength }) {
     (event) => {
       const loweredKey = event.key.toLowerCase()
       if (event.key === 'Escape') resetToSelectMode()
-      if (loweredKey === 'u') undo()
-      if (loweredKey === 'r') redo()
-      if (loweredKey === 'm') setMode(TOOL_MODES.ADD_MARKER)
-      if (loweredKey === 'l') setMode(TOOL_MODES.DRAW_LINE)
-      if (loweredKey === 't') setMode(TOOL_MODES.ADD_ROUTE)
-      if (loweredKey === 'd') setMode(TOOL_MODES.MEASURE_DISTANCE)
+      if (loweredKey === 'z') undo()
+      if (loweredKey === 'y') redo()
+      if (loweredKey === 'q') setMode(TOOL_MODES.SELECT)
+      if (loweredKey === 'w') setMode(TOOL_MODES.ADD_MARKER)
+      if (loweredKey === 'e') setMode(TOOL_MODES.DRAW_LINE)
+      if (loweredKey === 'r') setMode(TOOL_MODES.ADD_ROUTE)
+      if (loweredKey === 't') setMode(TOOL_MODES.MEASURE_DISTANCE)
     },
     [redo, resetToSelectMode, setMode, undo],
   )
@@ -83,6 +84,7 @@ function Toolbar({ currentMode, historyIndex, historyLength }) {
                   isActive={isActive}
                   isDisabled={buttonDisabledState[buttonItem.key]}
                   tooltip={buttonItem.tooltip}
+                  shortcut={buttonItem.shortcut}
                   onClick={handleToolbarButtonClick}
                 />
               )
@@ -97,12 +99,13 @@ function Toolbar({ currentMode, historyIndex, historyLength }) {
             <h2 className="text-base font-semibold">Keyboard Shortcuts</h2>
             <ul className="mt-3 space-y-2 text-sm text-gray-700">
               <li>ESC: Select/Pan 모드로 복귀</li>
-              <li>U: Undo</li>
-              <li>R: Redo</li>
-              <li>M: Add Marker 모드</li>
-              <li>L: Draw Line 모드</li>
-              <li>T: Add Route 모드</li>
-              <li>D: Measure Distance 모드</li>
+              <li>Z: Undo</li>
+              <li>Y: Redo</li>
+              <li>Q: Select/Pan 모드</li>
+              <li>W: Add Marker 모드</li>
+              <li>E: Draw Line 모드</li>
+              <li>R: Add Route 모드</li>
+              <li>T: Measure Distance 모드</li>
             </ul>
             <div className="mt-4 flex justify-end">
               <button
