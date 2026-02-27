@@ -50,8 +50,9 @@ function LineLayer({
       )}
 
       {lines.map((lineItem) =>
-        lineItem.points.map((linePoint, linePointIndex) => (
-          <Marker
+        (currentMode !== TOOL_MODES.SELECT || selectedLineId === lineItem.id)
+          ? lineItem.points.map((linePoint, linePointIndex) => (
+              <Marker
             key={`${lineItem.id}-vertex-${linePointIndex}`}
             position={linePoint}
             icon={{
@@ -62,9 +63,10 @@ function LineLayer({
               strokeColor: lineItem.color || LINE_DEFAULT_COLOR,
               strokeWeight: 2,
             }}
-            clickable={false}
-          />
-        )),
+                clickable={false}
+              />
+            ))
+          : null,
       )}
 
       {linePath.length > 1 ? (

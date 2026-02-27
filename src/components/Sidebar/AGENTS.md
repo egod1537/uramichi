@@ -18,3 +18,7 @@
 [codex] 2026-02-27 Sidebar 선 목록 데이터 소스 정리 메모
 - `LayerPanel`/`LayerRow`의 레이어 하위 선/도형 목록 데이터 소스를 `measurements`에서 `lines`로 전환함.
 - 사이드바 선 목록 라벨(`선분 N`/`도형 N`)은 기존 `shapeType` 분기를 유지하면서 `lines` 엔티티 기준으로 렌더링함.
+
+[codex] 2026-02-27 Sidebar 선/측정 목록 분리 표기 메모
+- `LayerRow`에서 레이어 하위 선 목록을 `sourceType` 기준으로 일반 선/도형(`line`)과 측정(`measurement`)으로 분리 렌더링함.
+- 일반 선은 기존 `선분 N`/`도형 N` 라벨을 유지하고, 측정 항목은 `측정 N`으로 별도 표시해 의미를 구분함.

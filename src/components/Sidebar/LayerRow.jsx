@@ -48,6 +48,8 @@ function LayerRow({
 
   const layerPins = useMemo(() => filteredPins.filter((pinItem) => pinItem.layerId === layer.id), [filteredPins, layer.id])
   const layerLines = useMemo(() => lines.filter((lineItem) => lineItem.layerId === layer.id), [lines, layer.id])
+  const layerMeasurementLines = useMemo(() => layerLines.filter((lineItem) => lineItem.sourceType === 'measurement'), [layerLines])
+  const layerDrawnLines = useMemo(() => layerLines.filter((lineItem) => lineItem.sourceType !== 'measurement'), [layerLines])
   const isActiveLayer = activeLayerId === layer.id
   const isLayerDropPreviewBefore = layerDropPreview?.targetLayerId === layer.id && layerDropPreview.dropPosition === 'before'
   const isLayerDropPreviewAfter = layerDropPreview?.targetLayerId === layer.id && layerDropPreview.dropPosition === 'after'
@@ -428,14 +430,30 @@ function LayerRow({
           })}
 
           {!!layerLines.length && (
-            <div className="mt-2 space-y-1 px-2">
-              {layerLines.map((lineItem, lineIndex) => (
-                <div key={lineItem.id} className="flex items-center gap-2 rounded bg-orange-50 px-2 py-1 text-xs text-orange-700">
-                  <span>📏</span>
-                  <span className="truncate">{lineItem.shapeType === 'polygon' ? `도형 ${lineIndex + 1}` : `선분 ${lineIndex + 1}`}</span>
-                  <span className="ml-auto text-[11px] text-orange-500">{lineItem.points.length}점</span>
+            <div className="mt-2 space-y-2 px-2">
+              {!!layerDrawnLines.length && (
+                <div className="space-y-1">
+                  {layerDrawnLines.map((lineItem, lineIndex) => (
+                    <div key={lineItem.id} className="flex items-center gap-2 rounded bg-orange-50 px-2 py-1 text-xs text-orange-700">
+                      <span>🧵</span>
+                      <span className="truncate">{lineItem.shapeType === 'polygon' ? `도형 ${lineIndex + 1}` : `선분 ${lineIndex + 1}`}</span>
+                      <span className="ml-auto text-[11px] text-orange-500">{lineItem.points.length}점</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
+
+              {!!layerMeasurementLines.length && (
+                <div className="space-y-1">
+                  {layerMeasurementLines.map((lineItem, lineIndex) => (
+                    <div key={lineItem.id} className="flex items-center gap-2 rounded bg-blue-50 px-2 py-1 text-xs text-blue-700">
+                      <span>📏</span>
+                      <span className="truncate">측정 {lineIndex + 1}</span>
+                      <span className="ml-auto text-[11px] text-blue-500">{lineItem.points.length}점</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
