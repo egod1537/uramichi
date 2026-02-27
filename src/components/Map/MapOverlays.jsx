@@ -90,7 +90,8 @@ function MapOverlays({
                   step={TIME_SLIDER_MINUTES_STEP}
                   value={sliderStartMinutes}
                   onChange={(event) => handleStartSliderChange(event.target.value)}
-                  className="pointer-events-auto absolute top-1/2 h-6 w-full -translate-y-1/2 appearance-none bg-transparent"
+                  className="pointer-events-auto absolute top-1/2 z-20 h-6 w-full -translate-y-1/2 appearance-none bg-transparent"
+                  style={{ clipPath: 'inset(0 50% 0 0)' }}
                 />
                 <input
                   type="range"
@@ -99,7 +100,8 @@ function MapOverlays({
                   step={TIME_SLIDER_MINUTES_STEP}
                   value={sliderEndMinutes}
                   onChange={(event) => handleEndSliderChange(event.target.value)}
-                  className="pointer-events-auto absolute top-1/2 h-6 w-full -translate-y-1/2 appearance-none bg-transparent"
+                  className="pointer-events-auto absolute top-1/2 z-30 h-6 w-full -translate-y-1/2 appearance-none bg-transparent"
+                  style={{ clipPath: 'inset(0 0 0 50%)' }}
                 />
               </div>
             </div>
