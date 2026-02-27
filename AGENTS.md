@@ -539,3 +539,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `src/components/Map/TimelineBar.jsx`를 추가해 핀 `openingHours` 복수 구간을 24시간 타임라인(회색 배경, 주황 구간, 상단 시작/종료 라벨, 하단 0/6/12/18/24 눈금)으로 렌더링함.
 - `src/utils/time.js`를 추가해 시간 문자열 파싱/퍼센트 계산/자정 넘김 구간 분리 로직을 분리함.
 - `src/components/Map/PinPopup.jsx` 하단에 타임라인을 삽입했고, `src/stores/useProjectStore.js` 기본 핀 데이터에 `openingHours: []`를 추가해 데이터 미존재 시 기본적으로 타임라인이 숨겨지도록 맞춤.
+
+[codex] 2026-02-27 chat 404 대응 메모
+- `vite.config.js`의 Claude 프록시 플러그인에 `configurePreviewServer`를 추가해 `vite preview` 환경에서도 `/api/chat/claude` 경로가 404 없이 동작하도록 맞춤.
+- dev/preview 공통으로 동일 핸들러를 재사용하도록 `handleClaudeRequest`를 분리해 라우트 동작 일관성을 유지함.
