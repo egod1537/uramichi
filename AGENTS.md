@@ -162,3 +162,11 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - 코드 주석: 한국어
 - 스타일링: Tailwind CSS (인라인 style 지양)
 - 컴포넌트 파일 하나에 클래스 하나
+
+[codex] 2026-02-27 클래스/상태 아키텍처 전환 메모
+- `src/App.jsx`가 기존 Zustand 상태를 모두 소유하도록 단일 state + 상태 변경 메서드(모드, 히스토리, 레이어, 핀 선택, 지도 메타)를 통합함.
+- 지도 로더는 훅 기반 `useJsApiLoader` 대신 클래스 컴포넌트에서 사용할 수 있는 `LoadScript`를 사용해 로딩 흐름을 유지함.
+- `src/components/Map/Map.jsx`, `Toolbar.jsx`, `Search.jsx`, `Sidebar/*.jsx`, `common/Logo.jsx`를 모두 `React.Component` 기반 클래스로 변환했고 Hook 사용을 제거함.
+- 레이어 행 컴포넌트를 `src/components/Sidebar/LayerRow.jsx`로 분리해 컴포넌트 파일당 클래스 1개 원칙을 맞춤.
+- 외부 상태관리 제거 요구에 맞춰 `src/stores/` 디렉터리와 Zustand 의존성을 삭제함.
+- 툴 모드 상수는 `src/utils/toolModes.js`로 이동해 App/자식 컴포넌트가 동일 상수를 props 기반 상태 흐름에서 공유함.
