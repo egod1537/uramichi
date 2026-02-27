@@ -30,12 +30,14 @@ const resolveSelectablePinIdList = (pinIdList, pinList) => {
 
 const useProjectStore = create((set) => ({
   ...initialProjectState,
+  selectedLineId: null,
   setMode: (nextMode) =>
     set((state) => ({
       currentMode: nextMode,
       routeDraft: nextMode === TOOL_MODES.ADD_ROUTE ? state.routeDraft : { start: null },
       draftMeasurePoints: nextMode === TOOL_MODES.MEASURE_DISTANCE ? state.draftMeasurePoints : [],
       measurePath: nextMode === TOOL_MODES.MEASURE_DISTANCE ? state.measurePath : [],
+      selectedLineId: nextMode === TOOL_MODES.SELECT ? state.selectedLineId : null,
     })),
   resetToSelectMode: () =>
     set({
@@ -43,6 +45,7 @@ const useProjectStore = create((set) => ({
       routeDraft: { start: null },
       draftMeasurePoints: [],
       measurePath: [],
+      selectedLineId: null,
     }),
   commitSnapshot: (nextSnapshot) =>
     set((state) => {
@@ -163,11 +166,13 @@ const useProjectStore = create((set) => ({
       return {
         ...committedHistory.snapshot,
         draftLinePoints: [],
+        selectedLineId: lineData.id,
         history: committedHistory.history,
         historyIndex: committedHistory.historyIndex,
         lastEditedAt: new Date().toISOString(),
       }
     }),
+  selectLine: (lineId) => set({ selectedLineId: lineId }),
   updateLine: (lineId, patchData) =>
     set((state) => ({
       lines: state.lines.map((lineItem) => (lineItem.id === lineId ? { ...lineItem, ...patchData } : lineItem)),
@@ -176,6 +181,7 @@ const useProjectStore = create((set) => ({
   removeLine: (lineId) =>
     set((state) => ({
       lines: state.lines.filter((lineItem) => lineItem.id !== lineId),
+      selectedLineId: state.selectedLineId === lineId ? null : state.selectedLineId,
       lastEditedAt: new Date().toISOString(),
     })),
   addRoute: (routeData) =>

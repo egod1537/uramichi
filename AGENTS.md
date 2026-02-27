@@ -274,3 +274,9 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `src/components/Map/PinPopup.jsx` 편집 UI를 로컬 draft 상태(`editDraft`)와 스토어 저장 상태(`updatePin`)로 분리해 입력 중 값과 저장 반영 경계를 명확히 정리함.
 - 편집 항목(이름 인라인, 메모, 카테고리, 태그 추가/삭제, 체류시간, 예상비용)을 모두 `updatePin(id, patch)` 호출로 즉시 반영하도록 연결함.
 - 삭제 버튼 클릭 시 `window.confirm` 대신 팝업 내부 확인 모달을 표시하고, 확인 시 `removePin(id)`, 취소 시 기존 상태 유지 흐름으로 변경함.
+
+[codex] 2026-02-27 선분 기능 작업 메모
+- `src/components/Map/Map.jsx`에서 draw_line 모드 클릭 시 드래프트 점을 누적하고, 저장된 `lines`와 드래프트 `linePath`를 별도 Polyline 레이어로 분리 렌더링하도록 연결함.
+- 더블클릭/ESC로 드래프트 선분을 완료하면 활성 레이어(`activeLayerId`) 기준으로 `addLine({ id, layerId, points, color, width })`를 호출해 line 엔티티를 저장하도록 구현함.
+- Select 모드에서 저장된 선분 Polyline 클릭 시 `selectedLineId`를 선택 상태로 유지하고, Delete/Backspace는 `removeLine`, `c` 키는 `updateLine` 색상 순환 액션으로 연결함.
+- `src/stores/useProjectStore.js`에 `selectedLineId` 상태와 `selectLine` 액션을 추가하고, 선분 추가/삭제 시 선택 상태가 일관되게 갱신되도록 조정함.
