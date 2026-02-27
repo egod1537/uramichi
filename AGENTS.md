@@ -241,3 +241,10 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `src/utils/ProjectManager.js`의 초기 더미 데이터를 제거해 `pins`, `layers`, `routes`를 모두 빈 배열로 시작하도록 정리함.
 - `src/components/Sidebar/LayerRow.jsx`에서 레이어 클릭 시 active layer를 설정하고, 현재 active layer에 하이라이트 스타일이 적용되도록 UI를 업데이트함.
 - `src/stores/useProjectStore.js`의 `addLayer`, `removeLayer`에서 active layer 갱신 로직을 연결해 레이어 추가/삭제 후에도 활성 상태가 일관되게 유지되도록 조정함.
+
+[codex] 2026-02-27 useProjectStore 시그니처 고정 메모
+- `src/stores/useProjectStore.js`에 `selectedPinIds`, `lines`, `routes`, `draftLinePoints`, `draftMeasurePoints` 상태와 멀티 선택/라인/경로/드래프트 액션 시그니처를 추가함.
+- 핀 기본 생성 구조에 `images: []` 기본값을 포함하도록 맞춤.
+- 히스토리 커밋은 `addLine`, `commitDraftLine`, `addRoute`, `commitRoutePath`, `commitMarkerDrag`에서만 수행하고, 드래프트 측정(`appendMeasurePoint`, `startDraftMeasure`)은 히스토리에 넣지 않도록 분리함.
+- `src/utils/ProjectManager.js` 초기 상태 생성 필드를 스토어 시그니처와 동일하게 맞춤(`lines`, `routes`, 드래프트/선택/경로 관련 필드 포함).
+- `src/utils/HistoryManager.js` 스냅샷 구조를 `lines/routes`까지 포함하도록 확장해 신규 상태 필드 커밋 시 undo/redo 일관성을 유지함.
