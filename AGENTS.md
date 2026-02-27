@@ -384,3 +384,10 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 [codex] 2026-02-27 클래스 선호 반영 메모
 - 사용자 선호에 맞춰 상태/액션 중심 컴포넌트(`App`, `Toolbar`, `Search`, `ChatPanel`, `UserButton`)를 `React.Component` 기반 클래스로 재전환함.
 - 단순 렌더링 위주의 컴포넌트는 기존 함수형을 유지하고, 상태/사이드이펙트가 있는 컴포넌트부터 우선 변환하는 기준을 AGENTS 문맥에 추가함.
+[codex] 2026-02-27 핀 선택/아이콘 필터/핀 추가 UX 보강 메모
+- `src/components/Map/Map.jsx`에서 핀 클릭 멀티선택 키를 Shift 외에 Ctrl/Cmd까지 허용해 컨트롤 키 기반 다중 선택이 가능하도록 확장함.
+- 같은 파일에서 핀 추가 모드를 즉시 설치 방식에서 `위치 클릭 -> 하단 확인 바에서 핀 추가 버튼` 2단계로 변경해 드래그 중 오설치와 단순 클릭 오설치를 줄임.
+- `src/stores/useProjectStore.js`와 `src/utils/ProjectManager.js`에 `pinIconFilters`, `togglePinIconFilter`, `clearPinIconFilter`를 추가해 지도/사이드바가 동일한 아이콘 필터 상태를 공유하도록 구성함.
+- `src/components/Sidebar/LayerPanel.jsx`에 레이어 패널 핀 아이콘 필터 UI를 추가하고, `LayerRow`에는 필터링된 핀 목록만 내려주도록 연결함.
+- `src/components/Map/Map.jsx` 우측 하단에 지도용 핀 아이콘 필터 UI를 추가해 지도에서도 동일한 필터를 즉시 토글 가능하게 함.
+- `src/components/Map/PinMarker.jsx`에서 핀 아이콘 프리셋(`TRAVEL_PIN_ICON_PRESETS`)을 기준으로 배경/링 색상을 달리 적용하고, `src/utils/constants.js`에 아이콘별 스타일 프리셋을 추가함.

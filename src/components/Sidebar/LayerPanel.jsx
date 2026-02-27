@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import LayerRow from './LayerRow'
 import useProjectStore from '../../stores/useProjectStore'
+import { ICON_FILTER_OPTIONS } from '../../utils/constants'
 
 const findPinNameByPosition = (pinList, targetPosition) => {
   if (!targetPosition) return 'Unknown'
@@ -19,11 +20,20 @@ function LayerPanel() {
   const removePins = useProjectStore((state) => state.removePins)
   const movePinsToLayer = useProjectStore((state) => state.movePinsToLayer)
   const reorderLayers = useProjectStore((state) => state.reorderLayers)
+  const pinIconFilters = useProjectStore((state) => state.pinIconFilters)
+  const togglePinIconFilter = useProjectStore((state) => state.togglePinIconFilter)
+  const clearPinIconFilter = useProjectStore((state) => state.clearPinIconFilter)
   const [targetLayerId, setTargetLayerId] = useState('')
   const [dragLayerId, setDragLayerId] = useState(null)
   const [layerDropPreview, setLayerDropPreview] = useState(null)
 
   const selectedPinCount = selectedPinIds.length
+
+  const filteredPins = useMemo(() => {
+    if (!pinIconFilters.length) return pins
+    const activeIconSet = new Set(ICON_FILTER_OPTIONS.filter((filterItem) => pinIconFilters.includes(filterItem.key)).map((filterItem) => filterItem.icon))
+    return pins.filter((pinItem) => activeIconSet.has(pinItem.icon))
+  }, [pinIconFilters, pins])
 
   const movableLayerOptions = useMemo(() => {
     if (!selectedPinIds.length) return layers
@@ -46,6 +56,35 @@ function LayerPanel() {
 
   return (
     <div className="flex-1 overflow-y-auto px-2 py-2">
+      <div className="mb-2 rounded-md border border-gray-200 bg-white p-2">
+        <div className="mb-2 flex items-center justify-between">
+          <p className="text-xs font-semibold text-gray-500">핀 아이콘 필터</p>
+          <button
+            type="button"
+            onClick={clearPinIconFilter}
+            className="text-xs text-gray-500 hover:text-gray-700 disabled:opacity-30"
+            disabled={!pinIconFilters.length}
+          >
+            초기화
+          </button>
+        </div>
+        <div className="flex flex-wrap gap-1">
+          {ICON_FILTER_OPTIONS.map((filterItem) => {
+            const isActive = pinIconFilters.includes(filterItem.key)
+            return (
+              <button
+                key={filterItem.key}
+                type="button"
+                onClick={() => togglePinIconFilter(filterItem.key)}
+                className={`rounded-full border px-2 py-0.5 text-xs ${isActive ? 'border-blue-400 bg-blue-50 text-blue-700' : 'border-gray-200 bg-white text-gray-600'}`}
+              >
+                {filterItem.icon} {filterItem.label}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
       <div className="mb-2 space-y-2 rounded-md border border-gray-200 bg-gray-50 p-2">
         <p className="text-sm text-gray-700">선택된 핀 {selectedPinCount}개</p>
         <div className="flex items-center gap-2">
@@ -101,6 +140,7 @@ function LayerPanel() {
         <LayerRow
           key={layerItem.id}
           layer={layerItem}
+          filteredPins={filteredPins}
           isDraggingLayer={dragLayerId === layerItem.id}
           layerDropPreview={layerDropPreview}
           onLayerDragStart={(layerId) => setDragLayerId(layerId)}

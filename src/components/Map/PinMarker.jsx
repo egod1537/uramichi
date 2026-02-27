@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { Marker, OverlayView } from '@react-google-maps/api'
 import useProjectStore from '../../stores/useProjectStore'
-import { CATEGORY_PRESETS, PIN_MARKER_COLOR_PRESETS } from '../../utils/constants'
+import { CATEGORY_PRESETS, PIN_ICON_STYLE_PRESETS, PIN_MARKER_COLOR_PRESETS, TRAVEL_PIN_ICON_PRESETS } from '../../utils/constants'
 
 const overlayPane = OverlayView.OVERLAY_MOUSE_TARGET
 
@@ -21,12 +21,15 @@ function PinMarker({
   const markerPreset = useMemo(() => {
     const categoryKey = pin.category || 'default'
     const categoryInfo = CATEGORY_PRESETS[categoryKey] || CATEGORY_PRESETS.default
-    const colorInfo = PIN_MARKER_COLOR_PRESETS[categoryKey] || PIN_MARKER_COLOR_PRESETS.default
+    const pinIcon = pin.icon || categoryInfo.icon
+    const iconPresetKey = TRAVEL_PIN_ICON_PRESETS.find((iconPreset) => iconPreset.icon === pinIcon)?.key
+    const categoryColorInfo = PIN_MARKER_COLOR_PRESETS[categoryKey] || PIN_MARKER_COLOR_PRESETS.default
+    const iconStyleInfo = iconPresetKey ? PIN_ICON_STYLE_PRESETS[iconPresetKey] : null
 
     return {
-      icon: pin.icon || categoryInfo.icon,
-      backgroundColor: pin.color || colorInfo.backgroundColor,
-      ringColor: colorInfo.ringColor,
+      icon: pinIcon,
+      backgroundColor: pin.color || iconStyleInfo?.backgroundColor || categoryColorInfo.backgroundColor,
+      ringColor: iconStyleInfo?.ringColor || categoryColorInfo.ringColor,
     }
   }, [pin.category, pin.color, pin.icon])
 
