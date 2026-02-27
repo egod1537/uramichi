@@ -348,6 +348,10 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `src/components/Map/Map.jsx`에서 핀 추가(`addMarker`) 트리거를 지도 `onClick`에서 `onMouseDown`으로 이동해, 클릭 업이 아닌 클릭 다운 시점에 핀이 생성되도록 변경함.
 - 기존 지도 클릭 핸들러는 Select/Line/Route/Measure 흐름만 유지하도록 정리함.
 
+[codex] 2026-02-27 removeLayer 정합성 보강 메모
+- `src/stores/useProjectStore.js`의 `removeLayer(layerId)`에서 삭제 대상 레이어에 속한 `lines`, `routes`도 함께 정리하고, `routePaths`를 남은 `routes` 기준으로 재생성하도록 수정함.
+- 같은 액션에 히스토리 커밋(`HistoryManager.commit`)을 연결해 레이어 삭제를 Undo/Redo로 되돌릴 수 있게 맞췄고, 핀/선택 상태(`selectedPinId`, `selectedPinIds`, `selectedLineId`)도 삭제 결과에 맞춰 정리하도록 반영함.
+- `src/components/Sidebar/LayerPanel.jsx`의 경로 목록은 이미 `routes`를 직접 구독해 렌더링하므로, 스토어 정리 이후 별도 컴포넌트 수정 없이 정리된 경로 목록이 반영됨을 확인함.
 [codex] 2026-02-27 키다운 입력 컨트롤 가드 작업 메모
 - `src/components/Toolbar/Toolbar.jsx`의 `handleKeydown` 시작부에 입력 컨트롤 가드(`INPUT`/`TEXTAREA`/`SELECT`/`isContentEditable`)를 추가해, 입력 중에는 단축키가 동작하지 않도록 하고 `Escape`만 예외 허용함.
 - `src/components/Map/Map.jsx`의 `handleDeleteKeyDown`에도 동일한 입력 컨트롤 가드를 적용해, 입력 중 Delete/Backspace/C 단축키 오동작을 방지하고 `Escape` 흐름은 유지함.
