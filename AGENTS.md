@@ -170,3 +170,8 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - 레이어 행 컴포넌트를 `src/components/Sidebar/LayerRow.jsx`로 분리해 컴포넌트 파일당 클래스 1개 원칙을 맞춤.
 - 외부 상태관리 제거 요구에 맞춰 `src/stores/` 디렉터리와 Zustand 의존성을 삭제함.
 - 툴 모드 상수는 `src/utils/toolModes.js`로 이동해 App/자식 컴포넌트가 동일 상수를 props 기반 상태 흐름에서 공유함.
+
+[codex] 2026-02-27 라우팅/테스트베드 작업 메모
+- `src/route.js`를 추가해 `window.location.pathname` 기반 경로 판별 함수 `getRoute()`를 분리함(`/`→`main`, `/testbed`→`testbed`, 기타→`main`).
+- `src/App.jsx`에서 `getRoute()` 결과로 메인 화면과 테스트베드 렌더링을 분기하도록 연결함.
+- `src/pages/Testbed.jsx`를 클래스 컴포넌트로 추가하고 컴포넌트 목록 버튼/뒤로가기/단일 컴포넌트 프리뷰 흐름을 구현함.
