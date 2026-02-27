@@ -24,11 +24,11 @@ function PinMarker({
     const colorInfo = PIN_MARKER_COLOR_PRESETS[categoryKey] || PIN_MARKER_COLOR_PRESETS.default
 
     return {
-      icon: categoryInfo.icon,
+      icon: pin.icon || categoryInfo.icon,
       backgroundColor: pin.color || colorInfo.backgroundColor,
       ringColor: colorInfo.ringColor,
     }
-  }, [pin.category, pin.color])
+  }, [pin.category, pin.color, pin.icon])
 
   const isSelected = selectedPinId === pin.id
   const scaleClassName = isSelected ? 'scale-110' : 'scale-100 group-hover:scale-105'
