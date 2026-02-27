@@ -80,7 +80,7 @@ class App extends React.Component {
         libraries={libraries}
         loadingElement={<div className="p-4">로딩 중...</div>}
       >
-        <div className="relative h-screen w-screen bg-[#82c7d7]">
+        <div className="relative h-screen w-screen overflow-hidden bg-[#82c7d7]">
           <Map />
           <Sidebar />
           <Toolbar
