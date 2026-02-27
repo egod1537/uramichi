@@ -117,3 +117,9 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `src/components/Sidebar/LayerPanel.jsx`에서 레이어 체크박스(표시/숨기기), 접기/펼치기, 이름 변경/삭제 메뉴, 핀/경로 목록 렌더링 및 핀 선택 연동을 구현함.
 - `src/stores/useMapStore.js`에 mapTitle/lastEditedAt/selectedPinId 및 레이어 가시성/접힘/이름변경/삭제 액션을 추가해 Sidebar-Map 상태 동기화를 지원함.
 - `src/components/Map/Map.jsx`에서 `useMapStore`의 레이어 가시성 기준으로 핀 마커를 렌더링하고, 핀 선택 시 `panTo`와 `InfoWindow`가 열리도록 연결함.
+
+[codex] 2026-02-26 태스크 3 핀 추가 메모
+- `src/stores/useMapStore.js`에 핀 스냅샷 기반 history/historyIndex, undo/redo를 추가해 핀 추가/삭제 되돌리기/다시실행을 지원함.
+- `src/components/Map/Map.jsx`에서 `currentMode === "addMarker"`일 때 지도 클릭으로 `addPin()`을 호출해 기본 필드(자동 이름, 좌표, 카테고리/색상/비용 등)를 가진 핀을 생성하도록 연결함.
+- addMarker 모드에서 지도 커서를 crosshair로 전환하고, 카테고리별 색상 아이콘으로 핀 마커를 렌더링하도록 반영함.
+- `src/components/Toolbar/Toolbar.jsx`에서 모드 전환 시 `useMapStore.currentMode`를 동기화하고 Undo/Redo를 핀 히스토리에도 함께 적용하도록 연결함.

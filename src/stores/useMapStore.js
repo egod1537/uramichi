@@ -71,6 +71,17 @@ const initialPins = [
 
 const updateTimestamp = () => new Date().toISOString()
 
+const clonePins = (pins) =>
+  pins.map((pin) => ({
+    ...pin,
+    position: pin.position ? { ...pin.position } : pin.position,
+    tags: Array.isArray(pin.tags) ? [...pin.tags] : pin.tags,
+  }))
+
+const createPinSnapshot = (pins) => ({
+  pins: clonePins(pins),
+})
+
 const useMapStore = create((set) => ({
   pins: initialPins,
   layers: initialLayers,
@@ -78,16 +89,32 @@ const useMapStore = create((set) => ({
   mapTitle: '제목없는 지도',
   lastEditedAt: updateTimestamp(),
   selectedPinId: null,
+  history: [createPinSnapshot(initialPins)],
+  historyIndex: 0,
   addPin: (pin) =>
     set((state) => ({
       pins: [...state.pins, pin],
+      history: [
+        ...state.history.slice(0, state.historyIndex + 1),
+        createPinSnapshot([...state.pins, pin]),
+      ],
+      historyIndex: state.historyIndex + 1,
       lastEditedAt: updateTimestamp(),
     })),
   removePin: (pinId) =>
-    set((state) => ({
-      pins: state.pins.filter((pin) => pin.id !== pinId),
-      lastEditedAt: updateTimestamp(),
-    })),
+    set((state) => {
+      const nextPins = state.pins.filter((pin) => pin.id !== pinId)
+      const trimmedHistory = state.history.slice(0, state.historyIndex + 1)
+      const nextHistory = [...trimmedHistory, createPinSnapshot(nextPins)]
+
+      return {
+        pins: nextPins,
+        history: nextHistory,
+        historyIndex: nextHistory.length - 1,
+        selectedPinId: state.selectedPinId === pinId ? null : state.selectedPinId,
+        lastEditedAt: updateTimestamp(),
+      }
+    }),
   addLayer: () =>
     set((state) => ({
       layers: [...state.layers, createDefaultLayer(state.layers.length)],
@@ -126,6 +153,42 @@ const useMapStore = create((set) => ({
       lastEditedAt: updateTimestamp(),
     }),
   selectPin: (pinId) => set({ selectedPinId: pinId }),
+  undo: () =>
+    set((state) => {
+      if (state.historyIndex === 0) {
+        return state
+      }
+
+      const nextHistoryIndex = state.historyIndex - 1
+      const snapshot = state.history[nextHistoryIndex]
+      const restoredPins = clonePins(snapshot.pins)
+      const selectedPinExists = restoredPins.some((pin) => pin.id === state.selectedPinId)
+
+      return {
+        pins: restoredPins,
+        historyIndex: nextHistoryIndex,
+        selectedPinId: selectedPinExists ? state.selectedPinId : null,
+        lastEditedAt: updateTimestamp(),
+      }
+    }),
+  redo: () =>
+    set((state) => {
+      if (state.historyIndex >= state.history.length - 1) {
+        return state
+      }
+
+      const nextHistoryIndex = state.historyIndex + 1
+      const snapshot = state.history[nextHistoryIndex]
+      const restoredPins = clonePins(snapshot.pins)
+      const selectedPinExists = restoredPins.some((pin) => pin.id === state.selectedPinId)
+
+      return {
+        pins: restoredPins,
+        historyIndex: nextHistoryIndex,
+        selectedPinId: selectedPinExists ? state.selectedPinId : null,
+        lastEditedAt: updateTimestamp(),
+      }
+    }),
 }))
 
 export default useMapStore

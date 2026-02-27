@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from 'react'
 import { TOOL_MODES, useToolbarStore } from '../../stores/toolbarStore'
+import useMapStore from '../../stores/useMapStore'
 import Search from './Search'
 import ToolButton from './ToolButton'
 
@@ -24,58 +25,72 @@ export default function Toolbar() {
   const undo = useToolbarStore((state) => state.undo)
   const redo = useToolbarStore((state) => state.redo)
   const setShortcutModalOpen = useToolbarStore((state) => state.setShortcutModalOpen)
+  const mapHistoryIndex = useMapStore((state) => state.historyIndex)
+  const mapHistoryLength = useMapStore((state) => state.history.length)
+  const setMapMode = useMapStore((state) => state.setMode)
+  const undoPinHistory = useMapStore((state) => state.undo)
+  const redoPinHistory = useMapStore((state) => state.redo)
 
   const buttonDisabledState = useMemo(
     () => ({
-      undo: historyIndex === 0,
-      redo: historyIndex >= historyLength - 1,
+      undo: historyIndex === 0 && mapHistoryIndex === 0,
+      redo: historyIndex >= historyLength - 1 && mapHistoryIndex >= mapHistoryLength - 1,
     }),
-    [historyIndex, historyLength],
+    [historyIndex, historyLength, mapHistoryIndex, mapHistoryLength],
   )
 
   useEffect(() => {
     const handleKeydown = (event) => {
       if (event.key === 'Escape') {
         resetToSelectMode()
+        setMapMode('select')
       }
 
       if (event.key.toLowerCase() === 'u') {
         undo()
+        undoPinHistory()
       }
 
       if (event.key.toLowerCase() === 'r') {
         redo()
+        redoPinHistory()
       }
 
       if (event.key.toLowerCase() === 'm') {
         setMode(TOOL_MODES.ADD_MARKER)
+        setMapMode('addMarker')
       }
 
       if (event.key.toLowerCase() === 'l') {
         setMode(TOOL_MODES.DRAW_LINE)
+        setMapMode('select')
       }
 
       if (event.key.toLowerCase() === 't') {
         setMode(TOOL_MODES.ADD_ROUTE)
+        setMapMode('select')
       }
 
       if (event.key.toLowerCase() === 'd') {
         setMode(TOOL_MODES.MEASURE_DISTANCE)
+        setMapMode('select')
       }
     }
 
     window.addEventListener('keydown', handleKeydown)
     return () => window.removeEventListener('keydown', handleKeydown)
-  }, [resetToSelectMode, redo, setMode, undo])
+  }, [resetToSelectMode, redo, redoPinHistory, setMapMode, setMode, undo, undoPinHistory])
 
   const handleToolbarButtonClick = (buttonKey) => {
     if (buttonKey === 'undo') {
       undo()
+      undoPinHistory()
       return
     }
 
     if (buttonKey === 'redo') {
       redo()
+      redoPinHistory()
       return
     }
 
@@ -85,6 +100,7 @@ export default function Toolbar() {
     }
 
     setMode(buttonKey)
+    setMapMode(buttonKey === TOOL_MODES.ADD_MARKER ? 'addMarker' : 'select')
   }
 
   return (

@@ -16,6 +16,29 @@ const mapOptions = {
   fullscreenControl: false,
 }
 
+
+const CATEGORY_ICON_STYLE = {
+  default: { fillColor: '#FF0000', strokeColor: '#B91C1C' },
+  airport: { fillColor: '#3B82F6', strokeColor: '#1D4ED8' },
+  station: { fillColor: '#F97316', strokeColor: '#C2410C' },
+  photo: { fillColor: '#8B5CF6', strokeColor: '#6D28D9' },
+  spot: { fillColor: '#10B981', strokeColor: '#047857' },
+  food: { fillColor: '#EC4899', strokeColor: '#BE185D' },
+}
+
+const getCategoryMarkerIcon = (category) => {
+  const iconStyle = CATEGORY_ICON_STYLE[category] ?? CATEGORY_ICON_STYLE.default
+
+  return {
+    path: window.google.maps.SymbolPath.CIRCLE,
+    fillColor: iconStyle.fillColor,
+    fillOpacity: 1,
+    strokeColor: iconStyle.strokeColor,
+    strokeWeight: 2,
+    scale: 8,
+  }
+}
+
 const getRouteRequest = (startPoint, endPoint) => ({
   origin: startPoint,
   destination: endPoint,
@@ -51,9 +74,10 @@ export default function Map() {
   const commitRoutePath = useToolbarStore((state) => state.commitRoutePath)
   const pins = useMapStore((state) => state.pins)
   const layers = useMapStore((state) => state.layers)
+  const currentMode = useMapStore((state) => state.currentMode)
   const selectedPinId = useMapStore((state) => state.selectedPinId)
   const selectPin = useMapStore((state) => state.selectPin)
-
+  const addPin = useMapStore((state) => state.addPin)
 
   const measuredDistanceLabel = useMemo(() => {
     const distanceInMeters = getPathDistanceInMeters(measurePath)
@@ -67,7 +91,7 @@ export default function Map() {
       layers.filter((layerItem) => layerItem.visible).map((layerItem) => layerItem.id),
     )
 
-    return pins.filter((pinItem) => visibleLayerIdSet.has(pinItem.layerId))
+    return pins.filter((pinItem) => pinItem.layerId === null || visibleLayerIdSet.has(pinItem.layerId))
   }, [pins, layers])
 
   const selectedPin = useMemo(
@@ -112,6 +136,25 @@ export default function Map() {
 
       const clickedPoint = { lat: latitude, lng: longitude }
 
+      if (currentMode === 'addMarker') {
+        const nextPinNumber = pins.filter((pinItem) => pinItem.name.startsWith('새 장소 ')).length + 1
+        addPin({
+          id: crypto.randomUUID(),
+          name: `새 장소 ${nextPinNumber}`,
+          lat: clickedPoint.lat,
+          lng: clickedPoint.lng,
+          position: clickedPoint,
+          memo: '',
+          tags: [],
+          category: 'default',
+          color: '#FF0000',
+          layerId: null,
+          durationMin: 60,
+          estimatedCostYen: 0,
+        })
+        return
+      }
+
       if (mode === TOOL_MODES.ADD_MARKER) {
         addMarker(clickedPoint)
         return
@@ -139,6 +182,9 @@ export default function Map() {
     },
     [
       mode,
+      currentMode,
+      pins,
+      addPin,
       addMarker,
       appendLinePoint,
       appendMeasurePoint,
@@ -154,7 +200,10 @@ export default function Map() {
         mapContainerStyle={containerStyle}
         center={defaultCenter}
         zoom={12}
-        options={mapOptions}
+        options={{
+          ...mapOptions,
+          draggableCursor: currentMode === 'addMarker' ? 'crosshair' : undefined,
+        }}
         onLoad={onLoad}
         onUnmount={onUnmount}
         onClick={handleMapClick}
@@ -167,6 +216,7 @@ export default function Map() {
           <Marker
             key={pinItem.id}
             position={pinItem.position}
+            icon={getCategoryMarkerIcon(pinItem.category)}
             onClick={() => selectPin(pinItem.id)}
           />
         ))}
