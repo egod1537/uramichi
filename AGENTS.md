@@ -375,3 +375,8 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `src/stores/useProjectStore.js`에 `reorderLayers(sourceLayerId, targetLayerId)`와 `reorderPinsInLayer(layerId, sourcePinId, targetPinId)` 액션을 추가해 레이어 목록/레이어 내부 핀 목록의 순서를 드래그 앤 드롭으로 재정렬할 수 있게 함.
 - `src/components/Sidebar/LayerPanel.jsx`에서 레이어 행 드래그 상태(`dragLayerId`)를 관리하고, 레이어 행 드롭 시 스토어 `reorderLayers`를 호출하도록 연결함.
 - `src/components/Sidebar/LayerRow.jsx`에서 레이어 행과 핀 행 모두 `draggable` 처리하고, 핀 드롭 시 `reorderPinsInLayer`를 호출해 같은 레이어 내 핀 순서를 reorderable list처럼 바꿀 수 있게 함.
+[codex] 2026-02-27 Sidebar 드래그 프리뷰/맨끝 이동 보강 메모
+- `src/stores/useProjectStore.js`의 `reorderLayers`, `reorderPinsInLayer` 시그니처를 `(sourceId, targetId, dropPosition)` 형태로 확장하고 `before/after/end` 삽입 위치 계산 로직을 추가함.
+- `src/components/Sidebar/LayerPanel.jsx`에서 레이어 드래그 프리뷰 상태(`layerDropPreview`)를 관리해 hover 위치(위/아래/맨끝)에 따라 파란 가로선을 표시하고, 리스트 맨 끝 드롭 존을 별도로 추가함.
+- `src/components/Sidebar/LayerRow.jsx`에서 레이어/핀 드래그 중 커서 절반 위치 기준으로 `before/after`를 판별하고, 드롭 예정 위치에 파란 가로선 프리뷰를 렌더링함.
+- 같은 파일에서 핀 목록 하단에 맨끝 드롭 존(`end`)을 추가해 마지막 위치로 이동이 가능하도록 보강함.
