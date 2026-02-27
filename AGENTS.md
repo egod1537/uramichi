@@ -436,3 +436,6 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `src/components/Map/Map.jsx`에서 ADD_MARKER 모드의 `pendingMarkerPoint` 확인 배너("선택 위치에 핀을 추가할까요?")를 제거함.
 - 지도 `onMouseUp`에서 좌표 클릭 즉시 `addMarker`를 호출하도록 변경해 추가 확인 단계 없이 핀이 바로 생성되도록 맞춤.
 - 확인 UI 제거에 맞춰 `pendingMarkerPoint` 관련 로컬 상태/리셋 코드를 함께 정리함.
+[codex] 2026-02-27 툴바 툴팁 한국어 번역 메모
+- `src/components/Toolbar/Toolbar.jsx`의 `toolbarButtons` tooltip 문구를 한국어로 변경해 마우스 호버 시 한국어 안내가 표시되도록 수정함.
+- 단축키 표기는 기존과 동일하게 `(Z/Y/Q/W/E/R/T)` 형식을 유지함.
