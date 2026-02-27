@@ -45,3 +45,8 @@
 - `Map.jsx`에서 선 그리기 완료 트리거를 우클릭(`onRightClick` + DOM `contextmenu`)으로만 유지하고, ESC/더블클릭으로 종료되지 않도록 정리함.
 - `measure/useMeasureInteraction.js`에서 드래프트 종료 시 시작점-끝점 거리가 임계값 이하인 경우 `shapeType: "polygon"`으로 판정하고, 폐곡선이 닫히도록 첫 점을 마지막에 추가해 저장함.
 - `measure/MeasureLayer.jsx`는 `shapeType === "polygon"`일 때 `Polygon`으로 렌더링해 반투명 내부 채움(`fillOpacity`)이 보이도록 처리함.
+[codex] 2026-02-27 툴 사용 후 자동 Select 복귀 메모
+- `src/components/Map/controllers/markerController.js`에서 핀 추가가 실제로 커밋된 직후 `setMode(TOOL_MODES.SELECT)`를 호출해 Add Marker 1회 사용 후 자동으로 선택/이동 모드로 복귀하도록 변경함.
+- `src/components/Map/controllers/routeController.js`에서 경로 2번째 클릭(경로 요청 실행) 이후 `setMode(TOOL_MODES.SELECT)`를 호출해 Add Route 완료 직후 자동 복귀하도록 맞춤.
+- `src/components/Map/controllers/lineController.js`에서 선/도형 저장 완료 시 `setMode(TOOL_MODES.SELECT)`를 호출해 Draw Line 종료(우클릭 커밋) 직후 자동 복귀하도록 연결함.
+- `src/components/Map/Map.jsx`, `src/components/Map/measure/useMeasureInteraction.js`에 `setMode` 액션 전달 경로를 추가해 컨트롤러/측정 완료 흐름에서 동일한 모드 전환 액션을 재사용하도록 정리함.
