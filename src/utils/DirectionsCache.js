@@ -14,7 +14,14 @@ class DirectionsCache {
   }
 
   set(startPoint, endPoint, travelMode, routeData) {
-    this.cacheMap.set(this.createKey(startPoint, endPoint, travelMode), routeData)
+    const routeCacheData = {
+      path: routeData.path || [],
+      distanceMeters: routeData.distanceMeters ?? 0,
+      durationSeconds: routeData.durationSeconds ?? 0,
+      summary: routeData.summary || '',
+      lineName: routeData.lineName || '',
+    }
+    this.cacheMap.set(this.createKey(startPoint, endPoint, travelMode), routeCacheData)
   }
 }
 
