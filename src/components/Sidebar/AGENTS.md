@@ -11,3 +11,7 @@
 - `LayerRow` 핀 아이콘 버튼 fallback을 emoji 텍스트에서 `DEFAULT_PIN_SVG_PATH` 이미지로 변경해, 아이콘 미지정/기본 카테고리 핀도 SVG로 표시되도록 수정함.
 [codex] 2026-02-27 레이어 패널 선분/도형 표기 메모
 - `LayerRow.jsx`의 측정/선 목록 라벨을 `shapeType` 기반으로 분기해, 일반 경로는 `선분 N`, 폐곡선은 `도형 N`으로 표시하도록 변경함.
+[codex] 2026-02-27 레이어/오브젝트 더블클릭 이름변경 메모
+- `LayerRow.jsx`에서 레이어 이름 라벨 더블클릭 시 즉시 인라인 이름 변경 모드로 진입하도록 `onDoubleClick -> onStartRename(layer)`를 추가함.
+- 같은 파일에서 핀 이름 라벨 더블클릭 시 즉시 인라인 이름 변경 모드로 진입하도록 `onDoubleClick -> onStartRename(pin)`를 추가함.
+- 기존 F2/옵션 메뉴 기반 이름 변경 경로와 Enter/Blur 저장, Escape 취소 규칙은 그대로 유지함.

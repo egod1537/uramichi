@@ -25,6 +25,7 @@ const createDefaultPinData = (point, layerId, pinIndex, pinPatchData = {}) => ({
   category: 'default',
   position: point,
   images: [],
+  openingHours: [],
   ...pinPatchData,
 })
 

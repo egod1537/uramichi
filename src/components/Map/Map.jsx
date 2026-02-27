@@ -82,6 +82,8 @@ function Map() {
   const [hoverMeasurePoint, setHoverMeasurePoint] = useState(null)
   const [draggingMeasurePointIndex, setDraggingMeasurePointIndex] = useState(null)
   const [isPinFilterExpanded, setIsPinFilterExpanded] = useState(false)
+  const [isTimeFilterExpanded, setIsTimeFilterExpanded] = useState(false)
+  const [timeFilterRange, setTimeFilterRange] = useState({ start: '09:00', end: '18:00' })
   const {
     selectedPoiDetail,
     requestPoiDetail,
@@ -546,9 +548,18 @@ function Map() {
 
       <MapOverlays
         currentMode={currentMode}
+        isTimeFilterExpanded={isTimeFilterExpanded}
         isPinFilterExpanded={isPinFilterExpanded}
         pinIconFilters={pinIconFilters}
         routeDraft={routeDraft}
+        timeFilterRange={timeFilterRange}
+        onSetTimeFilterExpanded={setIsTimeFilterExpanded}
+        onSetTimeFilterRange={(timeFieldKey, nextTimeValue) => {
+          setTimeFilterRange((previousTimeFilterRange) => ({
+            ...previousTimeFilterRange,
+            [timeFieldKey]: nextTimeValue,
+          }))
+        }}
         onClearPinIconFilter={clearPinIconFilter}
         onTogglePinIconFilter={togglePinIconFilter}
         onSetPinFilterExpanded={setIsPinFilterExpanded}
