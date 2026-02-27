@@ -703,7 +703,7 @@ function Map() {
 
       <div
         className={`absolute bottom-4 left-1/2 z-20 -translate-x-1/2 rounded-xl border border-gray-200 bg-white/95 px-3 py-2 shadow-lg transition-all duration-200 ${
-          isPinFilterExpanded ? 'inline-flex max-w-[92vw] items-center gap-3' : 'inline-flex w-[min(92vw,360px)] items-center justify-between'
+          isPinFilterExpanded ? 'inline-flex max-w-[92vw] items-center gap-3' : 'inline-flex w-auto items-center gap-2'
         }`}
       >
         <p className="shrink-0 text-xs font-semibold text-gray-600">지도 핀 아이콘 필터</p>
