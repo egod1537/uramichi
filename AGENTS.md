@@ -175,3 +175,38 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `src/route.js`를 추가해 `window.location.pathname` 기반 경로 판별 함수 `getRoute()`를 분리함(`/`→`main`, `/testbed`→`testbed`, 기타→`main`).
 - `src/App.jsx`에서 `getRoute()` 결과로 메인 화면과 테스트베드 렌더링을 분기하도록 연결함.
 - `src/pages/Testbed.jsx`를 클래스 컴포넌트로 추가하고 컴포넌트 목록 버튼/뒤로가기/단일 컴포넌트 프리뷰 흐름을 구현함.
+
+[codex]
+
+# uramichi - 裏道
+
+일본 힙스터 여행 AI 플래너.
+
+## 아키텍처 원칙
+
+### 컴포넌트
+- 함수형 컴포넌트 + React Hooks 사용.
+- 클래스 컴포넌트 사용 금지.
+
+### 상태관리 (Zustand)
+- 3개 스토어로 분리:
+  - useEditorStore — 에디터 설정 (localStorage 영속)
+  - useProjectStore — 현재 지도 프로젝트 (메모리 ↔ Supabase)
+  - useUserStore — 유저 정보 (Supabase)
+- 컴포넌트에서 직접 useState로 앱 데이터를 관리하지 않는다 (UI 토글 같은 로컬 상태는 예외).
+- Redux, MobX, useContext, useReducer 사용 금지. Zustand만 사용.
+
+### 로직 분리
+- 비즈니스 로직은 src/utils/ 매니저 클래스에 작성한다.
+- Zustand 스토어는 얇게 유지하고, 매니저를 호출한다.
+- 컴포넌트는 뷰 역할만: 스토어에서 읽기 + 액션 호출.
+
+### 파일 구분
+- .jsx — React 컴포넌트 (JSX 포함)
+- .js — 순수 로직 (스토어, 유틸, 상수, 매니저)
+
+## 코드 스타일
+- 커밋 메시지: 영어 conventional commit (feat:, fix:, refactor:, chore:, docs:)
+- 코드 주석: 한국어
+- 스타일링: Tailwind CSS (인라인 style 지양)
+- 컴포넌트 파일 하나에 컴포넌트 하나
