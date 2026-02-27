@@ -10,6 +10,7 @@ export const CATEGORY_PRESETS = {
 }
 
 export const TRAVEL_PIN_ICON_PRESETS = [
+  { key: 'default', icon: '📍', label: '기본 핀', svgPath: '/svg/pin-default.svg' },
   { key: 'transit', icon: '🚇', label: '대중교통', svgPath: '/svg/pin-transit.svg' },
   { key: 'restaurant', icon: '🍽️', label: '식당', svgPath: '/svg/pin-restaurant.svg' },
   { key: 'tour', icon: '🗼', label: '관광지', svgPath: '/svg/pin-tour.svg' },
