@@ -365,11 +365,6 @@ function Map() {
       if (latitude === undefined || longitude === undefined) return
       const clickedPoint = { lat: latitude, lng: longitude }
 
-      if (currentMode === TOOL_MODES.ADD_MARKER) {
-        setPendingMarkerPoint(clickedPoint)
-        return
-      }
-
       if (currentMode === TOOL_MODES.DRAW_LINE) {
         appendLinePoint(clickedPoint)
         return
@@ -415,6 +410,24 @@ function Map() {
       setPendingMarkerPoint,
       setSelectedPoiDetail,
     ],
+  )
+
+  const handleMapMouseUp = useCallback(
+    (event) => {
+      if (currentMode !== TOOL_MODES.ADD_MARKER) return
+      if (isPinClickInProgress) {
+        setIsPinClickInProgress(false)
+        return
+      }
+      if (event.placeId) return
+
+      const latitude = event.latLng?.lat()
+      const longitude = event.latLng?.lng()
+      if (latitude === undefined || longitude === undefined) return
+
+      setPendingMarkerPoint({ lat: latitude, lng: longitude })
+    },
+    [currentMode, isPinClickInProgress, setPendingMarkerPoint],
   )
 
   const handleMapMouseMove = useCallback(
@@ -598,6 +611,7 @@ function Map() {
           mapInstanceRef.current = null
         }}
         onClick={handleMapClick}
+        onMouseUp={handleMapMouseUp}
         onMouseMove={handleMapMouseMove}
         onDblClick={handleMapDoubleClick}
         onRightClick={() => {
