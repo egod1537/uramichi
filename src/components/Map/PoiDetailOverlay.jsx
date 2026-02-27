@@ -69,13 +69,6 @@ function PoiDetailOverlay({ poiDetail, onClose, onAddPoiToMap }) {
           >
             Google 지도에서 보기
           </button>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
-          >
-            닫기
-          </button>
         </div>
       </div>
     </OverlayView>
