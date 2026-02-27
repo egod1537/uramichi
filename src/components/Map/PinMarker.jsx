@@ -15,10 +15,10 @@ function PinMarker({ pin, onClick, indexLabel }) {
 
     return {
       icon: categoryInfo.icon,
-      backgroundColor: colorInfo.backgroundColor,
+      backgroundColor: pin.color || colorInfo.backgroundColor,
       ringColor: colorInfo.ringColor,
     }
-  }, [pin.category])
+  }, [pin.category, pin.color])
 
   const isSelected = selectedPinId === pin.id
   const scaleClassName = isSelected ? 'scale-110' : 'scale-100 group-hover:scale-105'

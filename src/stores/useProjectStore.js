@@ -133,6 +133,17 @@ const useProjectStore = create((set) => ({
       layers: state.layers.map((layerItem) => (layerItem.id === layerId ? { ...layerItem, collapsed: !layerItem.collapsed } : layerItem)),
     })),
   setMapTitle: (mapTitle) => set({ mapTitle, lastEditedAt: new Date().toISOString() }),
+  updatePin: (pinId, patchData) =>
+    set((state) => ({
+      pins: state.pins.map((pinItem) => (pinItem.id === pinId ? { ...pinItem, ...patchData } : pinItem)),
+      lastEditedAt: new Date().toISOString(),
+    })),
+  removePin: (pinId) =>
+    set((state) => ({
+      pins: state.pins.filter((pinItem) => pinItem.id !== pinId),
+      selectedPinId: state.selectedPinId === pinId ? null : state.selectedPinId,
+      lastEditedAt: new Date().toISOString(),
+    })),
   selectPin: (pinId) => set({ selectedPinId: pinId }),
 }))
 
