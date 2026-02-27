@@ -9,3 +9,6 @@
 - `useLineInteraction.js`를 추가해 선그리기 전용 로직(폐곡선 판정, measurement 엔티티 생성, 선 종료 커밋, 드래프트 포인트 드래그)을 독립 파일로 분리함.
 - `useDistanceMeasureInteraction.js`를 추가해 거리측정 전용 로직(구간/총 거리 라벨, 프리뷰 경로, 종료 시 cancel-only, 드래프트 포인트 드래그)을 독립 파일로 분리함.
 - 공통 상수는 `constants.js`(`MEASURE_LINE_WIDTH`, `POLYGON_CLOSE_DISTANCE_METERS`)로 이동해 렌더 레이어(`MeasureLayer.jsx`)가 특정 상호작용 훅 파일에 결합되지 않도록 정리함.
+[codex] 2026-02-27 measure 훅 상태 소스 분리 메모
+- `useLineInteraction`의 입력 상태를 `measurePath`에서 `linePath`로 교체하고, 업데이트 액션도 `setMeasurePath` 대신 `setLinePath`를 사용하도록 변경함.
+- 선그리기 완료 시 드래프트 정리 액션을 `cancelDraftMeasure`가 아닌 `cancelDraftLine`으로 고정해 거리측정 드래프트 상태와 완전히 분리함.

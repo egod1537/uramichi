@@ -520,6 +520,11 @@ const useProjectStore = create((set) => ({
       draftLinePoints: [...state.draftLinePoints, point],
       linePath: [...state.draftLinePoints, point],
     })),
+  setLinePath: (linePointList) =>
+    set({
+      draftLinePoints: linePointList,
+      linePath: linePointList,
+    }),
   appendMeasurePoint: (point) =>
     set((state) => ({
       draftMeasurePoints: [...state.draftMeasurePoints, point],

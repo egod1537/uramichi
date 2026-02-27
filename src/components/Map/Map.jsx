@@ -43,6 +43,7 @@ function Map() {
   const lines = useProjectStore((state) => state.lines)
   const measurements = useProjectStore((state) => state.measurements)
   const routePaths = useProjectStore((state) => state.routePaths)
+  const linePath = useProjectStore((state) => state.linePath)
   const measurePath = useProjectStore((state) => state.measurePath)
   const routeDraft = useProjectStore((state) => state.routeDraft)
   const pins = useProjectStore((state) => state.pins)
@@ -55,6 +56,8 @@ function Map() {
   const addMarker = useProjectStore((state) => state.addMarker)
   const setMode = useProjectStore((state) => state.setMode)
   const cancelDraftLine = useProjectStore((state) => state.cancelDraftLine)
+  const appendLinePoint = useProjectStore((state) => state.appendLinePoint)
+  const setLinePath = useProjectStore((state) => state.setLinePath)
   const appendMeasurePoint = useProjectStore((state) => state.appendMeasurePoint)
   const setMeasurePath = useProjectStore((state) => state.setMeasurePath)
   const cancelDraftMeasure = useProjectStore((state) => state.cancelDraftMeasure)
@@ -133,16 +136,16 @@ function Map() {
     handleLineDraftPointDragEnd,
     isLinePointDragging,
   } = useLineInteraction({
-    measurePath,
+    linePath,
     hoverMeasurePoint,
     draggingMeasurePointIndex,
     activeLayerId,
     layers,
     measurements,
     setHoverMeasurePoint,
-    cancelDraftMeasure,
+    cancelDraftLine,
     addMeasurement,
-    setMeasurePath,
+    setLinePath,
     setDraggingMeasurePointIndex,
     setMode,
   })
@@ -170,6 +173,7 @@ function Map() {
 
   const activeSegmentLabelDataList = currentMode === TOOL_MODES.DRAW_LINE ? lineSegmentLabelDataList : measureSegmentLabelDataList
   const activeTotalLabelData = currentMode === TOOL_MODES.DRAW_LINE ? lineTotalLabelData : measureTotalLabelData
+  const activeDraftPath = currentMode === TOOL_MODES.DRAW_LINE ? linePath : measurePath
   const activePreviewPath = currentMode === TOOL_MODES.DRAW_LINE ? linePreviewPath : previewMeasurePath
   const activeHandleDraftPointDragStart =
     currentMode === TOOL_MODES.DRAW_LINE ? handleLineDraftPointDragStart : handleMeasurePointDragStart
@@ -223,12 +227,14 @@ function Map() {
           clickedPoint,
           isPinClickInProgress,
           routeDraft,
+          linePath,
           measurePath,
           draggingMeasurePointIndex: isDraggingDraftPoint ? 0 : null,
           addMarkerDragThresholdPx: ADD_MARKER_DRAG_THRESHOLD_PX,
         },
         actions: {
           setHoverMeasurePoint,
+          appendLinePoint,
           appendMeasurePoint,
           setRouteStart,
           requestRoute,
@@ -246,11 +252,13 @@ function Map() {
     },
     [
       addMarker,
+      appendLinePoint,
       appendMeasurePoint,
       clearPinSelection,
       currentMode,
       isDraggingDraftPoint,
       isPinClickInProgress,
+      linePath,
       measurePath,
       requestRoute,
       routeDraft,
@@ -528,7 +536,7 @@ function Map() {
         <MeasureLayer
           currentMode={currentMode}
           visibleMeasurements={visibleMeasurements}
-          measurePath={measurePath}
+          measurePath={activeDraftPath}
           previewMeasurePath={activePreviewPath}
           measureSegmentLabelDataList={activeSegmentLabelDataList}
           measureTotalLabelData={activeTotalLabelData}

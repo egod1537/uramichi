@@ -51,35 +51,35 @@ const createTotalLabelData = (measurePointPath) => {
 }
 
 function useLineInteraction({
-  measurePath,
+  linePath,
   hoverMeasurePoint,
   draggingMeasurePointIndex,
   activeLayerId,
   layers,
   measurements,
   setHoverMeasurePoint,
-  cancelDraftMeasure,
+  cancelDraftLine,
   addMeasurement,
-  setMeasurePath,
+  setLinePath,
   setDraggingMeasurePointIndex,
   setMode,
 }) {
-  const lineSegmentLabelDataList = useMemo(() => createSegmentLabelDataList(measurePath), [measurePath])
+  const lineSegmentLabelDataList = useMemo(() => createSegmentLabelDataList(linePath), [linePath])
 
-  const lineTotalLabelData = useMemo(() => createTotalLabelData(measurePath), [measurePath])
+  const lineTotalLabelData = useMemo(() => createTotalLabelData(linePath), [linePath])
 
   const linePreviewPath = useMemo(() => {
-    if (!measurePath.length || !hoverMeasurePoint) return []
-    return [...measurePath, hoverMeasurePoint]
-  }, [hoverMeasurePoint, measurePath])
+    if (!linePath.length || !hoverMeasurePoint) return []
+    return [...linePath, hoverMeasurePoint]
+  }, [hoverMeasurePoint, linePath])
 
   const completeLineInteraction = useCallback(() => {
     handleLineDraftComplete({
       currentMode: TOOL_MODES.DRAW_LINE,
-      state: { measurePath, activeLayerId, layers, measurements, createMeasurementEntity: createLineMeasurementEntity },
-      actions: { setHoverMeasurePoint, cancelDraftMeasure, addMeasurement, setMode },
+      state: { linePath, activeLayerId, layers, measurements, createMeasurementEntity: createLineMeasurementEntity },
+      actions: { setHoverMeasurePoint, cancelDraftLine, addMeasurement, setMode },
     })
-  }, [activeLayerId, addMeasurement, cancelDraftMeasure, layers, measurePath, measurements, setHoverMeasurePoint, setMode])
+  }, [activeLayerId, addMeasurement, cancelDraftLine, layers, linePath, measurements, setHoverMeasurePoint, setMode])
 
   const handleLineDraftPointDrag = useCallback(
     (pointIndex, event) => {
@@ -90,11 +90,11 @@ function useLineInteraction({
         currentMode: TOOL_MODES.DRAW_LINE,
         pointIndex,
         clickedPoint,
-        state: { measurePath },
-        actions: { setMeasurePath },
+        state: { linePath },
+        actions: { setLinePath },
       })
     },
-    [measurePath, setMeasurePath],
+    [linePath, setLinePath],
   )
 
   const handleLineDraftPointDragStart = useCallback((pointIndex) => {
