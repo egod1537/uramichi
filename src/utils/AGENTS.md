@@ -14,3 +14,6 @@
 - 시간 필터 종료 핸들이 24시에서 00시로 되감기던 오버플로우 증상을 방지함.
 [codex] 2026-02-27 기본 핀 아이콘 프리셋 추가 메모
 - `TRAVEL_PIN_ICON_PRESETS`에 `default` 키(기본 핀 SVG)를 추가해 핀 아이콘 선택 목록에서도 기본 핀 아이콘을 명시적으로 선택할 수 있게 함.
+[codex] 2026-02-27 line 스타일/히스토리 정리 메모
+- 일반 선 기본 스타일 상수를 `src/utils/lineStyle.js`로 분리해 색상/굵기 기본값을 한 곳에서 재사용하도록 통일함.
+- `HistoryManager`/`ProjectManager`의 스냅샷·초기 상태에서 `measurements` 필드를 제거해 저장 데이터 모델을 `lines` 중심으로 정리함.

@@ -3,3 +3,6 @@
 - 스토어 직접 구독은 피하고, Map 컨테이너에서 전달된 값으로만 렌더링 책임을 제한함.
 [codex] 2026-02-27 PinLayer 측정 모드 상호작용 차단 메모
 - `PinLayer.jsx`에 `isPinInteractionBlocked` 전달 경로를 추가해, 측정 모드에서는 `PinMarker` 클릭/마우스다운 이벤트가 핀 선택으로 이어지지 않도록 부모 모드 상태를 반영함.
+[codex] 2026-02-27 LineLayer 단일 렌더러 메모
+- `LineLayer.jsx`가 저장된 일반 선(`lines`) + draw_line 드래프트(`linePath`/`previewLinePath`)를 함께 렌더하는 단일 일반 선 렌더러 역할을 담당하도록 확장함.
+- 선/도형(`shapeType`) 렌더를 `LineLayer`에서 처리하고, 스타일 기본값은 `src/utils/lineStyle.js` 상수를 사용하도록 맞춤.

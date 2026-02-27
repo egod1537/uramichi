@@ -26,7 +26,6 @@ class ProjectManager {
       pins: ProjectManager.createInitialPins(),
       layers: ProjectManager.createInitialLayers(),
       lines: [],
-      measurements: [],
       routes: [],
       participants: [],
       currentMode: TOOL_MODES.SELECT,
