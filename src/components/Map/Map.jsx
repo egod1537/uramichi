@@ -172,6 +172,8 @@ function Map() {
   const togglePinIconFilter = useProjectStore((state) => state.togglePinIconFilter)
   const clearPinIconFilter = useProjectStore((state) => state.clearPinIconFilter)
   const [isPinClickInProgress, setIsPinClickInProgress] = useState(false)
+  const [isPinDragEnabled, setIsPinDragEnabled] = useState(false)
+  const [isMapDragging, setIsMapDragging] = useState(false)
   const removePins = useProjectStore((state) => state.removePins)
   const [draggingPinId, setDraggingPinId] = useState(null)
   const [hoverMeasurePoint, setHoverMeasurePoint] = useState(null)
@@ -343,6 +345,7 @@ function Map() {
     (event) => {
       if (isPinClickInProgress) {
         setIsPinClickInProgress(false)
+        setIsPinDragEnabled(false)
         return
       }
 
@@ -410,11 +413,31 @@ function Map() {
     ],
   )
 
+  const isPinDragAllowed = useCallback(
+    () => currentMode === TOOL_MODES.SELECT && isPinDragEnabled && !isMapDragging,
+    [currentMode, isMapDragging, isPinDragEnabled],
+  )
+
+  const handlePinMouseDown = useCallback(
+    (event) => {
+      const mouseEvent = event?.domEvent || event
+      if (mouseEvent?.altKey) {
+        setIsPinDragEnabled(true)
+      } else {
+        setIsPinDragEnabled(false)
+      }
+      setIsPinClickInProgress(true)
+    },
+    [],
+  )
+
+
   const handleMapMouseUp = useCallback(
     (event) => {
       if (currentMode !== TOOL_MODES.ADD_MARKER) return
       if (isPinClickInProgress) {
         setIsPinClickInProgress(false)
+        setIsPinDragEnabled(false)
         return
       }
       if (event.placeId) return
@@ -457,8 +480,6 @@ function Map() {
 
   const handlePinClick = useCallback(
     (pinId, event) => {
-      setIsPinClickInProgress(true)
-
       if (currentMode !== TOOL_MODES.SELECT) {
         selectPin(pinId)
         return
@@ -471,7 +492,7 @@ function Map() {
       }
       selectPin(pinId)
     },
-    [currentMode, selectLine, selectPin, togglePinInSelection, setIsPinClickInProgress],
+    [currentMode, selectLine, selectPin, togglePinInSelection],
   )
 
   const handleLineClick = useCallback(
@@ -486,38 +507,44 @@ function Map() {
 
   const handlePinDragStart = useCallback(
     (pinId) => {
-      if (currentMode !== TOOL_MODES.SELECT) return
+      if (!isPinDragAllowed()) return
       setDraggingPinId(pinId)
     },
-    [currentMode],
+    [isPinDragAllowed],
   )
 
   const handlePinDrag = useCallback(
     (pinId, event) => {
-      if (currentMode !== TOOL_MODES.SELECT) return
+      if (!isPinDragAllowed()) return
       const latitude = event.latLng?.lat()
       const longitude = event.latLng?.lng()
       if (latitude === undefined || longitude === undefined) return
       updatePin(pinId, { position: { lat: latitude, lng: longitude } })
     },
-    [currentMode, updatePin],
+    [isPinDragAllowed, updatePin],
   )
 
   const handlePinDragEnd = useCallback(
     (pinId, event) => {
-      if (currentMode !== TOOL_MODES.SELECT) return
+      if (!isPinDragAllowed()) {
+        setDraggingPinId(null)
+        setIsPinDragEnabled(false)
+        return
+      }
       const latitude = event.latLng?.lat()
       const longitude = event.latLng?.lng()
       if (latitude === undefined || longitude === undefined) {
         setDraggingPinId(null)
+        setIsPinDragEnabled(false)
         return
       }
       const nextPosition = { lat: latitude, lng: longitude }
       updatePin(pinId, { position: nextPosition })
       commitMarkerDrag()
       setDraggingPinId(null)
+      setIsPinDragEnabled(false)
     },
-    [commitMarkerDrag, currentMode, updatePin],
+    [commitMarkerDrag, isPinDragAllowed, updatePin],
   )
 
   const handleMapDoubleClick = useCallback(() => {
@@ -588,7 +615,6 @@ function Map() {
     setHoverMeasurePoint,
     updateLine,
   ])
-
   useEffect(() => {
     if (currentMode === TOOL_MODES.MEASURE_DISTANCE) return
     setHoverMeasurePoint(null)
@@ -610,6 +636,16 @@ function Map() {
         onClick={handleMapClick}
         onMouseUp={handleMapMouseUp}
         onMouseMove={handleMapMouseMove}
+        onDragStart={() => {
+          setIsMapDragging(true)
+          setIsPinDragEnabled(false)
+          setDraggingPinId(null)
+        }}
+        onDragEnd={() => {
+          setIsMapDragging(false)
+          setIsPinDragEnabled(false)
+          setDraggingPinId(null)
+        }}
         onDblClick={handleMapDoubleClick}
         onRightClick={() => {
           if (currentMode === TOOL_MODES.MEASURE_DISTANCE) {
@@ -623,10 +659,10 @@ function Map() {
           <PinMarker
             key={pinItem.id}
             pin={pinItem}
-            onMouseDown={() => setIsPinClickInProgress(true)}
+            onMouseDown={handlePinMouseDown}
             onClick={(event) => handlePinClick(pinItem.id, event)}
             indexLabel={currentMode === TOOL_MODES.ADD_ROUTE ? String(pinIndex + 1) : ''}
-            draggable={currentMode === TOOL_MODES.SELECT && selectedPinId === pinItem.id}
+            draggable={currentMode === TOOL_MODES.SELECT && selectedPinId === pinItem.id && isPinDragEnabled && !isMapDragging}
             isDragging={draggingPinId === pinItem.id}
             onDragStart={() => handlePinDragStart(pinItem.id)}
             onDrag={(event) => handlePinDrag(pinItem.id, event)}

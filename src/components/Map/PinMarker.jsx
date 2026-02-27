@@ -45,7 +45,7 @@ function PinMarker({
 
   const handlePinMouseDown = (event) => {
     event.stopPropagation()
-    onMouseDown?.()
+    onMouseDown?.(event)
   }
 
   return (
