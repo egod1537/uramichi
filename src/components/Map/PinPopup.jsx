@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { OverlayView } from '@react-google-maps/api'
 import useProjectStore from '../../stores/useProjectStore'
 import { CATEGORY_PRESETS, PIN_MARKER_COLOR_PRESETS } from '../../utils/constants'
+import { convertFileToDataUrl } from '../../utils/file'
 
 const overlayPane = OverlayView.OVERLAY_MOUSE_TARGET
 
@@ -21,6 +22,7 @@ const colorPresetList = Object.values(PIN_MARKER_COLOR_PRESETS).slice(0, 8).map(
 
 function PinPopup({ pin }) {
   const popupContainerRef = useRef(null)
+  const imageInputRef = useRef(null)
   const selectedPinId = useProjectStore((state) => state.selectedPinId)
   const updatePin = useProjectStore((state) => state.updatePin)
   const removePin = useProjectStore((state) => state.removePin)
@@ -117,6 +119,27 @@ function PinPopup({ pin }) {
     updatePin(pin.id, { tags: nextTags })
   }
 
+  const handleImageButtonClick = () => {
+    imageInputRef.current?.click()
+  }
+
+  const handleImageChange = async (event) => {
+    const selectedFile = event.target.files?.[0]
+    if (!selectedFile) {
+      return
+    }
+
+    const imageDataUrl = await convertFileToDataUrl(selectedFile)
+    const nextImageList = [...(pin.images || []), imageDataUrl]
+    updatePin(pin.id, { images: nextImageList })
+    event.target.value = ''
+  }
+
+  const handleImageRemove = (imageIndex) => {
+    const nextImageList = (pin.images || []).filter((_, currentImageIndex) => currentImageIndex !== imageIndex)
+    updatePin(pin.id, { images: nextImageList })
+  }
+
   return (
     <OverlayView position={pin.position} mapPaneName={overlayPane}>
       <div ref={popupContainerRef} className="relative -translate-x-1/2 -translate-y-[calc(100%+22px)]">
@@ -156,10 +179,30 @@ function PinPopup({ pin }) {
               <button type="button" onClick={() => setIsEditMode((previousMode) => !previousMode)} className="rounded p-1 hover:bg-gray-100" aria-label="편집 모드">
                 ✏️
               </button>
-              <button type="button" className="rounded p-1 hover:bg-gray-100" aria-label="사진 추가">📷</button>
-              <button type="button" onClick={handleOpenDeleteModal} className="rounded p-1 hover:bg-gray-100" aria-label="삭제">🗑️</button>
+              <button type="button" onClick={handleImageButtonClick} className="rounded p-1 hover:bg-gray-100" aria-label="사진 추가">📷</button>
+              <button type="button" onClick={handleDelete} className="rounded p-1 hover:bg-gray-100" aria-label="삭제">🗑️</button>
             </div>
           </div>
+
+          <input ref={imageInputRef} type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+
+          {(pin.images || []).length ? (
+            <div className="mb-3 grid grid-cols-3 gap-2 border-t border-gray-200 pt-3">
+              {(pin.images || []).map((imageDataUrl, imageIndex) => (
+                <div key={`${pin.id}-image-${imageIndex}`} className="relative overflow-hidden rounded-lg border border-gray-200">
+                  <img src={imageDataUrl} alt={`핀 이미지 ${imageIndex + 1}`} className="h-20 w-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => handleImageRemove(imageIndex)}
+                    className="absolute right-1 top-1 rounded bg-black/60 px-1.5 text-xs text-white hover:bg-black/75"
+                    aria-label={`이미지 ${imageIndex + 1} 삭제`}
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : null}
 
           {isEditMode ? (
             <div className="space-y-3 border-t border-gray-200 pt-3">

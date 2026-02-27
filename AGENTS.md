@@ -255,6 +255,12 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - 핀 드래그는 Select 모드에서만 활성화되도록 `PinMarker`에 `draggable` 제어를 추가했고, 드래그 중에는 반투명 스타일(`opacity-60`)을 적용함.
 - 드래그 중 좌표 반영은 `updatePin(id, { position })`로 처리하고, 드래그 완료 시점에만 `commitMarkerDrag(...)`를 호출하도록 분리해 히스토리 커밋 타이밍을 고정함.
 
+[codex] 2026-02-27 핀 이미지 기능 작업 메모
+- `src/utils/file.js`에 파일을 base64 data URL 문자열로 변환하는 `convertFileToDataUrl(file)` 유틸을 추가함.
+- `src/components/Map/PinPopup.jsx`의 📷 버튼이 숨김 `<input type="file">`를 트리거하도록 연결함.
+- 이미지 선택 시 `convertFileToDataUrl` 결과를 사용해 `updatePin(id, { images: nextImages })` 형태로 핀 `images` 배열을 갱신함.
+- PinPopup 본문에 핀 이미지 썸네일 그리드 렌더링과 개별 삭제 버튼(✕)을 추가함.
+- 핀 기본 생성값의 `images: []`는 `src/stores/useProjectStore.js`의 `createDefaultPinData`에서 계속 보장됨.
 [codex] 2026-02-27 PinPopup 편집/삭제 UX 보강 메모
 - `src/components/Map/PinPopup.jsx` 편집 UI를 로컬 draft 상태(`editDraft`)와 스토어 저장 상태(`updatePin`)로 분리해 입력 중 값과 저장 반영 경계를 명확히 정리함.
 - 편집 항목(이름 인라인, 메모, 카테고리, 태그 추가/삭제, 체류시간, 예상비용)을 모두 `updatePin(id, patch)` 호출로 즉시 반영하도록 연결함.
