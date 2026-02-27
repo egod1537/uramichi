@@ -90,7 +90,6 @@ const createRouteEntity = (routeResult, routePath, startPoint, endPoint, activeL
 function Map() {
   const mapInstanceRef = useRef(null)
   const currentMode = useProjectStore((state) => state.currentMode)
-  const markers = useProjectStore((state) => state.markers)
   const lines = useProjectStore((state) => state.lines)
   const linePath = useProjectStore((state) => state.linePath)
   const routePaths = useProjectStore((state) => state.routePaths)
@@ -120,6 +119,7 @@ function Map() {
   const removeLine = useProjectStore((state) => state.removeLine)
   const updatePin = useProjectStore((state) => state.updatePin)
   const commitMarkerDrag = useProjectStore((state) => state.commitMarkerDrag)
+  const [isPinClickInProgress, setIsPinClickInProgress] = useState(false)
   const removePins = useProjectStore((state) => state.removePins)
   const [draggingPinId, setDraggingPinId] = useState(null)
 
@@ -234,6 +234,10 @@ function Map() {
       }
 
       if (currentMode === TOOL_MODES.SELECT) {
+        if (isPinClickInProgress) {
+          setIsPinClickInProgress(false)
+          return
+        }
         selectPin(null)
         selectLine(null)
         clearPinSelection()
@@ -251,6 +255,7 @@ function Map() {
       selectLine,
       selectPin,
       setRouteStart,
+      isPinClickInProgress,
     ],
   )
 
@@ -259,12 +264,14 @@ function Map() {
       if (currentMode !== TOOL_MODES.SELECT) return
       selectLine(null)
       if (event?.domEvent?.shiftKey) {
+        setIsPinClickInProgress(true)
         togglePinInSelection(pinId)
         return
       }
+      setIsPinClickInProgress(true)
       selectPin(pinId)
     },
-    [currentMode, selectLine, selectPin, togglePinInSelection],
+    [currentMode, selectLine, selectPin, togglePinInSelection, setIsPinClickInProgress],
   )
 
   const handleLineClick = useCallback(
@@ -307,8 +314,7 @@ function Map() {
       }
       const nextPosition = { lat: latitude, lng: longitude }
       updatePin(pinId, { position: nextPosition })
-      const currentMarkers = useProjectStore.getState().markers
-      commitMarkerDrag(currentMarkers)
+      commitMarkerDrag()
       setDraggingPinId(null)
     },
     [commitMarkerDrag, currentMode, updatePin],
@@ -387,14 +393,6 @@ function Map() {
         onDblClick={handleMapDoubleClick}
         options={{ ...mapOptions, disableDoubleClickZoom: currentMode === TOOL_MODES.MEASURE_DISTANCE || currentMode === TOOL_MODES.DRAW_LINE }}
       >
-        {markers.map((markerPoint, markerIndex) => (
-          <PinMarker
-            key={`marker-${markerIndex}`}
-            pin={{ id: `marker-${markerIndex}`, position: markerPoint, category: 'default' }}
-            onClick={() => {}}
-          />
-        ))}
-
         {visiblePins.map((pinItem, pinIndex) => (
           <PinMarker
             key={pinItem.id}
@@ -451,7 +449,7 @@ function Map() {
 
         {measureSegmentLabelDataList.map((segmentLabelData) => (
           <OverlayView key={segmentLabelData.id} position={segmentLabelData.position} mapPaneName={measureOverlayPane}>
-            <div className="-translate-x-1/2 -translate-y-1/2 rounded bg-white/95 px-2 py-0.5 text-xs font-medium text-gray-700 shadow">
+            <div className="-translate-x-1/2 -translate-y-[calc(100%+4px)] whitespace-nowrap rounded bg-white/95 px-2 py-0.5 text-xs font-medium text-gray-700 shadow">
               {segmentLabelData.label}
             </div>
           </OverlayView>
@@ -459,7 +457,7 @@ function Map() {
 
         {measureTotalLabelData ? (
           <OverlayView key={measureTotalLabelData.id} position={measureTotalLabelData.position} mapPaneName={measureOverlayPane}>
-            <div className="-translate-x-1/2 -translate-y-[calc(100%+12px)] rounded bg-[#f97316] px-2 py-1 text-xs font-semibold text-white shadow">
+            <div className="-translate-x-1/2 -translate-y-[calc(100%+12px)] whitespace-nowrap rounded bg-[#f97316] px-2 py-1 text-xs font-semibold text-white shadow">
               {measureTotalLabelData.label}
             </div>
           </OverlayView>

@@ -15,6 +15,8 @@ const createSnapshotFromState = (state) => ({
   measurePath: state.measurePath,
 })
 
+const createMarkersFromPins = (pinList) => pinList.map((pinItem) => pinItem.position)
+
 const createDefaultPinData = (point, layerId, pinIndex) => ({
   id: `pin-${Date.now()}-${pinIndex + 1}`,
   layerId,
@@ -81,7 +83,7 @@ const useProjectStore = create((set) => ({
       const nextPins = [...state.pins, createdPin]
       const committedHistory = HistoryManager.commit(state.history, state.historyIndex, {
         ...createSnapshotFromState(state),
-        markers: [...state.markers, point],
+        markers: createMarkersFromPins(nextPins),
       })
 
       return {
@@ -119,24 +121,46 @@ const useProjectStore = create((set) => ({
     }),
   clearPinSelection: () => set({ selectedPinId: null, selectedPinIds: [] }),
   updatePin: (pinId, patchData) =>
-    set((state) => ({
-      pins: state.pins.map((pinItem) => (pinItem.id === pinId ? { ...pinItem, ...patchData } : pinItem)),
-      lastEditedAt: new Date().toISOString(),
-    })),
+    set((state) => {
+      const nextPins = state.pins.map((pinItem) => (pinItem.id === pinId ? { ...pinItem, ...patchData } : pinItem))
+      return {
+        pins: nextPins,
+        markers: createMarkersFromPins(nextPins),
+        lastEditedAt: new Date().toISOString(),
+      }
+    }),
   removePin: (pinId) =>
-    set((state) => ({
-      pins: state.pins.filter((pinItem) => pinItem.id !== pinId),
-      selectedPinId: state.selectedPinId === pinId ? null : state.selectedPinId,
-      selectedPinIds: state.selectedPinIds.filter((selectedPinIdItem) => selectedPinIdItem !== pinId),
-      lastEditedAt: new Date().toISOString(),
-    })),
+    set((state) => {
+      const nextPins = state.pins.filter((pinItem) => pinItem.id !== pinId)
+      const committedHistory = HistoryManager.commit(state.history, state.historyIndex, {
+        ...createSnapshotFromState(state),
+        markers: createMarkersFromPins(nextPins),
+      })
+      return {
+        ...committedHistory.snapshot,
+        pins: nextPins,
+        selectedPinId: state.selectedPinId === pinId ? null : state.selectedPinId,
+        selectedPinIds: state.selectedPinIds.filter((selectedPinIdItem) => selectedPinIdItem !== pinId),
+        history: committedHistory.history,
+        historyIndex: committedHistory.historyIndex,
+        lastEditedAt: new Date().toISOString(),
+      }
+    }),
   removePins: (pinIds) =>
     set((state) => {
       const pinIdSetToRemove = new Set(pinIds)
+      const nextPins = state.pins.filter((pinItem) => !pinIdSetToRemove.has(pinItem.id))
+      const committedHistory = HistoryManager.commit(state.history, state.historyIndex, {
+        ...createSnapshotFromState(state),
+        markers: createMarkersFromPins(nextPins),
+      })
       return {
-        pins: state.pins.filter((pinItem) => !pinIdSetToRemove.has(pinItem.id)),
+        ...committedHistory.snapshot,
+        pins: nextPins,
         selectedPinId: pinIdSetToRemove.has(state.selectedPinId) ? null : state.selectedPinId,
         selectedPinIds: state.selectedPinIds.filter((selectedPinIdItem) => !pinIdSetToRemove.has(selectedPinIdItem)),
+        history: committedHistory.history,
+        historyIndex: committedHistory.historyIndex,
         lastEditedAt: new Date().toISOString(),
       }
     }),
@@ -147,15 +171,17 @@ const useProjectStore = create((set) => ({
       if (!hasTargetLayer) return state
       const selectedPinIdSet = new Set(pinIds)
       if (!selectedPinIdSet.size) return state
+      const nextPins = state.pins.map((pinItem) =>
+        selectedPinIdSet.has(pinItem.id)
+          ? {
+              ...pinItem,
+              layerId,
+            }
+          : pinItem,
+      )
       return {
-        pins: state.pins.map((pinItem) =>
-          selectedPinIdSet.has(pinItem.id)
-            ? {
-                ...pinItem,
-                layerId,
-              }
-            : pinItem,
-        ),
+        pins: nextPins,
+        markers: createMarkersFromPins(nextPins),
         activeLayerId: layerId,
         lastEditedAt: new Date().toISOString(),
       }
@@ -183,11 +209,20 @@ const useProjectStore = create((set) => ({
       lastEditedAt: new Date().toISOString(),
     })),
   removeLine: (lineId) =>
-    set((state) => ({
-      lines: state.lines.filter((lineItem) => lineItem.id !== lineId),
-      selectedLineId: state.selectedLineId === lineId ? null : state.selectedLineId,
-      lastEditedAt: new Date().toISOString(),
-    })),
+    set((state) => {
+      const nextLines = state.lines.filter((lineItem) => lineItem.id !== lineId)
+      const committedHistory = HistoryManager.commit(state.history, state.historyIndex, {
+        ...createSnapshotFromState(state),
+        lines: nextLines,
+      })
+      return {
+        ...committedHistory.snapshot,
+        selectedLineId: state.selectedLineId === lineId ? null : state.selectedLineId,
+        history: committedHistory.history,
+        historyIndex: committedHistory.historyIndex,
+        lastEditedAt: new Date().toISOString(),
+      }
+    }),
   addRoute: (routeData) =>
     set((state) => {
       const nextRoutePathList = [...state.routePaths, routeData.path || []]
@@ -243,11 +278,11 @@ const useProjectStore = create((set) => ({
     })),
   completeDraftMeasure: () => set({ draftMeasurePoints: [], measurePath: [] }),
   cancelDraftMeasure: () => set({ draftMeasurePoints: [], measurePath: [] }),
-  commitMarkerDrag: (nextMarkers) =>
+  commitMarkerDrag: () =>
     set((state) => {
       const committedHistory = HistoryManager.commit(state.history, state.historyIndex, {
         ...createSnapshotFromState(state),
-        markers: nextMarkers,
+        markers: createMarkersFromPins(state.pins),
       })
       return {
         ...committedHistory.snapshot,
@@ -330,6 +365,7 @@ const useProjectStore = create((set) => ({
       return {
         layers: nextLayers,
         pins: nextPins,
+        markers: createMarkersFromPins(nextPins),
         selectedPinId: removedPinIdSet.has(state.selectedPinId) ? null : state.selectedPinId,
         selectedPinIds: state.selectedPinIds.filter((selectedPinIdItem) => !removedPinIdSet.has(selectedPinIdItem)),
         activeLayerId: nextActiveLayerId,
