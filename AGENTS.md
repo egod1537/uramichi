@@ -320,6 +320,10 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - 실행 결과 리포트에 총 key 수, 언어별 완료/누락 수, 누락 key 목록을 출력하도록 추가함.
 - `package.json`에 `locale:pull` 스크립트를 등록해 `pnpm run locale:pull`로 실행 가능하게 연결함.
 
+[codex] 2026-02-27 Toolbar qwert 단축키 작업 메모
+- `src/components/Toolbar/Toolbar.jsx`의 툴바 단축키를 요청한 QWERT 순서로 재배치함(Select=Q, Add Marker=W, Draw Line=E, Add Route=R, Measure Distance=T)하고 Undo/Redo는 Z/Y로 분리함.
+- 단축키 모달 안내 문구와 각 버튼 tooltip 문구를 새 키맵과 동일하게 업데이트함.
+- `src/components/Toolbar/ToolButton.jsx`에 `shortcut` 표시를 추가해 아이콘 오른쪽에 단축키 문자가 함께 보이도록 반영함.
 [codex] 2026-02-27 PinPopup 상호작용/핀 클릭 충돌 수정 메모
 - `src/components/Map/Map.jsx`에서 핀 클릭 직후 발생하는 지도 클릭 이벤트를 모드 공통으로 먼저 차단해, 핀 위 클릭 시 핀 추가 대신 팝업 선택 동작이 우선되도록 수정함.
 - 같은 파일에서 비-Select 모드에서도 핀 클릭 시 `selectPin(pinId)`가 동작하도록 분기해, 어떤 모드에서도 핀 팝업을 열 수 있게 정리함.
