@@ -6,8 +6,6 @@ import useEditorStore from '../../stores/useEditorStore'
 import useProjectStore from '../../stores/useProjectStore'
 
 const toolbarButtons = [
-  { key: 'undo', label: 'Undo', icon: '↩', tooltip: '실행 취소 (Z)', shortcut: 'Z' },
-  { key: 'redo', label: 'Redo', icon: '↪', tooltip: '다시 실행 (Y)', shortcut: 'Y' },
   { key: TOOL_MODES.SELECT, label: 'Select/Pan', icon: '🖐️', tooltip: '선택/이동 (Q)', shortcut: 'Q' },
   { key: TOOL_MODES.ADD_MARKER, label: 'Add Marker', icon: '📍', tooltip: '핀 추가 (W)', shortcut: 'W' },
   { key: TOOL_MODES.DRAW_LINE, label: 'Draw Line', icon: '✏️', tooltip: '선 그리기 (E)', shortcut: 'E' },
@@ -48,8 +46,16 @@ class Toolbar extends React.Component {
     const projectStore = useProjectStore.getState()
     const loweredKey = event.key.toLowerCase()
     if (event.key === 'Escape' && projectStore.currentMode !== TOOL_MODES.DRAW_LINE) projectStore.resetToSelectMode()
-    if (loweredKey === 'z') projectStore.undo()
-    if (loweredKey === 'y') projectStore.redo()
+    if ((event.ctrlKey || event.metaKey) && loweredKey === 'z') {
+      event.preventDefault()
+      projectStore.undo()
+      return
+    }
+    if ((event.ctrlKey || event.metaKey) && loweredKey === 'r') {
+      event.preventDefault()
+      projectStore.redo()
+      return
+    }
     if (loweredKey === 'q') projectStore.setMode(TOOL_MODES.SELECT)
     if (loweredKey === 'w') projectStore.setMode(TOOL_MODES.ADD_MARKER)
     if (loweredKey === 'e') projectStore.setMode(TOOL_MODES.DRAW_LINE)
@@ -59,8 +65,6 @@ class Toolbar extends React.Component {
 
   handleToolbarButtonClick = (buttonKey) => {
     const projectStore = useProjectStore.getState()
-    if (buttonKey === 'undo') return projectStore.undo()
-    if (buttonKey === 'redo') return projectStore.redo()
     if (buttonKey === 'shortcuts') return useEditorStore.getState().setShortcutModalOpen(true)
     return projectStore.setMode(buttonKey)
   }
@@ -70,11 +74,7 @@ class Toolbar extends React.Component {
   }
 
   render() {
-    const { currentMode, historyIndex, historyLength } = this.props
-    const buttonDisabledState = {
-      undo: historyIndex === 0,
-      redo: historyIndex >= historyLength - 1,
-    }
+    const { currentMode } = this.props
 
     return (
       <>
@@ -102,7 +102,7 @@ class Toolbar extends React.Component {
                     label={buttonItem.label}
                     icon={buttonItem.icon}
                     isActive={isActive}
-                    isDisabled={buttonDisabledState[buttonItem.key]}
+                    isDisabled={false}
                     tooltip={buttonItem.tooltip}
                     shortcut={buttonItem.shortcut}
                     onClick={this.handleToolbarButtonClick}
@@ -119,8 +119,8 @@ class Toolbar extends React.Component {
               <h2 className="text-base font-semibold">Keyboard Shortcuts</h2>
               <ul className="mt-3 space-y-2 text-sm text-gray-700">
                 <li>ESC: Select/Pan 모드로 복귀 (선 그리기 모드 제외)</li>
-                <li>Z: Undo</li>
-                <li>Y: Redo</li>
+                <li>Ctrl+Z: Undo</li>
+                <li>Ctrl+R: Redo</li>
                 <li>Q: Select/Pan 모드</li>
                 <li>W: Add Marker 모드</li>
                 <li>E: Draw Line 모드</li>
