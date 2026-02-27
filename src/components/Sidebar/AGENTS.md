@@ -9,3 +9,5 @@
 
 [codex] 2026-02-27 Sidebar 기본 핀 아이콘 SVG 고정 메모
 - `LayerRow` 핀 아이콘 버튼 fallback을 emoji 텍스트에서 `DEFAULT_PIN_SVG_PATH` 이미지로 변경해, 아이콘 미지정/기본 카테고리 핀도 SVG로 표시되도록 수정함.
+[codex] 2026-02-27 레이어 패널 선분/도형 표기 메모
+- `LayerRow.jsx`의 측정/선 목록 라벨을 `shapeType` 기반으로 분기해, 일반 경로는 `선분 N`, 폐곡선은 `도형 N`으로 표시하도록 변경함.
