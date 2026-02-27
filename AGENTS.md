@@ -221,3 +221,11 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `src/components/Map/PinMarker.jsx`를 추가하고 `OverlayView` 기반 HTML 마커 렌더링으로 Google 기본 `Marker` 의존을 제거함.
 - `PinMarker`는 `useProjectStore`의 `selectedPinId`를 구독해 선택된 핀 확대/강조 스타일을 적용하고, 호버 확대 애니메이션을 지원함.
 - 카테고리별 아이콘/색상 프리셋은 `src/utils/constants.js`의 `CATEGORY_PRESETS`, `PIN_MARKER_COLOR_PRESETS`를 사용하며 경로 모드에서는 마커 순번 배지를 노출함.
+
+[codex] 2026-02-27 PinPopup 작업 메모
+- `src/components/Map/PinPopup.jsx`를 추가해 핀 선택 시 말풍선 팝업(기본 뷰/편집 모드)을 `OverlayView`로 렌더링하도록 구현함.
+- 팝업 닫기 동작은 닫기 버튼, 바깥 클릭, ESC 모두 `useProjectStore.selectPin(null)`로 통합함.
+- 핀 데이터 변경은 `useProjectStore.updatePin(id, patch)`로 연결하고 삭제는 확인 후 `removePin(id)`를 호출하도록 연결함.
+- `src/components/Map/Map.jsx`의 기존 `InfoWindow`를 `PinPopup`으로 교체함.
+- `src/components/Map/PinMarker.jsx`는 핀에 저장된 `color` 값이 있으면 마커 배경색에 우선 반영하도록 조정함.
+- `src/stores/useProjectStore.js`에 `updatePin`, `removePin` 액션을 추가해 팝업 편집/삭제 상태 연동을 지원함.
