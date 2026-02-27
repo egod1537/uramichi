@@ -8,6 +8,7 @@ const overlayPane = OverlayView.OVERLAY_MOUSE_TARGET
 function PinMarker({
   pin,
   onClick,
+  onMouseDown,
   indexLabel,
   draggable = false,
   isDragging = false,
@@ -39,6 +40,11 @@ function PinMarker({
     onClick(event)
   }
 
+  const handlePinMouseDown = (event) => {
+    event.stopPropagation()
+    onMouseDown?.()
+  }
+
   return (
     <>
       <Marker
@@ -54,6 +60,7 @@ function PinMarker({
       <OverlayView position={pin.position} mapPaneName={overlayPane}>
         <button
           type="button"
+          onMouseDown={handlePinMouseDown}
           onClick={handlePinClick}
           className="group relative -translate-x-1/2 -translate-y-full transition-transform duration-150 ease-out"
         >
