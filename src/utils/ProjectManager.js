@@ -35,7 +35,7 @@ class ProjectManager {
       measurePath: [],
       draftLinePoints: [],
       draftMeasurePoints: [],
-      routeDraft: { start: null },
+      routeDraft: { start: null, travelMode: 'WALKING' },
       history: [HistoryManager.createEmptySnapshot()],
       historyIndex: 0,
       mapTitle: '제목없는 지도',

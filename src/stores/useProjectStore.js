@@ -4,6 +4,7 @@ import HistoryManager from '../utils/HistoryManager'
 import ProjectManager from '../utils/ProjectManager'
 
 const initialProjectState = ProjectManager.createInitialProjectState()
+const defaultTravelMode = 'WALKING'
 
 const createSnapshotFromState = (state) => ({
   markers: state.markers,
@@ -34,7 +35,10 @@ const useProjectStore = create((set) => ({
   setMode: (nextMode) =>
     set((state) => ({
       currentMode: nextMode,
-      routeDraft: nextMode === TOOL_MODES.ADD_ROUTE ? state.routeDraft : { start: null },
+      routeDraft:
+        nextMode === TOOL_MODES.ADD_ROUTE
+          ? { start: state.routeDraft.start, travelMode: state.routeDraft.travelMode || defaultTravelMode }
+          : { start: null, travelMode: state.routeDraft.travelMode || defaultTravelMode },
       draftMeasurePoints: nextMode === TOOL_MODES.MEASURE_DISTANCE ? state.draftMeasurePoints : [],
       measurePath: nextMode === TOOL_MODES.MEASURE_DISTANCE ? state.measurePath : [],
       selectedLineId: nextMode === TOOL_MODES.SELECT ? state.selectedLineId : null,
@@ -42,7 +46,7 @@ const useProjectStore = create((set) => ({
   resetToSelectMode: () =>
     set({
       currentMode: TOOL_MODES.SELECT,
-      routeDraft: { start: null },
+      routeDraft: { start: null, travelMode: defaultTravelMode },
       draftMeasurePoints: [],
       measurePath: [],
       selectedLineId: null,
@@ -57,7 +61,7 @@ const useProjectStore = create((set) => ({
         linePath: committedHistory.snapshot.linePath,
         routePaths: committedHistory.snapshot.routePaths,
         measurePath: committedHistory.snapshot.measurePath,
-        routeDraft: { start: null },
+        routeDraft: { start: null, travelMode: state.routeDraft.travelMode || defaultTravelMode },
         history: committedHistory.history,
         historyIndex: committedHistory.historyIndex,
       }
@@ -85,7 +89,7 @@ const useProjectStore = create((set) => ({
         layers: nextLayers,
         pins: nextPins,
         activeLayerId: nextActiveLayerId,
-        routeDraft: { start: null },
+        routeDraft: { start: null, travelMode: state.routeDraft.travelMode || defaultTravelMode },
         history: committedHistory.history,
         historyIndex: committedHistory.historyIndex,
         lastEditedAt: new Date().toISOString(),
@@ -194,7 +198,7 @@ const useProjectStore = create((set) => ({
       })
       return {
         ...committedHistory.snapshot,
-        routeDraft: { start: null },
+        routeDraft: { start: null, travelMode: state.routeDraft.travelMode || defaultTravelMode },
         history: committedHistory.history,
         historyIndex: committedHistory.historyIndex,
         lastEditedAt: new Date().toISOString(),
@@ -251,7 +255,14 @@ const useProjectStore = create((set) => ({
         historyIndex: committedHistory.historyIndex,
       }
     }),
-  setRouteStart: (point) => set({ routeDraft: { start: point } }),
+  setRouteStart: (point) =>
+    set((state) => ({
+      routeDraft: { start: point, travelMode: state.routeDraft.travelMode || defaultTravelMode },
+    })),
+  setRouteTravelMode: (travelMode) =>
+    set((state) => ({
+      routeDraft: { start: state.routeDraft.start, travelMode },
+    })),
   commitRoutePath: (path) =>
     set((state) => {
       const nextRouteData = {
@@ -259,7 +270,7 @@ const useProjectStore = create((set) => ({
         layerId: state.activeLayerId,
         start: path[0] || null,
         end: path[path.length - 1] || null,
-        travelMode: 'DRIVING',
+        travelMode: state.routeDraft.travelMode || defaultTravelMode,
         summary: '',
         path,
       }
@@ -271,7 +282,7 @@ const useProjectStore = create((set) => ({
       })
       return {
         ...committedHistory.snapshot,
-        routeDraft: { start: null },
+        routeDraft: { start: null, travelMode: state.routeDraft.travelMode || defaultTravelMode },
         history: committedHistory.history,
         historyIndex: committedHistory.historyIndex,
       }
@@ -282,7 +293,7 @@ const useProjectStore = create((set) => ({
       if (!undoResult) return state
       return {
         ...undoResult.snapshot,
-        routeDraft: { start: null },
+        routeDraft: { start: null, travelMode: state.routeDraft.travelMode || defaultTravelMode },
         draftLinePoints: [],
         draftMeasurePoints: [],
         historyIndex: undoResult.historyIndex,
@@ -294,7 +305,7 @@ const useProjectStore = create((set) => ({
       if (!redoResult) return state
       return {
         ...redoResult.snapshot,
-        routeDraft: { start: null },
+        routeDraft: { start: null, travelMode: state.routeDraft.travelMode || defaultTravelMode },
         draftLinePoints: [],
         draftMeasurePoints: [],
         historyIndex: redoResult.historyIndex,

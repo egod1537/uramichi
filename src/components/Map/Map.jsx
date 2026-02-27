@@ -6,6 +6,7 @@ import useProjectStore from '../../stores/useProjectStore'
 import PinMarker from './PinMarker'
 import PinPopup from './PinPopup'
 import { formatDistanceLabel, getMidpoint, getPathDistanceInMeters } from '../../utils/geo'
+import directionsCache from '../../utils/DirectionsCache'
 
 const containerStyle = { width: '100%', height: '100%' }
 const defaultCenter = { lat: 35.6812, lng: 139.7671 }
@@ -21,6 +22,11 @@ const mapOptions = {
 
 const measureOverlayPane = OverlayView.OVERLAY_MOUSE_TARGET
 const lineColorSequence = [COLOR_PRESETS.primaryBlue, COLOR_PRESETS.routeGreen, COLOR_PRESETS.measureOrange, '#8b5cf6']
+const routeTravelModeList = [
+  { value: 'WALKING', label: '도보' },
+  { value: 'TRANSIT', label: '대중교통' },
+  { value: 'DRIVING', label: '차량' },
+]
 
 const createSegmentLabelDataList = (measurePointPath) =>
   measurePointPath.slice(1).map((currentPoint, pointIndex) => {
@@ -40,10 +46,10 @@ const createTotalLabelData = (measurePointPath) => {
   return { id: 'measure-total', position: terminalPoint, label: `총 ${formatDistanceLabel(totalDistanceInMeters)}` }
 }
 
-const getRouteRequest = (startPoint, endPoint) => ({
+const getRouteRequest = (startPoint, endPoint, travelMode) => ({
   origin: startPoint,
   destination: endPoint,
-  travelMode: window.google.maps.TravelMode.WALKING,
+  travelMode: window.google.maps.TravelMode[travelMode],
 })
 
 const createLineEntity = (linePointPath, activeLayerId, lineCount) => ({
@@ -60,6 +66,27 @@ const getNextLineColor = (currentColor) => {
   return lineColorSequence[(currentColorIndex + 1) % lineColorSequence.length]
 }
 
+const createRouteEntity = (routeResult, routePath, startPoint, endPoint, activeLayerId, travelMode, routeCount) => {
+  const primaryRoute = routeResult.routes?.[0]
+  const firstLeg = primaryRoute?.legs?.[0]
+  const firstTransitStep = firstLeg?.steps?.find((stepItem) => stepItem.travel_mode === 'TRANSIT')
+  const transitLineName =
+    firstTransitStep?.transit?.line?.short_name || firstTransitStep?.transit?.line?.name || firstTransitStep?.instructions || ''
+
+  return {
+    id: `route-${Date.now()}-${routeCount + 1}`,
+    layerId: activeLayerId,
+    start: startPoint,
+    end: endPoint,
+    travelMode,
+    summary: primaryRoute?.summary || '',
+    path: routePath,
+    distanceMeters: firstLeg?.distance?.value ?? 0,
+    durationSeconds: firstLeg?.duration?.value ?? 0,
+    lineName: transitLineName,
+  }
+}
+
 function Map() {
   const mapInstanceRef = useRef(null)
   const currentMode = useProjectStore((state) => state.currentMode)
@@ -71,6 +98,7 @@ function Map() {
   const routeDraft = useProjectStore((state) => state.routeDraft)
   const pins = useProjectStore((state) => state.pins)
   const layers = useProjectStore((state) => state.layers)
+  const routes = useProjectStore((state) => state.routes)
   const selectedPinId = useProjectStore((state) => state.selectedPinId)
   const selectedPinIds = useProjectStore((state) => state.selectedPinIds)
   const selectedLineId = useProjectStore((state) => state.selectedLineId)
@@ -81,7 +109,8 @@ function Map() {
   const appendMeasurePoint = useProjectStore((state) => state.appendMeasurePoint)
   const cancelDraftMeasure = useProjectStore((state) => state.cancelDraftMeasure)
   const setRouteStart = useProjectStore((state) => state.setRouteStart)
-  const commitRoutePath = useProjectStore((state) => state.commitRoutePath)
+  const setRouteTravelMode = useProjectStore((state) => state.setRouteTravelMode)
+  const addRoute = useProjectStore((state) => state.addRoute)
   const selectPin = useProjectStore((state) => state.selectPin)
   const selectLine = useProjectStore((state) => state.selectLine)
   const togglePinInSelection = useProjectStore((state) => state.togglePinInSelection)
@@ -100,7 +129,6 @@ function Map() {
   )
 
   const visiblePins = useMemo(() => pins.filter((pinItem) => visibleLayerIdSet.has(pinItem.layerId)), [pins, visibleLayerIdSet])
-
   const visibleLines = useMemo(() => lines.filter((lineItem) => visibleLayerIdSet.has(lineItem.layerId)), [lines, visibleLayerIdSet])
 
   const selectedLine = useMemo(
@@ -129,7 +157,6 @@ function Map() {
   }, [cancelDraftLine, cancelDraftMeasure, currentMode])
 
   const measureSegmentLabelDataList = useMemo(() => createSegmentLabelDataList(measurePath), [measurePath])
-
   const measureTotalLabelData = useMemo(() => createTotalLabelData(measurePath), [measurePath])
 
   const completeDraftLine = useCallback(() => {
@@ -146,18 +173,32 @@ function Map() {
     addLine(createLineEntity(linePath, targetLayerId, lines.length))
   }, [activeLayerId, addLine, cancelDraftLine, currentMode, layers, linePath, lines.length])
 
-  const createRoutePath = useCallback(
-    (startPoint, endPoint) => {
+  const requestRoute = useCallback(
+    (startPoint, endPoint, travelMode) => {
+      const cachedRouteData = directionsCache.get(startPoint, endPoint, travelMode)
+      if (cachedRouteData) {
+        addRoute(cachedRouteData)
+        return
+      }
+
+      const routeLayerId = activeLayerId || layers[0]?.id || null
+      if (!routeLayerId) {
+        setRouteStart(null)
+        return
+      }
+
       const directionsService = new window.google.maps.DirectionsService()
-      directionsService.route(getRouteRequest(startPoint, endPoint), (result, status) => {
+      directionsService.route(getRouteRequest(startPoint, endPoint, travelMode), (result, status) => {
         if (status !== window.google.maps.DirectionsStatus.OK || !result) return
         const overviewPath = result.routes[0]?.overview_path ?? []
         if (!overviewPath.length) return
         const normalizedPath = overviewPath.map((locationPoint) => ({ lat: locationPoint.lat(), lng: locationPoint.lng() }))
-        commitRoutePath(normalizedPath)
+        const routeEntity = createRouteEntity(result, normalizedPath, startPoint, endPoint, routeLayerId, travelMode, routes.length)
+        directionsCache.set(startPoint, endPoint, travelMode, routeEntity)
+        addRoute(routeEntity)
       })
     },
-    [commitRoutePath],
+    [activeLayerId, addRoute, layers, routes.length, setRouteStart],
   )
 
   const handleMapClick = useCallback(
@@ -167,13 +208,29 @@ function Map() {
       if (latitude === undefined || longitude === undefined) return
       const clickedPoint = { lat: latitude, lng: longitude }
 
-      if (currentMode === TOOL_MODES.ADD_MARKER) return addMarker(clickedPoint)
-      if (currentMode === TOOL_MODES.DRAW_LINE) return appendLinePoint(clickedPoint)
-      if (currentMode === TOOL_MODES.MEASURE_DISTANCE) return appendMeasurePoint(clickedPoint)
+      if (currentMode === TOOL_MODES.ADD_MARKER) {
+        addMarker(clickedPoint)
+        return
+      }
+
+      if (currentMode === TOOL_MODES.DRAW_LINE) {
+        appendLinePoint(clickedPoint)
+        return
+      }
+
       if (currentMode === TOOL_MODES.ADD_ROUTE) {
-        if (!routeDraft.start) return setRouteStart(clickedPoint)
-        createRoutePath(routeDraft.start, clickedPoint)
+        if (!routeDraft.start) {
+          setRouteStart(clickedPoint)
+          return
+        }
+        requestRoute(routeDraft.start, clickedPoint, routeDraft.travelMode || 'WALKING')
         setRouteStart(null)
+        return
+      }
+
+      if (currentMode === TOOL_MODES.MEASURE_DISTANCE) {
+        appendMeasurePoint(clickedPoint)
+        return
       }
 
       if (currentMode === TOOL_MODES.SELECT) {
@@ -187,9 +244,10 @@ function Map() {
       appendLinePoint,
       appendMeasurePoint,
       clearPinSelection,
-      createRoutePath,
       currentMode,
+      requestRoute,
       routeDraft.start,
+      routeDraft.travelMode,
       selectLine,
       selectPin,
       setRouteStart,
@@ -408,9 +466,20 @@ function Map() {
         ) : null}
       </GoogleMap>
 
-      {routeDraft.start && (
-        <div className="absolute bottom-4 left-1/2 z-20 -translate-x-1/2 rounded-md bg-white px-3 py-2 text-sm shadow">
-          도착점을 클릭해 경로를 완성하세요
+      {currentMode === TOOL_MODES.ADD_ROUTE && (
+        <div className="absolute left-1/2 top-4 z-20 flex -translate-x-1/2 items-center gap-2 rounded-md bg-white px-3 py-2 text-sm shadow">
+          <select
+            value={routeDraft.travelMode || 'WALKING'}
+            onChange={(event) => setRouteTravelMode(event.target.value)}
+            className="rounded border border-gray-300 px-2 py-1 text-sm text-gray-700"
+          >
+            {routeTravelModeList.map((routeTravelModeItem) => (
+              <option key={routeTravelModeItem.value} value={routeTravelModeItem.value}>
+                {routeTravelModeItem.label}
+              </option>
+            ))}
+          </select>
+          <span className="text-gray-700">{routeDraft.start ? '도착점을 클릭해 경로를 완성하세요' : '출발점을 클릭하세요'}</span>
         </div>
       )}
     </>
