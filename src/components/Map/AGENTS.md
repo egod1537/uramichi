@@ -72,6 +72,10 @@
 - `TimelineBar.jsx`를 추가해 핀 `openingHours` 배열(복수 구간)을 24시간 바(회색 배경 + 주황 구간)로 렌더링하도록 구현함.
 - 자정 넘김 구간은 정규화 결과에 따라 `18:00~24:00`, `00:00~02:00`처럼 분리 렌더링하며, 각 구간 시작/종료 라벨과 하단 눈금(0/6/12/18/24)을 함께 표시함.
 - `PinPopup.jsx` 하단에 `<TimelineBar openingHours={pin.openingHours} />`를 삽입해 영업시간 데이터가 없을 때는 타임라인 자체가 렌더링되지 않도록 연결함.
+[codex] 2026-02-27 PinPopup 영업시간 설정 UI 추가 메모
+- `src/components/Map/PinPopup.jsx` 액션 아이콘 영역에 시계(🕒) 버튼을 추가해 핀 팝업 내부에서 영업시간 설정 패널을 열고 닫을 수 있도록 구현함.
+- 영업시간 설정 패널에서 구간 추가, 시작/종료 시간(`type="time"`) 수정, 구간 삭제를 지원하고 변경 시 `updatePin(pin.id, { openingHours })`로 즉시 저장되도록 연결함.
+- 기존 `TimelineBar` 렌더와 동일 데이터(`pin.openingHours`)를 사용해 설정 변경이 타임라인 미리보기에 바로 반영되도록 유지함.
 [codex] 2026-02-27 거리 측정 입력 충돌/종료 동작 보강 메모
 - `Map.jsx`에서 `MEASURE_DISTANCE` 모드일 때 POI 클릭(`event.placeId`)을 상세 오버레이 분기 전에 측정 꼭짓점 추가 분기로 우선 처리해, 측정 중 지도 오브젝트 클릭이 핀/POI 동작으로 전환되지 않도록 고정함.
 - 같은 파일에서 지도 옵션 `clickableIcons`를 측정 모드 동안 `false`로 전환해, 기본 POI/지도 오브젝트 클릭으로 인한 스냅 느낌 상호작용을 차단함.

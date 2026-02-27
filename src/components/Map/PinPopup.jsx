@@ -30,6 +30,7 @@ function PinPopup({ pin }) {
   const selectPin = useProjectStore((state) => state.selectPin)
   const [isEditMode, setIsEditMode] = useState(false)
   const [isIconPickerOpen, setIsIconPickerOpen] = useState(false)
+  const [isOpeningHoursEditorOpen, setIsOpeningHoursEditorOpen] = useState(false)
   const [isNameEditing, setIsNameEditing] = useState(false)
   const [tagDraftInput, setTagDraftInput] = useState('')
   const [editDraft, setEditDraft] = useState(() => ({
@@ -130,6 +131,31 @@ function PinPopup({ pin }) {
     updatePin(pin.id, { images: nextImageList })
   }
 
+  const openingHoursRangeList = Array.isArray(pin.openingHours) ? pin.openingHours : []
+
+  const handleAddOpeningHoursRange = () => {
+    const nextOpeningHours = [...openingHoursRangeList, { start: '09:00', end: '18:00' }]
+    updatePin(pin.id, { openingHours: nextOpeningHours })
+  }
+
+  const handleOpeningHoursRangeChange = (rangeIndex, fieldName, fieldValue) => {
+    const nextOpeningHours = openingHoursRangeList.map((timeRange, currentRangeIndex) => {
+      if (currentRangeIndex !== rangeIndex) {
+        return timeRange
+      }
+      return {
+        ...timeRange,
+        [fieldName]: fieldValue,
+      }
+    })
+    updatePin(pin.id, { openingHours: nextOpeningHours })
+  }
+
+  const handleRemoveOpeningHoursRange = (rangeIndex) => {
+    const nextOpeningHours = openingHoursRangeList.filter((_, currentRangeIndex) => currentRangeIndex !== rangeIndex)
+    updatePin(pin.id, { openingHours: nextOpeningHours })
+  }
+
   return (
     <OverlayView position={pin.position} mapPaneName={overlayPane}>
       <div
@@ -212,10 +238,60 @@ function PinPopup({ pin }) {
               <button type="button" onClick={() => setIsEditMode((previousMode) => !previousMode)} className="rounded p-1 hover:bg-gray-100" aria-label="편집 모드">
                 ✏️
               </button>
+              <button
+                type="button"
+                onClick={() => setIsOpeningHoursEditorOpen((previousOpenState) => !previousOpenState)}
+                className={`rounded p-1 hover:bg-gray-100 ${isOpeningHoursEditorOpen ? 'bg-orange-50 text-orange-600' : ''}`}
+                aria-label="영업시간 설정"
+                title="영업시간 설정"
+              >
+                🕒
+              </button>
               <button type="button" onClick={handleImageButtonClick} className="rounded p-1 hover:bg-gray-100" aria-label="사진 추가">📷</button>
               <button type="button" onClick={handleDeletePin} className="rounded p-1 hover:bg-gray-100" aria-label="삭제">🗑️</button>
             </div>
           </div>
+
+          {isOpeningHoursEditorOpen ? (
+            <div className="mb-3 rounded-xl border border-orange-200 bg-orange-50 p-3">
+              <div className="mb-2 flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-orange-700">영업시간</h3>
+                <button type="button" onClick={handleAddOpeningHoursRange} className="rounded bg-white px-2 py-1 text-xs text-orange-700 hover:bg-orange-100">
+                  + 구간 추가
+                </button>
+              </div>
+
+              <div className="space-y-2">
+                {openingHoursRangeList.map((timeRange, rangeIndex) => (
+                  <div key={`${pin.id}-opening-hours-${rangeIndex}`} className="flex items-center gap-2">
+                    <input
+                      type="time"
+                      value={timeRange.start || '09:00'}
+                      onChange={(event) => handleOpeningHoursRangeChange(rangeIndex, 'start', event.target.value)}
+                      className="flex-1 rounded border border-orange-200 bg-white px-2 py-1 text-sm text-gray-700 outline-none ring-orange-200 focus:ring"
+                    />
+                    <span className="text-sm text-orange-600">~</span>
+                    <input
+                      type="time"
+                      value={timeRange.end || '18:00'}
+                      onChange={(event) => handleOpeningHoursRangeChange(rangeIndex, 'end', event.target.value)}
+                      className="flex-1 rounded border border-orange-200 bg-white px-2 py-1 text-sm text-gray-700 outline-none ring-orange-200 focus:ring"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveOpeningHoursRange(rangeIndex)}
+                      className="rounded px-1 py-1 text-xs text-orange-700 hover:bg-orange-100"
+                      aria-label={`영업시간 구간 ${rangeIndex + 1} 삭제`}
+                    >
+                      삭제
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {!openingHoursRangeList.length ? <p className="mt-2 text-xs text-orange-600">아직 설정된 영업시간이 없습니다.</p> : null}
+            </div>
+          ) : null}
 
           <input ref={imageInputRef} type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
 
