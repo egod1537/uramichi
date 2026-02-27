@@ -422,6 +422,10 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `src/components/Map/Map.jsx`에서 거리 측정 드래프트 완료 로직을 분리해 우클릭/ESC/더블클릭 시 측정 선이 즉시 확정 저장되도록 변경함.
 - 거리선 두께를 상향(`MEASURE_LINE_WIDTH`)하고 꼭짓점을 `Marker` 심볼로 렌더링해 확대/축소 시에도 선/꼭짓점이 화면 기준 일정 비율로 유지되도록 맞춤.
 - 저장된 거리 측정 오브젝트를 지도에 재렌더링하고, `src/components/Sidebar/LayerRow.jsx`에 레이어별 측정 목록(`📏 거리 측정 n`)을 추가해 핀처럼 레이어 패널에서 확인 가능하게 연결함.
+[codex] 2026-02-27 핀 추가 마우스 업 타이밍 변경 메모
+- `src/components/Map/Map.jsx`에서 핀 추가 모드의 `pendingMarkerPoint` 설정 시점을 지도 `onClick`에서 `onMouseUp`으로 이동해, 마우스 버튼을 뗄 때(ClickUp) 핀 추가 확인 바가 열리도록 조정함.
+- 같은 파일에서 `ADD_MARKER` 분기를 `handleMapClick`에서 제거해 Select/Line/Route/Measure 흐름과 충돌하지 않도록 정리함.
+- `onMouseUp`에서도 `isPinClickInProgress` 가드를 유지해 핀 요소 클릭이 지도 핀 추가로 오동작하지 않게 맞춤.
 [codex] 2026-02-27 지도 페이지 스크롤바 제거 메모
 - `src/index.css`에 `html/body/#root`의 `width/height: 100%`와 `body { overflow: hidden; }`를 추가해 구글 맵 화면에서 브라우저 수직/수평 스크롤바가 나타나지 않도록 고정함.
 
