@@ -6,11 +6,9 @@ class UserButton extends React.Component {
 
   googleSignInScriptPromise = null
 
-  googleSignInInitialized = false
+  googleTokenClient = null
 
   isGoogleLoginPending = false
-
-  googleLoginRetryTimeoutId = null
 
   state = {
     isDropdownOpen: false,
@@ -38,8 +36,6 @@ class UserButton extends React.Component {
     }
     this.detachOutsideClickListener()
     this.clearToastTimeout()
-    this.clearGoogleLoginRetryTimeout()
-    this.detachGoogleLoginResumeListeners()
   }
 
   componentDidUpdate(previousProps, previousState) {
@@ -72,64 +68,12 @@ class UserButton extends React.Component {
     }
   }
 
-  clearGoogleLoginRetryTimeout() {
-    if (this.googleLoginRetryTimeoutId) {
-      window.clearTimeout(this.googleLoginRetryTimeoutId)
-      this.googleLoginRetryTimeoutId = null
-    }
-  }
-
-  attachGoogleLoginResumeListeners() {
-    window.addEventListener('focus', this.handleGoogleLoginResume)
-    document.addEventListener('visibilitychange', this.handleGoogleLoginResume)
-  }
-
-  detachGoogleLoginResumeListeners() {
-    window.removeEventListener('focus', this.handleGoogleLoginResume)
-    document.removeEventListener('visibilitychange', this.handleGoogleLoginResume)
-  }
-
   stopGoogleLoginFlow() {
     this.isGoogleLoginPending = false
-    this.clearGoogleLoginRetryTimeout()
-    this.detachGoogleLoginResumeListeners()
-  }
-
-  scheduleGoogleLoginRetry() {
-    this.clearGoogleLoginRetryTimeout()
-    this.googleLoginRetryTimeoutId = window.setTimeout(() => {
-      this.googleLoginRetryTimeoutId = null
-      this.handleGoogleLoginResume()
-    }, 300)
-  }
-
-  handleGoogleLoginResume = () => {
-    if (!this.isGoogleLoginPending || this.state.isLoggedIn) {
-      return
-    }
-    if (document.visibilityState !== 'visible' || !document.hasFocus()) {
-      return
-    }
-    this.promptGoogleSignIn()
-  }
-
-  decodeJwtPayload(jwtToken) {
-    const tokenPartList = jwtToken.split('.')
-    if (tokenPartList.length < 2) return null
-    const payload = tokenPartList[1].replace(/-/g, '+').replace(/_/g, '/')
-    const decodedPayload = window.atob(payload)
-    const normalizedPayload = decodeURIComponent(
-      decodedPayload
-        .split('')
-        .map((character) => `%${`00${character.charCodeAt(0).toString(16)}`.slice(-2)}`)
-        .join(''),
-    )
-
-    return JSON.parse(normalizedPayload)
   }
 
   loadGoogleSignInScript() {
-    if (window.google?.accounts?.id) {
+    if (window.google?.accounts?.oauth2) {
       return Promise.resolve()
     }
     if (this.googleSignInScriptPromise) {
@@ -139,6 +83,10 @@ class UserButton extends React.Component {
     this.googleSignInScriptPromise = new Promise((resolve, reject) => {
       const existingScriptElement = document.querySelector('script[data-google-identity="true"]')
       if (existingScriptElement) {
+        if (window.google?.accounts?.oauth2) {
+          resolve()
+          return
+        }
         existingScriptElement.addEventListener('load', () => resolve(), { once: true })
         existingScriptElement.addEventListener('error', () => reject(new Error('Google script load failed')), { once: true })
         return
@@ -157,65 +105,61 @@ class UserButton extends React.Component {
     return this.googleSignInScriptPromise
   }
 
-  handleGoogleCredentialResponse = (response) => {
-    if (!response?.credential) {
+  handleGoogleTokenResponse = async (tokenResponse) => {
+    if (!tokenResponse?.access_token) {
       this.stopGoogleLoginFlow()
       this.setState({ toastMessage: 'Google 로그인에 실패했습니다' })
       return
     }
 
-    const profilePayload = this.decodeJwtPayload(response.credential)
-    if (!profilePayload) {
-      this.stopGoogleLoginFlow()
-      this.setState({ toastMessage: 'Google 계정 정보를 읽지 못했습니다' })
-      return
-    }
-
-    useUserStore.getState().login({
-      provider: 'google',
-      idToken: response.credential,
-      displayName: profilePayload.name || '',
-      email: profilePayload.email || '',
-      avatarUrl: profilePayload.picture || '',
-    })
-
-    this.stopGoogleLoginFlow()
-  }
-
-  promptGoogleSignIn() {
     try {
-      window.google.accounts.id.prompt((momentNotification) => {
-        if (!this.isGoogleLoginPending || this.state.isLoggedIn) {
-          return
-        }
-        const isSkipped = momentNotification?.isSkippedMoment?.() === true
-        const isDismissed = momentNotification?.isDismissedMoment?.() === true
-        const isNotDisplayed = momentNotification?.isNotDisplayed?.() === true
-        if (isSkipped || isDismissed || isNotDisplayed) {
-          this.scheduleGoogleLoginRetry()
-        }
+      const profileResponse = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: {
+          Authorization: `Bearer ${tokenResponse.access_token}`,
+        },
+      })
+
+      if (!profileResponse.ok) {
+        throw new Error('Failed to fetch Google profile')
+      }
+
+      const profileData = await profileResponse.json()
+
+      useUserStore.getState().login({
+        provider: 'google',
+        accessToken: tokenResponse.access_token,
+        displayName: profileData.name || '',
+        email: profileData.email || '',
+        avatarUrl: profileData.picture || '',
       })
     } catch {
-      this.scheduleGoogleLoginRetry()
+      this.setState({ toastMessage: 'Google 계정 정보를 읽지 못했습니다' })
+    } finally {
+      this.stopGoogleLoginFlow()
     }
   }
 
-  initializeGoogleSignIn() {
+  initializeGoogleTokenClient() {
     const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
     if (!googleClientId) {
       this.setState({ toastMessage: 'VITE_GOOGLE_CLIENT_ID 설정이 필요합니다' })
       return false
     }
-    if (!window.google?.accounts?.id) {
+    if (!window.google?.accounts?.oauth2) {
       this.setState({ toastMessage: 'Google 로그인 SDK를 불러오지 못했습니다' })
       return false
     }
-    if (!this.googleSignInInitialized) {
-      window.google.accounts.id.initialize({
+
+    if (!this.googleTokenClient) {
+      this.googleTokenClient = window.google.accounts.oauth2.initTokenClient({
         client_id: googleClientId,
-        callback: this.handleGoogleCredentialResponse,
+        scope: 'openid email profile',
+        callback: this.handleGoogleTokenResponse,
+        error_callback: () => {
+          this.stopGoogleLoginFlow()
+          this.setState({ toastMessage: 'Google 로그인 창을 닫았습니다' })
+        },
       })
-      this.googleSignInInitialized = true
     }
 
     return true
@@ -228,12 +172,11 @@ class UserButton extends React.Component {
 
     try {
       await this.loadGoogleSignInScript()
-      const isInitialized = this.initializeGoogleSignIn()
+      const isInitialized = this.initializeGoogleTokenClient()
       if (!isInitialized) return
 
       this.isGoogleLoginPending = true
-      this.attachGoogleLoginResumeListeners()
-      this.promptGoogleSignIn()
+      this.googleTokenClient.requestAccessToken({ prompt: 'consent' })
     } catch {
       this.stopGoogleLoginFlow()
       this.setState({ toastMessage: 'Google 로그인 창을 열지 못했습니다' })

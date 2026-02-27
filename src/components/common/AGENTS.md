@@ -8,3 +8,7 @@
 [codex] 2026-02-27 ColorPalette 컴포넌트 작업 메모
 - `src/components/common/ColorPalette.jsx`를 추가해 레인보우 2줄 + 뉴트럴 1줄 색상 스와치, 투명도 슬라이더, 테두리 두께 슬라이더 UI를 재사용 가능 형태로 구현함.
 - 컴포넌트는 `selectedColor/opacity/borderWidth` 제어 props가 없을 때 내부 상태로 동작하고, props가 전달되면 외부 상태로 제어할 수 있도록 분기함.
+[codex] 2026-02-27 로그인 버튼 동작 수정 메모
+- `src/components/common/UserButton.jsx`의 로그인 흐름을 Google One Tap `prompt()` 재시도 방식에서 OAuth 토큰 팝업(`google.accounts.oauth2.initTokenClient`) 호출 방식으로 변경해, 버튼 클릭 시 계정 선택창이 즉시 열리도록 수정함.
+- 로그인 성공 시 `https://www.googleapis.com/oauth2/v3/userinfo`로 프로필을 조회해 `useUserStore.login`에 `displayName/email/avatarUrl`을 반영하도록 연결함.
+- 기존 스크립트 태그가 이미 존재하는 경우에도 SDK 로드 완료 상태를 즉시 판별해 Promise가 대기 상태로 멈추지 않도록 보강함.
