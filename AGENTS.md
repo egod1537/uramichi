@@ -229,3 +229,9 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `src/components/Map/Map.jsx`의 기존 `InfoWindow`를 `PinPopup`으로 교체함.
 - `src/components/Map/PinMarker.jsx`는 핀에 저장된 `color` 값이 있으면 마커 배경색에 우선 반영하도록 조정함.
 - `src/stores/useProjectStore.js`에 `updatePin`, `removePin` 액션을 추가해 팝업 편집/삭제 상태 연동을 지원함.
+
+[codex] 2026-02-27 활성 레이어 기반 핀 추가 작업 메모
+- `src/stores/useProjectStore.js`에 `activeLayerId` 상태와 `setActiveLayer` 액션을 추가하고, 핀 추가(`addMarker`) 시 활성 레이어가 없으면 기본 레이어를 자동 생성한 뒤 `layerId`를 자동 할당하도록 변경함.
+- `src/utils/ProjectManager.js`의 초기 더미 데이터를 제거해 `pins`, `layers`, `routes`를 모두 빈 배열로 시작하도록 정리함.
+- `src/components/Sidebar/LayerRow.jsx`에서 레이어 클릭 시 active layer를 설정하고, 현재 active layer에 하이라이트 스타일이 적용되도록 UI를 업데이트함.
+- `src/stores/useProjectStore.js`의 `addLayer`, `removeLayer`에서 active layer 갱신 로직을 연결해 레이어 추가/삭제 후에도 활성 상태가 일관되게 유지되도록 조정함.
