@@ -296,6 +296,22 @@ function Map() {
     [triggerMeasureComplete],
   )
 
+  useEffect(() => {
+    const mapDivElement = mapInstanceRef.current?.getDiv?.()
+    if (!mapDivElement) return undefined
+
+    const handleMapContextMenu = (event) => {
+      event.preventDefault()
+      shouldIgnoreNextMapClickRef.current = true
+      triggerMeasureComplete()
+    }
+
+    mapDivElement.addEventListener('contextmenu', handleMapContextMenu)
+    return () => {
+      mapDivElement.removeEventListener('contextmenu', handleMapContextMenu)
+    }
+  }, [triggerMeasureComplete])
+
   const handleMapMouseDown = useCallback((event) => {
     handleMarkerMouseDown(createModeEventContext(event))
   }, [createModeEventContext])
