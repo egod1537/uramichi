@@ -296,3 +296,6 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `src/components/Toolbar/Toolbar.jsx`의 `toolbarButtons`에 버튼별 `tooltip` 문구를 추가해 각 도구에 단축키 포함 툴팁이 뜨도록 연결함.
 - 툴바 검색 버튼에도 `title="장소 검색"`을 추가해 상단 검색 액션 버튼 호버 시 툴팁이 표시되도록 맞춤.
 - `src/components/Toolbar/ToolButton.jsx`는 `tooltip` prop을 받아 `title`로 우선 적용하고, 값이 없으면 기존 `label`을 fallback으로 사용하도록 조정함.
+[codex] 2026-02-27 PinPopup 삭제 핸들러 버그 수정 메모
+- `src/components/Map/PinPopup.jsx`에서 휴지통 버튼 `onClick`이 정의되지 않은 `handleDelete`를 참조해 런타임 `ReferenceError`가 발생하던 문제를 확인함.
+- 삭제 확인 모달 오픈 핸들러인 `handleOpenDeleteModal`로 연결을 수정해 핀 팝업에서 삭제 버튼 클릭 시 에러 없이 기존 확인 플로우가 동작하도록 복구함.
