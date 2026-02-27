@@ -119,6 +119,14 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `src/components/Sidebar/MapPanel.jsx`에 지도 제목 인라인 편집, 마지막 수정일 표시, 액션 버튼(레이어 추가/공유/미리보기) UI를 연결함.
 - `src/components/Sidebar/LayerPanel.jsx`에서 레이어 체크박스(표시/숨기기), 접기/펼치기, 이름 변경/삭제 메뉴, 핀/경로 목록 렌더링 및 핀 선택 연동을 구현함.
 - `src/stores/useMapStore.js`에 mapTitle/lastEditedAt/selectedPinId 및 레이어 가시성/접힘/이름변경/삭제 액션을 추가해 Sidebar-Map 상태 동기화를 지원함.
+- `src/components/Map/Map.jsx`에서 `useMapStore`의 레이어 가시성 기준으로 핀 마커를 렌더링하고, 핀 선택 시 `panTo`와 `InfoWindow`가 열리도록 연결함.
+
+[codex] 2026-02-26 Toolbar 작업 메모 (Task 2-A)
+- `src/stores/useMapStore.js`에 툴바 모드/히스토리 상태(`currentMode`, `history`, `historyIndex`)와 Undo/Redo/드로잉 액션을 통합해 툴바와 지도 클릭 동작이 동일 스토어를 사용하도록 정리함.
+- `src/components/Toolbar/Toolbar.jsx`는 `useMapStore`의 `setMode`, `undo`, `redo`, `resetToSelectMode`를 직접 사용하며 ESC/단축키(U/R/M/L/T/D) 동작과 단일 활성 하이라이트를 유지함.
+- `src/components/Toolbar/Search.jsx`는 Google Places Autocomplete를 유지하되 리스너 정리(cleanup)를 추가해 재마운트 시 이벤트 누수를 방지함.
+- `src/components/Toolbar/ToolButton.jsx`는 스크린샷 톤에 맞춰 회색 아이콘 기본 스타일 + 활성 시 파란 하이라이트 스타일로 조정함.
+- `src/components/Map/Map.jsx`도 `useMapStore`의 툴 상태/히스토리 데이터를 사용하도록 변경해 툴바 클릭과 지도 동작의 상태 소스를 일치시킴.
 - `src/components/Map/Map.jsx`에서 `useMapStore`의 레이어 가시성 기준으로
 
 핀 마커를 렌더링하고, 핀 선택 시 `panTo`와 `InfoWindow`가 열리도록 연결함.

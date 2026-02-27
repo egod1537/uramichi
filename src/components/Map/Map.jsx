@@ -1,7 +1,6 @@
 import { GoogleMap, InfoWindow, Marker, Polyline } from '@react-google-maps/api'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { TOOL_MODES, useToolbarStore } from '../../stores/toolbarStore'
-import useMapStore from '../../stores/useMapStore'
+import useMapStore, { TOOL_MODES } from '../../stores/useMapStore'
 
 const containerStyle = { width: '100%', height: '100%' }
 
@@ -38,17 +37,17 @@ const getPathDistanceInMeters = (path) => {
 
 export default function Map() {
   const [mapInstance, setMapInstance] = useState(null)
-  const mode = useToolbarStore((state) => state.mode)
-  const markers = useToolbarStore((state) => state.markers)
-  const linePath = useToolbarStore((state) => state.linePath)
-  const routePaths = useToolbarStore((state) => state.routePaths)
-  const measurePath = useToolbarStore((state) => state.measurePath)
-  const routeDraft = useToolbarStore((state) => state.routeDraft)
-  const addMarker = useToolbarStore((state) => state.addMarker)
-  const appendLinePoint = useToolbarStore((state) => state.appendLinePoint)
-  const appendMeasurePoint = useToolbarStore((state) => state.appendMeasurePoint)
-  const setRouteStart = useToolbarStore((state) => state.setRouteStart)
-  const commitRoutePath = useToolbarStore((state) => state.commitRoutePath)
+  const currentMode = useMapStore((state) => state.currentMode)
+  const markers = useMapStore((state) => state.markers)
+  const linePath = useMapStore((state) => state.linePath)
+  const routePaths = useMapStore((state) => state.routePaths)
+  const measurePath = useMapStore((state) => state.measurePath)
+  const routeDraft = useMapStore((state) => state.routeDraft)
+  const addMarker = useMapStore((state) => state.addMarker)
+  const appendLinePoint = useMapStore((state) => state.appendLinePoint)
+  const appendMeasurePoint = useMapStore((state) => state.appendMeasurePoint)
+  const setRouteStart = useMapStore((state) => state.setRouteStart)
+  const commitRoutePath = useMapStore((state) => state.commitRoutePath)
   const pins = useMapStore((state) => state.pins)
   const layers = useMapStore((state) => state.layers)
   const selectedPinId = useMapStore((state) => state.selectedPinId)
@@ -112,22 +111,22 @@ export default function Map() {
 
       const clickedPoint = { lat: latitude, lng: longitude }
 
-      if (mode === TOOL_MODES.ADD_MARKER) {
+      if (currentMode === TOOL_MODES.ADD_MARKER) {
         addMarker(clickedPoint)
         return
       }
 
-      if (mode === TOOL_MODES.DRAW_LINE) {
+      if (currentMode === TOOL_MODES.DRAW_LINE) {
         appendLinePoint(clickedPoint)
         return
       }
 
-      if (mode === TOOL_MODES.MEASURE_DISTANCE) {
+      if (currentMode === TOOL_MODES.MEASURE_DISTANCE) {
         appendMeasurePoint(clickedPoint)
         return
       }
 
-      if (mode === TOOL_MODES.ADD_ROUTE) {
+      if (currentMode === TOOL_MODES.ADD_ROUTE) {
         if (!routeDraft.start) {
           setRouteStart(clickedPoint)
           return
@@ -138,7 +137,7 @@ export default function Map() {
       }
     },
     [
-      mode,
+      currentMode,
       addMarker,
       appendLinePoint,
       appendMeasurePoint,
