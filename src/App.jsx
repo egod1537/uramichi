@@ -4,6 +4,8 @@ import { LoadScript } from '@react-google-maps/api'
 import Map from './components/Map/Map'
 import Sidebar from './components/Sidebar/Sidebar'
 import Toolbar from './components/Toolbar/Toolbar'
+import Testbed from './pages/Testbed'
+import { getRoute } from './route'
 
 const libraries = ['places', 'geometry']
 
@@ -291,6 +293,25 @@ class App extends React.Component {
       undo: this.undo,
       redo: this.redo,
       setShortcutModalOpen: this.setShortcutModalOpen,
+    }
+
+    const currentRoute = getRoute()
+
+    if (currentRoute === 'testbed') {
+      return (
+        <LoadScript
+          googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
+          libraries={libraries}
+          loadingElement={<div className="p-4">로딩 중...</div>}
+        >
+          <Testbed
+            {...mapProps}
+            {...sidebarProps}
+            {...toolbarProps}
+            historyLength={this.state.history.length}
+          />
+        </LoadScript>
+      )
     }
 
     return (
