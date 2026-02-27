@@ -299,3 +299,8 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 [codex] 2026-02-27 PinPopup 삭제 핸들러 버그 수정 메모
 - `src/components/Map/PinPopup.jsx`에서 휴지통 버튼 `onClick`이 정의되지 않은 `handleDelete`를 참조해 런타임 `ReferenceError`가 발생하던 문제를 확인함.
 - 삭제 확인 모달 오픈 핸들러인 `handleOpenDeleteModal`로 연결을 수정해 핀 팝업에서 삭제 버튼 클릭 시 에러 없이 기존 확인 플로우가 동작하도록 복구함.
+
+[codex] 2026-02-27 로컬라이제이션 시스템 작업 메모
+- `src/utils/L.js`를 추가해 현재 언어(`useEditorStore.language`) 기반 동적 import 로케일 로딩, `{index}` 포맷 치환, 키 누락 시 key 반환 동작을 구현함.
+- `src/locales/ko.json`, `src/locales/ja.json`, `src/locales/en.json` 플랫 키 번역 리소스를 추가함.
+- 앱 시작 시 `src/App.jsx`에서 `initializeLocalization()`을 호출하도록 연결했고, `src/stores/useEditorStore.js`에 `language`/`setLanguage` 상태를 추가함.
