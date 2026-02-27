@@ -511,3 +511,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 [codex] 2026-02-27 pin SVG 외곽선 스타일 작업 메모
 - `public/svg/pin-*.svg`에서 원형 배경(채움/테두리 원)을 제거하고, 아이콘 본체를 배경색 기반 단색 외곽선(stroke) 스타일로 통일함.
 - 아이콘별 외곽선 색상은 기존 배경 원의 fill 색(`default #5F6368`, `hotel #0F766E`, `photo #DB2777`, `restaurant #DC2626`, `tour #7C3AED`, `transit #2563EB`)을 그대로 사용함.
+[codex] 2026-02-27 Claude API 연결 구현 메모
+- `.env.local` 기반 Anthropic 키는 `ANTHROPIC_API_KEY` 이름으로 읽도록 고정했고, 선택값으로 `ANTHROPIC_MODEL`, `ANTHROPIC_MAX_TOKENS`를 함께 지원함.
+- `vite.config.js`에 개발 서버 미들웨어 `/api/chat/claude`를 추가해 프런트에서 키를 노출하지 않고 Claude Messages API를 호출하도록 연결함.
+- `src/components/Chat/ChatPanel.jsx`의 전송 흐름을 API 호출 기반으로 변경해, 임시 응답 메시지를 실제 Claude 응답/에러 메시지로 치환하도록 수정함.
