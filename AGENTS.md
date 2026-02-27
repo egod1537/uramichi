@@ -259,3 +259,18 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `src/components/Sidebar/LayerPanel.jsx`에 `selectedPinIds` 기반 선택 개수 배지와 일괄 삭제(`removePins`)·대상 레이어 선택 후 일괄 이동(`movePinsToLayer`) UI를 추가함.
 - `src/stores/useProjectStore.js`에 `movePinsToLayer(pinIds, layerId)` 액션을 추가해 다중 핀 레이어 이동을 스토어 단일 경로로 처리함.
 - `src/components/Sidebar/LayerRow.jsx`의 핀 항목에 우클릭 메뉴를 추가하고 단건 삭제를 `removePin` 액션으로 연결해 Map의 키보드/팝업 삭제와 동일 액션 경로를 사용하도록 맞춤.
+[codex] 2026-02-27 거리 측정 분리 구현 메모
+- `src/utils/geo.js`를 추가해 Haversine 기반 점간 거리/경로 총거리/중간점/단위 포맷(m, km) 유틸을 분리함.
+- `src/components/Map/Map.jsx`에서 measure 모드 클릭 시 `draftMeasurePoints` 경로를 누적하고, 각 구간 중간점 Overlay 라벨 + 마지막 지점 총거리 Overlay 라벨을 렌더링하도록 연결함.
+- 측정 종료는 더블클릭과 ESC 키로 처리하고, 측정 모드를 벗어나면 드래프트 측정 경로가 즉시 제거되도록 동기화함.
+- 측정 드래프트는 스토어 영구 데이터/히스토리 커밋 대상이 아니며 화면용 상태로만 유지되도록 기존 구조를 유지함.
+[codex] 2026-02-27 핀 이미지 기능 작업 메모
+- `src/utils/file.js`에 파일을 base64 data URL 문자열로 변환하는 `convertFileToDataUrl(file)` 유틸을 추가함.
+- `src/components/Map/PinPopup.jsx`의 📷 버튼이 숨김 `<input type="file">`를 트리거하도록 연결함.
+- 이미지 선택 시 `convertFileToDataUrl` 결과를 사용해 `updatePin(id, { images: nextImages })` 형태로 핀 `images` 배열을 갱신함.
+- PinPopup 본문에 핀 이미지 썸네일 그리드 렌더링과 개별 삭제 버튼(✕)을 추가함.
+- 핀 기본 생성값의 `images: []`는 `src/stores/useProjectStore.js`의 `createDefaultPinData`에서 계속 보장됨.
+[codex] 2026-02-27 PinPopup 편집/삭제 UX 보강 메모
+- `src/components/Map/PinPopup.jsx` 편집 UI를 로컬 draft 상태(`editDraft`)와 스토어 저장 상태(`updatePin`)로 분리해 입력 중 값과 저장 반영 경계를 명확히 정리함.
+- 편집 항목(이름 인라인, 메모, 카테고리, 태그 추가/삭제, 체류시간, 예상비용)을 모두 `updatePin(id, patch)` 호출로 즉시 반영하도록 연결함.
+- 삭제 버튼 클릭 시 `window.confirm` 대신 팝업 내부 확인 모달을 표시하고, 확인 시 `removePin(id)`, 취소 시 기존 상태 유지 흐름으로 변경함.
