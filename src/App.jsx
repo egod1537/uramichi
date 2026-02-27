@@ -23,6 +23,7 @@ class App extends React.Component {
 
   componentDidMount() {
     initializeLocalization()
+    window.addEventListener('keydown', this.handleWindowKeyDown)
     this.unsubscribeProjectStore = useProjectStore.subscribe((state) => {
       this.setState({
         currentMode: state.currentMode,
@@ -33,9 +34,19 @@ class App extends React.Component {
   }
 
   componentWillUnmount() {
+    window.removeEventListener('keydown', this.handleWindowKeyDown)
     if (this.unsubscribeProjectStore) {
       this.unsubscribeProjectStore()
     }
+  }
+
+  handleWindowKeyDown = (event) => {
+    if (event.key !== 'Tab') {
+      return
+    }
+
+    event.preventDefault()
+    this.setState((previousState) => ({ chatPanelOpen: !previousState.chatPanelOpen }))
   }
 
   handleOpenChatPanel = () => {
