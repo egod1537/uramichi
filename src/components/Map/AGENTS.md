@@ -35,3 +35,6 @@
 [codex] 2026-02-27 선 도구 우클릭 종료 보강 메모
 - `src/components/Map/Map.jsx`에 지도 DOM(`map.getDiv()`)의 `contextmenu` 이벤트 리스너를 추가해, 우클릭 시 GoogleMap `onRightClick`이 누락되는 경우에도 `triggerMeasureComplete()`가 항상 호출되도록 보강함.
 - 같은 핸들러에서 기본 컨텍스트 메뉴를 막고 `shouldIgnoreNextMapClickRef`를 함께 설정해, 우클릭 직후 후속 클릭 이벤트로 드래프트 점이 다시 찍히는 부작용을 방지함.
+[codex] 2026-02-27 Map 상수 config 분리 메모
+- `src/components/Map/config.js`를 추가해 지도 컨테이너 스타일, 기본 중심 좌표, 지도 옵션, 핀 추가 드래그 임계값 상수를 모아 관리하도록 정리함.
+- `src/components/Map/Map.jsx`는 기존 파일 내부 상수 선언을 제거하고 `config.js`에서 import해 동일 값을 사용하도록 연결함.
