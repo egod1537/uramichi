@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react'
-import { GoogleMap, InfoWindow, Polyline } from '@react-google-maps/api'
+import { GoogleMap, Polyline } from '@react-google-maps/api'
 import TOOL_MODES from '../../utils/toolModes'
 import { COLOR_PRESETS } from '../../utils/constants'
 import useProjectStore from '../../stores/useProjectStore'
 import PinMarker from './PinMarker'
+import PinPopup from './PinPopup'
 
 const containerStyle = { width: '100%', height: '100%' }
 const defaultCenter = { lat: 35.6812, lng: 139.7671 }
@@ -141,11 +142,7 @@ function Map() {
           />
         ))}
 
-        {selectedPin && (
-          <InfoWindow position={selectedPin.position} onCloseClick={() => selectPin(null)}>
-            <div className="text-sm">{selectedPin.name}</div>
-          </InfoWindow>
-        )}
+        {selectedPin ? <PinPopup key={selectedPin.id} pin={selectedPin} /> : null}
 
         {linePath.length > 1 && <Polyline path={linePath} options={{ strokeColor: COLOR_PRESETS.primaryBlue, strokeWeight: 3, clickable: false }} />}
 
