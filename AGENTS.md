@@ -550,3 +550,6 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 [codex] 2026-02-27 Tab 채팅 패널 토글/포커스 메모
 - `src/App.jsx`에 전역 `keydown` 리스너를 추가해 Tab 입력 시 AI 채팅 패널(`chatPanelOpen`)이 열림/닫힘 토글되도록 연결함.
 - `src/components/Chat/ChatPanel.jsx`에 `textarea` ref와 `componentDidUpdate` 포커스 로직을 추가해 패널이 열리는 순간 입력창으로 자동 포커스가 이동하도록 처리함.
+[codex] 2026-02-27 선그리기 이슈 대응 메모
+- 선그리기(draw_line)는 measurement 엔티티로 저장되는 구조를 유지하며, UX 요구사항(검정 기본색/거리라벨 비표시/완료 후 Select 복귀)을 렌더·상호작용 레이어에서 우선 반영함.
+- 우클릭 완료 시 남는 잔상 문제 대응으로 draw_line의 점선 스타일을 제거하고 실선 렌더로 통일함.

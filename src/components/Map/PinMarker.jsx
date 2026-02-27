@@ -7,6 +7,7 @@ function PinMarker({
   pin,
   onClick,
   onMouseDown,
+  isInteractionBlocked = false,
   indexLabel,
   draggable = false,
   isDragging = false,
@@ -59,11 +60,19 @@ function PinMarker({
   }, [indexLabel])
 
   const handlePinClick = (event) => {
+    if (isInteractionBlocked) {
+      event?.domEvent?.stopPropagation?.()
+      return
+    }
     event?.domEvent?.stopPropagation?.()
     onClick(event)
   }
 
   const handlePinMouseDown = (event) => {
+    if (isInteractionBlocked) {
+      event?.domEvent?.stopPropagation?.()
+      return
+    }
     event?.domEvent?.stopPropagation?.()
     onMouseDown?.()
   }
