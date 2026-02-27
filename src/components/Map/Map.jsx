@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Circle, GoogleMap, OverlayView, Polyline } from '@react-google-maps/api'
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { GoogleMap, Marker, OverlayView, Polyline } from '@react-google-maps/api'
 import TOOL_MODES from '../../utils/toolModes'
 import { COLOR_PRESETS } from '../../utils/constants'
 import useProjectStore, { createRouteId } from '../../stores/useProjectStore'
@@ -14,6 +14,7 @@ const defaultCenter = { lat: 35.6812, lng: 139.7671 }
 
 const mapOptions = {
   disableDefaultUI: true,
+  gestureHandling: 'greedy',
   zoomControl: true,
   zoomControlOptions: { position: 9 },
   mapTypeControl: false,
@@ -31,6 +32,8 @@ const routeTravelModeList = [
 ]
 
 const createGoogleMapsPlaceUrl = (placeId) => `https://www.google.com/maps/search/?api=1&query=Google&query_place_id=${placeId}`
+const MEASURE_LINE_WIDTH = 6
+const MEASURE_VERTEX_PIXEL_SIZE = 12
 
 const createSegmentLabelDataList = (measurePointPath) =>
   measurePointPath.slice(1).map((currentPoint, pointIndex) => {
@@ -49,6 +52,14 @@ const createTotalLabelData = (measurePointPath) => {
   const terminalPoint = measurePointPath[measurePointPath.length - 1]
   return { id: 'measure-total', position: terminalPoint, label: `총 ${formatDistanceLabel(totalDistanceInMeters)}` }
 }
+
+const createMeasurementEntity = (measurePointPath, activeLayerId, measurementCount) => ({
+  id: `measure-${Date.now()}-${measurementCount + 1}`,
+  layerId: activeLayerId,
+  points: measurePointPath,
+  color: COLOR_PRESETS.measureOrange,
+  width: MEASURE_LINE_WIDTH,
+})
 
 const getRouteRequest = (startPoint, endPoint, travelMode) => ({
   origin: startPoint,
@@ -126,6 +137,7 @@ function Map() {
   const mapInstanceRef = useRef(null)
   const currentMode = useProjectStore((state) => state.currentMode)
   const lines = useProjectStore((state) => state.lines)
+  const measurements = useProjectStore((state) => state.measurements)
   const linePath = useProjectStore((state) => state.linePath)
   const routePaths = useProjectStore((state) => state.routePaths)
   const measurePath = useProjectStore((state) => state.measurePath)
@@ -146,6 +158,7 @@ function Map() {
   const setRouteStart = useProjectStore((state) => state.setRouteStart)
   const setRouteTravelMode = useProjectStore((state) => state.setRouteTravelMode)
   const addRoute = useProjectStore((state) => state.addRoute)
+  const addMeasurement = useProjectStore((state) => state.addMeasurement)
   const selectPin = useProjectStore((state) => state.selectPin)
   const selectLine = useProjectStore((state) => state.selectLine)
   const togglePinInSelection = useProjectStore((state) => state.togglePinInSelection)
@@ -178,6 +191,10 @@ function Map() {
     return layerVisiblePins.filter((pinItem) => activeIconSet.has(pinItem.icon))
   }, [pinIconFilters, pins, visibleLayerIdSet])
   const visibleLines = useMemo(() => lines.filter((lineItem) => visibleLayerIdSet.has(lineItem.layerId)), [lines, visibleLayerIdSet])
+  const visibleMeasurements = useMemo(
+    () => measurements.filter((measurementItem) => visibleLayerIdSet.has(measurementItem.layerId)),
+    [measurements, visibleLayerIdSet],
+  )
 
   const selectedLine = useMemo(
     () => visibleLines.find((lineItem) => lineItem.id === selectedLineId) || null,
@@ -255,6 +272,21 @@ function Map() {
     if (!measurePath.length || !hoverMeasurePoint) return []
     return [...measurePath, hoverMeasurePoint]
   }, [currentMode, hoverMeasurePoint, measurePath])
+
+  const completeDraftMeasure = useCallback(() => {
+    if (currentMode !== TOOL_MODES.MEASURE_DISTANCE) return
+    if (measurePath.length < 2) {
+      cancelDraftMeasure()
+      return
+    }
+    const targetLayerId = activeLayerId || layers[0]?.id || null
+    if (!targetLayerId) {
+      cancelDraftMeasure()
+      return
+    }
+    addMeasurement(createMeasurementEntity(measurePath, targetLayerId, measurements.length))
+    cancelDraftMeasure()
+  }, [activeLayerId, addMeasurement, cancelDraftMeasure, currentMode, layers, measurePath, measurements.length])
 
   const completeDraftLine = useCallback(() => {
     if (currentMode !== TOOL_MODES.DRAW_LINE) return
@@ -480,13 +512,13 @@ function Map() {
   const handleMapDoubleClick = useCallback(() => {
     if (currentMode === TOOL_MODES.MEASURE_DISTANCE) {
       setHoverMeasurePoint(null)
-      cancelDraftMeasure()
+      completeDraftMeasure()
       return
     }
     if (currentMode === TOOL_MODES.DRAW_LINE) {
       completeDraftLine()
     }
-  }, [cancelDraftMeasure, completeDraftLine, currentMode])
+  }, [completeDraftMeasure, completeDraftLine, currentMode])
 
   useEffect(() => {
     const handleDeleteKeyDown = (event) => {
@@ -502,7 +534,7 @@ function Map() {
       if (event.key === 'Escape') {
         if (currentMode === TOOL_MODES.MEASURE_DISTANCE) {
           setHoverMeasurePoint(null)
-          cancelDraftMeasure()
+          completeDraftMeasure()
           return
         }
         if (currentMode === TOOL_MODES.DRAW_LINE) {
@@ -534,7 +566,7 @@ function Map() {
     window.addEventListener('keydown', handleDeleteKeyDown)
     return () => window.removeEventListener('keydown', handleDeleteKeyDown)
   }, [
-    cancelDraftMeasure,
+    completeDraftMeasure,
     completeDraftLine,
     currentMode,
     removeLine,
@@ -568,6 +600,12 @@ function Map() {
         onClick={handleMapClick}
         onMouseMove={handleMapMouseMove}
         onDblClick={handleMapDoubleClick}
+        onRightClick={() => {
+          if (currentMode === TOOL_MODES.MEASURE_DISTANCE) {
+            setHoverMeasurePoint(null)
+            completeDraftMeasure()
+          }
+        }}
         options={{ ...mapOptions, disableDoubleClickZoom: currentMode === TOOL_MODES.MEASURE_DISTANCE || currentMode === TOOL_MODES.DRAW_LINE }}
       >
         {visiblePins.map((pinItem, pinIndex) => (
@@ -662,12 +700,42 @@ function Map() {
           <Polyline key={`route-${routeIndex}`} path={routePath} options={{ strokeColor: COLOR_PRESETS.routeGreen, strokeWeight: 4, clickable: false }} />
         ))}
 
+        {visibleMeasurements.map((measurementItem) => (
+          <Fragment key={measurementItem.id}>
+            <Polyline
+              path={measurementItem.points}
+              options={{
+                strokeColor: measurementItem.color || COLOR_PRESETS.measureOrange,
+                strokeWeight: measurementItem.width || MEASURE_LINE_WIDTH,
+                clickable: false,
+                strokeOpacity: 0.95,
+                icons: [{ icon: { path: 'M 0,-1 0,1', strokeOpacity: 1, scale: 5 }, offset: '0', repeat: '20px' }],
+              }}
+            />
+            {measurementItem.points.map((measurementPoint, measurementPointIndex) => (
+              <Marker
+                key={`${measurementItem.id}-point-${measurementPointIndex}`}
+                position={measurementPoint}
+                icon={{
+                  path: window.google.maps.SymbolPath.CIRCLE,
+                  scale: MEASURE_VERTEX_PIXEL_SIZE / 2,
+                  fillColor: '#ffffff',
+                  fillOpacity: 1,
+                  strokeColor: '#ea580c',
+                  strokeWeight: Math.max(2, MEASURE_LINE_WIDTH - 2),
+                }}
+                clickable={false}
+              />
+            ))}
+          </Fragment>
+        ))}
+
         {measurePath.length > 1 && (
           <Polyline
             path={measurePath}
             options={{
               strokeColor: COLOR_PRESETS.measureOrange,
-              strokeWeight: 3,
+              strokeWeight: MEASURE_LINE_WIDTH,
               clickable: false,
               icons: [{ icon: { path: 'M 0,-1 0,1', strokeOpacity: 1, scale: 4 }, offset: '0', repeat: '20px' }],
             }}
@@ -679,7 +747,7 @@ function Map() {
             path={previewMeasurePath}
             options={{
               strokeColor: COLOR_PRESETS.measureOrange,
-              strokeWeight: 2,
+              strokeWeight: Math.max(2, MEASURE_LINE_WIDTH - 2),
               clickable: false,
               strokeOpacity: 0.45,
             }}
@@ -687,19 +755,18 @@ function Map() {
         )}
 
         {measurePath.map((measurePointItem, measurePointIndex) => (
-          <Circle
+          <Marker
             key={`measure-point-${measurePointIndex}`}
-            center={measurePointItem}
-            radius={4}
-            options={{
-              strokeColor: '#ea580c',
-              strokeWeight: 2,
+            position={measurePointItem}
+            icon={{
+              path: window.google.maps.SymbolPath.CIRCLE,
+              scale: MEASURE_VERTEX_PIXEL_SIZE / 2,
               fillColor: '#ffffff',
               fillOpacity: 1,
-              clickable: currentMode === TOOL_MODES.MEASURE_DISTANCE,
-              draggable: currentMode === TOOL_MODES.MEASURE_DISTANCE,
-              zIndex: 12,
+              strokeColor: '#ea580c',
+              strokeWeight: Math.max(2, MEASURE_LINE_WIDTH - 2),
             }}
+            draggable={currentMode === TOOL_MODES.MEASURE_DISTANCE}
             onDragStart={() => setDraggingMeasurePointIndex(measurePointIndex)}
             onDrag={(event) => handleMeasurePointDrag(measurePointIndex, event)}
             onDragEnd={(event) => {
