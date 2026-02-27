@@ -216,3 +216,8 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `src/utils/ProjectManager.js`, `src/utils/HistoryManager.js`, `src/utils/constants.js`를 추가해 프로젝트 초기값/유효성, undo-redo 스냅샷, 카테고리/색상/아이콘 프리셋을 분리함.
 - `src/App.jsx`, `src/components/**`, `src/pages/Testbed.jsx`를 함수형 컴포넌트 + React Hooks 기반으로 전환해 클래스 컴포넌트를 제거함.
 - 지도/툴바/사이드바 데이터 흐름은 컴포넌트 props 체인 대신 Zustand 스토어 구독 + 액션 호출로 통합함.
+
+[codex] 2026-02-27 커스텀 마커 작업 메모
+- `src/components/Map/PinMarker.jsx`를 추가하고 `OverlayView` 기반 HTML 마커 렌더링으로 Google 기본 `Marker` 의존을 제거함.
+- `PinMarker`는 `useProjectStore`의 `selectedPinId`를 구독해 선택된 핀 확대/강조 스타일을 적용하고, 호버 확대 애니메이션을 지원함.
+- 카테고리별 아이콘/색상 프리셋은 `src/utils/constants.js`의 `CATEGORY_PRESETS`, `PIN_MARKER_COLOR_PRESETS`를 사용하며 경로 모드에서는 마커 순번 배지를 노출함.
