@@ -18,3 +18,6 @@
 [codex] 2026-02-27 draw_line 렌더 스타일 보정 메모
 - draw_line 드래프트/프리뷰/저장 렌더를 거리측정 점선과 분리해, draw_line 모드에서는 검은 실선으로 표시되도록 MeasureLayer 분기를 추가함.
 - 저장된 선/도형 꼭짓점 마커의 외곽선도 엔티티 색상(기본 검정)을 따라가도록 맞춰, 일부 꼭짓점이 다른 색으로 보이던 문제를 줄임.
+[codex] 2026-02-27 거리 라벨 박스 레이아웃/우클릭 종료 모드 유지 메모
+- `MeasureLabels`의 구간/총거리 라벨 패딩·라운드·오프셋을 키워 배경 박스보다 텍스트가 튀어나오던 레이아웃 문제를 보정함.
+- `useDistanceMeasureInteraction`에서 우클릭 종료(`contextmenu`)는 드래프트 취소 후 측정 모드를 유지하도록 `setMode(MEASURE_DISTANCE)`를 명시함.

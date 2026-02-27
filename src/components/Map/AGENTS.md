@@ -101,3 +101,6 @@
 [codex] 2026-02-27 선그리기 우클릭 종료 중복 호출 잠금 메모
 - `Map.jsx`에 `rightClickCompleteLockRef`를 추가해 `onRightClick`와 DOM `contextmenu`가 같은 우클릭에서 동시에 들어와도 완료 로직이 1회만 실행되도록 잠금 처리함.
 - 우클릭 직후 클릭 무시 플래그(`shouldIgnoreNextMapClickRef`)와 함께 동작해 종료 직후 드래프트가 다시 남는 잔상 케이스를 줄이는 목적임.
+[codex] 2026-02-27 거리 측정 상호작용 차단/우클릭 종료 유지 메모
+- `PinMarker`에서 측정 모드 상호작용 차단 시 핀 클릭 이벤트를 소비하지 않고 `clickable={false}`로 내려, 측정 좌클릭이 핀 선택 대신 지도 꼭짓점 추가로 이어지도록 조정함.
+- 거리 측정 우클릭 종료는 Select 모드 전환 없이 `MEASURE_DISTANCE` 모드 유지 방향으로 정리함.

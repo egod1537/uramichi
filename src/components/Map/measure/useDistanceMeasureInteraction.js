@@ -47,7 +47,8 @@ function useDistanceMeasureInteraction({
   const completeDistanceMeasureInteractionByContextMenu = useCallback(() => {
     setHoverMeasurePoint(null)
     cancelDraftMeasure()
-  }, [cancelDraftMeasure, setHoverMeasurePoint])
+    setMode?.(TOOL_MODES.MEASURE_DISTANCE)
+  }, [cancelDraftMeasure, setHoverMeasurePoint, setMode])
 
   const completeDistanceMeasureInteractionByEscape = useCallback(() => {
     setHoverMeasurePoint(null)
