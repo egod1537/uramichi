@@ -334,3 +334,12 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `src/components/Sidebar/LayerRow.jsx`의 각 핀 행에 `⋯` 버튼을 추가하고, 클릭 시 간소화된 핀 옵션 드롭다운(이름 변경/핀 삭제)이 열리도록 구현함.
 - 기존 우클릭 컨텍스트 메뉴 흐름은 제거하고, 동일한 `updatePin`/`removePin` 스토어 액션을 재사용해 핀 팝업보다 단순한 사이드바 전용 편집 경로를 제공함.
 - 드롭다운 외부 클릭 시 닫히도록 기존 row 클릭 핸들러를 `pinOptionsPinId` 상태 기반으로 정리함.
+[codex] 2026-02-27 PinPopup 삭제 즉시 실행 변경 메모
+- `src/components/Map/PinPopup.jsx`에서 삭제 확인 모달 상태(`isDeleteModalOpen`)와 관련 핸들러를 제거함.
+- 휴지통 버튼 클릭 시 `handleDeletePin`이 바로 `removePin(pin.id)`를 호출하도록 변경해 재확인 없이 즉시 삭제되도록 맞춤.
+- ESC 키 처리도 모달 분기 없이 기존처럼 핀 팝업 닫기 동작만 유지되도록 정리함.
+[codex] 2026-02-27 거리툴 UX 보강 작업 메모
+- `src/components/Map/Map.jsx`에서 거리 측정 라벨의 y 오프셋/line-height/padding을 조정해 텍스트가 말풍선 밖으로 삐져나오는 현상을 완화함.
+- 같은 파일에서 측정 경로 각 꼭짓점에 드래그 가능한 점(`Circle`)을 렌더링해 점 단위 위치 수정이 가능하도록 연결함.
+- 같은 파일에서 측정 모드 중 마지막 점 이후 마우스 위치까지 실시간 프리뷰 선(`previewMeasurePath`)을 추가해 다음 점 추가 위치를 미리 확인할 수 있도록 구현함.
+- `src/stores/useProjectStore.js`에 `setMeasurePath(measurePointList)` 액션을 추가해 꼭짓점 드래그 시 측정 경로를 즉시 갱신하도록 연결함.
