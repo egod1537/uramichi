@@ -405,6 +405,10 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 [codex] 2026-02-27 지도 핀 아이콘 필터 폭 자동 맞춤 메모
 - `src/components/Map/Map.jsx`의 하단 핀 아이콘 필터 바를 고정 폭(`w-[min(92vw,860px)]`)에서 내용 기반 `inline-flex + max-w` 구조로 변경해 우측 여백이 과하게 비는 문제를 줄임.
 - 아이콘 버튼 영역은 `flex-1` 확장 대신 `max-w-[56vw] overflow-x-auto`로 제한해, 버튼 수에 맞춰 폭이 자연스럽게 늘고 좁은 화면에서는 가로 스크롤로 대응하도록 조정함.
+[codex] 2026-02-27 Google POI 커스텀 팝업 작업 메모
+- `src/components/Map/Map.jsx`에서 지도 POI 클릭 이벤트(`event.placeId`)를 감지해 기본 구글 POI 동작을 `event.stop()`으로 차단하고 커스텀 오버레이 팝업으로 전환함.
+- 같은 파일에 `PlacesService.getDetails` 기반 POI 상세 조회(`name/address/website/phone/rating`) 상태(`selectedPoiDetail`)를 추가해, 클릭한 POI 좌표에 맞춰 팝업 내용을 렌더링하도록 연결함.
+- 커스텀 팝업 액션 버튼으로 `Google 지도에서 보기`(place_id 기반 외부 링크)와 닫기 버튼을 추가함.
 [codex] 2026-02-27 지도 스크롤 줌 제스처 메모
 - `src/components/Map/Map.jsx`의 `mapOptions`에 `gestureHandling: 'greedy'`를 추가해 Ctrl 키 없이 마우스 휠만으로 확대/축소가 동작하도록 설정함.
 [codex] 2026-02-27 Google 로그인 기능 작업 메모
@@ -420,3 +424,6 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - 저장된 거리 측정 오브젝트를 지도에 재렌더링하고, `src/components/Sidebar/LayerRow.jsx`에 레이어별 측정 목록(`📏 거리 측정 n`)을 추가해 핀처럼 레이어 패널에서 확인 가능하게 연결함.
 [codex] 2026-02-27 지도 페이지 스크롤바 제거 메모
 - `src/index.css`에 `html/body/#root`의 `width/height: 100%`와 `body { overflow: hidden; }`를 추가해 구글 맵 화면에서 브라우저 수직/수평 스크롤바가 나타나지 않도록 고정함.
+
+[codex] 2026-02-27 지도 줌 컨트롤 숨김 메모
+- `src/components/Map/Map.jsx`의 Google Map 옵션에서 `zoomControl`을 `false`로 변경해 우측의 `+ / -` 확대·축소 버튼이 표시되지 않도록 조정함.
