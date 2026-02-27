@@ -390,6 +390,26 @@ function Map() {
     triggerMeasureComplete()
   }, [triggerMeasureComplete])
 
+  const handleAddPoiToMap = useCallback(
+    (poiDetail) => {
+      if (!poiDetail?.position) return
+      addMarker(poiDetail.position)
+
+      const createdPinList = useProjectStore.getState().pins
+      const createdPin = createdPinList[createdPinList.length - 1]
+      if (!createdPin) return
+
+      updatePin(createdPin.id, {
+        name: poiDetail.name || createdPin.name,
+        memo: poiDetail.address || '',
+        rating: poiDetail.rating,
+      })
+      selectPin(createdPin.id)
+      clearPoiDetail()
+    },
+    [addMarker, clearPoiDetail, selectPin, updatePin],
+  )
+
   useEffect(() => {
     const handleDeleteKeyDown = (event) => {
       const eventTarget = event.target
@@ -472,7 +492,7 @@ function Map() {
           onPinDragEnd={handlePinDragEnd}
         />
 
-        <PoiDetailOverlay poiDetail={selectedPoiDetail} onClose={clearPoiDetail} />
+        <PoiDetailOverlay poiDetail={selectedPoiDetail} onClose={clearPoiDetail} onAddToMap={handleAddPoiToMap} />
 
         <LineLayer lines={visibleLines} currentMode={currentMode} selectedLineId={selectedLineId} onLineClick={handleLineClick} />
 

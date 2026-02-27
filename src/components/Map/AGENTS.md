@@ -41,3 +41,7 @@
 [codex] 2026-02-27 Map 상수 config 분리 메모
 - `src/components/Map/config.js`를 추가해 지도 컨테이너 스타일, 기본 중심 좌표, 지도 옵션, 핀 추가 드래그 임계값 상수를 모아 관리하도록 정리함.
 - `src/components/Map/Map.jsx`는 기존 파일 내부 상수 선언을 제거하고 `config.js`에서 import해 동일 값을 사용하도록 연결함.
+[codex] 2026-02-27 POI 상세 오버레이 액션/평점 UI 보강 메모
+- `src/components/Map/PoiDetailOverlay.jsx`에 `지도에 추가` 버튼을 추가하고, 클릭 시 부모에서 전달한 `onAddToMap(poiDetail)` 콜백을 호출하도록 연결함.
+- 같은 오버레이의 평점 표시를 텍스트 단독(`평점 n.n`)에서 숫자 + 5개 별 아이콘(채움/비채움) 조합으로 변경해 시각적으로도 평점 강도를 바로 확인할 수 있게 조정함.
+- `src/components/Map/Map.jsx`에 `handleAddPoiToMap` 콜백을 추가해 POI 좌표로 핀을 생성(`addMarker`)하고, 생성된 핀에 POI 이름/주소/평점을 반영한 뒤 선택 상태로 전환하고 POI 상세를 닫도록 처리함.
