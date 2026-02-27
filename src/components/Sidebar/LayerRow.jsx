@@ -11,9 +11,10 @@ function LayerRow({ layer }) {
   const renameLayer = useProjectStore((state) => state.renameLayer)
   const removeLayer = useProjectStore((state) => state.removeLayer)
   const selectPin = useProjectStore((state) => state.selectPin)
+  const updatePin = useProjectStore((state) => state.updatePin)
   const removePin = useProjectStore((state) => state.removePin)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [pinContextMenuPinId, setPinContextMenuPinId] = useState(null)
+  const [pinOptionsPinId, setPinOptionsPinId] = useState(null)
 
   const layerPins = useMemo(() => pins.filter((pinItem) => pinItem.layerId === layer.id), [layer.id, pins])
   const isActiveLayer = activeLayerId === layer.id
@@ -39,8 +40,8 @@ function LayerRow({ layer }) {
     <div
       className={`border-b py-2 last:border-b-0 ${isActiveLayer ? 'border-blue-200 bg-blue-50/70' : 'border-gray-200'}`}
       onClick={() => {
-        if (pinContextMenuPinId) {
-          setPinContextMenuPinId(null)
+        if (pinOptionsPinId) {
+          setPinOptionsPinId(null)
         }
       }}
     >
@@ -92,18 +93,58 @@ function LayerRow({ layer }) {
             const routeItem = layer.routes.find((routeData) => routeData.fromPinId === pinItem.id && routeData.toPinId === nextPin?.id)
             return (
               <div key={pinItem.id} className="space-y-1">
-                <button
-                  type="button"
-                  onClick={() => selectPin(pinItem.id)}
-                  onContextMenu={(event) => {
-                    event.preventDefault()
-                    setPinContextMenuPinId(pinItem.id)
-                  }}
-                  className="flex w-full items-center gap-2 rounded px-2 py-1 text-sm text-gray-700 hover:bg-gray-100"
-                >
-                  <span>{CATEGORY_PRESETS[pinItem.category]?.icon ?? CATEGORY_PRESETS.default.icon}</span>
-                  <span className="truncate">{pinItem.name}</span>
-                </button>
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => selectPin(pinItem.id)}
+                    className="flex min-w-0 flex-1 items-center gap-2 rounded px-2 py-1 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    <span>{CATEGORY_PRESETS[pinItem.category]?.icon ?? CATEGORY_PRESETS.default.icon}</span>
+                    <span className="truncate">{pinItem.name}</span>
+                  </button>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        setPinOptionsPinId((previousPinId) => (previousPinId === pinItem.id ? null : pinItem.id))
+                      }}
+                      className="rounded px-2 py-1 text-sm text-gray-500 hover:bg-gray-100"
+                      aria-label="핀 옵션"
+                    >
+                      ⋯
+                    </button>
+                    {pinOptionsPinId === pinItem.id && (
+                      <div className="absolute right-0 top-8 z-30 min-w-28 rounded border border-gray-200 bg-white py-1 shadow">
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            const nextPinName = window.prompt('핀 이름 변경', pinItem.name)
+                            if (nextPinName?.trim()) {
+                              updatePin(pinItem.id, { name: nextPinName.trim() })
+                            }
+                            setPinOptionsPinId(null)
+                          }}
+                          className="block w-full px-3 py-1 text-left text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          이름 변경
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            removePin(pinItem.id)
+                            setPinOptionsPinId(null)
+                          }}
+                          className="block w-full px-3 py-1 text-left text-sm text-red-500 hover:bg-gray-100"
+                        >
+                          핀 삭제
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
 
                 {routeItem && (
                   <div className="flex items-center gap-2 px-2 py-1 text-xs text-gray-500">
@@ -116,21 +157,6 @@ function LayerRow({ layer }) {
               </div>
             )
           })}
-
-          {pinContextMenuPinId && (
-            <div className="absolute right-2 top-0 z-30 min-w-28 rounded border border-gray-200 bg-white py-1 shadow">
-              <button
-                type="button"
-                onClick={() => {
-                  removePin(pinContextMenuPinId)
-                  setPinContextMenuPinId(null)
-                }}
-                className="block w-full px-3 py-1 text-left text-sm text-red-500 hover:bg-gray-100"
-              >
-                핀 삭제
-              </button>
-            </div>
-          )}
         </div>
       )}
     </div>

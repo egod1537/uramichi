@@ -329,3 +329,8 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - 같은 파일에서 비-Select 모드에서도 핀 클릭 시 `selectPin(pinId)`가 동작하도록 분기해, 어떤 모드에서도 핀 팝업을 열 수 있게 정리함.
 - 같은 파일에서 핀 드래그 가능 조건을 `selectedPinId === pin.id`로 제한해 지도 이동 중 핀이 튀는 것처럼 보이는 오조작 가능성을 줄임.
 - `src/components/Map/PinPopup.jsx` 루트 컨테이너에 `onMouseDown/onClick stopPropagation`을 추가해 팝업 내부 버튼 클릭이 지도 클릭으로 전파되어 편집/삭제 액션이 끊기던 문제를 방지함.
+
+[codex] 2026-02-27 Sidebar 핀 옵션 드롭다운 작업 메모
+- `src/components/Sidebar/LayerRow.jsx`의 각 핀 행에 `⋯` 버튼을 추가하고, 클릭 시 간소화된 핀 옵션 드롭다운(이름 변경/핀 삭제)이 열리도록 구현함.
+- 기존 우클릭 컨텍스트 메뉴 흐름은 제거하고, 동일한 `updatePin`/`removePin` 스토어 액션을 재사용해 핀 팝업보다 단순한 사이드바 전용 편집 경로를 제공함.
+- 드롭다운 외부 클릭 시 닫히도록 기존 row 클릭 핸들러를 `pinOptionsPinId` 상태 기반으로 정리함.
