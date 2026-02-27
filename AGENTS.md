@@ -248,3 +248,9 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - 히스토리 커밋은 `addLine`, `commitDraftLine`, `addRoute`, `commitRoutePath`, `commitMarkerDrag`에서만 수행하고, 드래프트 측정(`appendMeasurePoint`, `startDraftMeasure`)은 히스토리에 넣지 않도록 분리함.
 - `src/utils/ProjectManager.js` 초기 상태 생성 필드를 스토어 시그니처와 동일하게 맞춤(`lines`, `routes`, 드래프트/선택/경로 관련 필드 포함).
 - `src/utils/HistoryManager.js` 스냅샷 구조를 `lines/routes`까지 포함하도록 확장해 신규 상태 필드 커밋 시 undo/redo 일관성을 유지함.
+
+[codex] 2026-02-27 Select 상호작용 작업 메모
+- `src/components/Map/Map.jsx`에서 Select 모드 전용 상호작용을 추가해 핀 클릭 단일선택(`selectPin`)과 Shift 멀티선택(`togglePinInSelection`)을 분기하고, 지도 빈 영역 클릭 시 `selectPin(null)` + `clearPinSelection()`으로 선택을 해제하도록 연결함.
+- Delete/Backspace 키 삭제 처리는 `Map.jsx`의 단일 keydown 바인딩으로 고정했고, Select 모드 + 선택 핀이 있을 때만 `removePins(selectedPinIds)`가 실행되도록 제한함.
+- 핀 드래그는 Select 모드에서만 활성화되도록 `PinMarker`에 `draggable` 제어를 추가했고, 드래그 중에는 반투명 스타일(`opacity-60`)을 적용함.
+- 드래그 중 좌표 반영은 `updatePin(id, { position })`로 처리하고, 드래그 완료 시점에만 `commitMarkerDrag(...)`를 호출하도록 분리해 히스토리 커밋 타이밍을 고정함.

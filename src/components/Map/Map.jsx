@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { GoogleMap, Polyline } from '@react-google-maps/api'
 import TOOL_MODES from '../../utils/toolModes'
 import { COLOR_PRESETS } from '../../utils/constants'
@@ -47,12 +47,19 @@ function Map() {
   const pins = useProjectStore((state) => state.pins)
   const layers = useProjectStore((state) => state.layers)
   const selectedPinId = useProjectStore((state) => state.selectedPinId)
+  const selectedPinIds = useProjectStore((state) => state.selectedPinIds)
   const addMarker = useProjectStore((state) => state.addMarker)
   const appendLinePoint = useProjectStore((state) => state.appendLinePoint)
   const appendMeasurePoint = useProjectStore((state) => state.appendMeasurePoint)
   const setRouteStart = useProjectStore((state) => state.setRouteStart)
   const commitRoutePath = useProjectStore((state) => state.commitRoutePath)
   const selectPin = useProjectStore((state) => state.selectPin)
+  const togglePinInSelection = useProjectStore((state) => state.togglePinInSelection)
+  const clearPinSelection = useProjectStore((state) => state.clearPinSelection)
+  const updatePin = useProjectStore((state) => state.updatePin)
+  const commitMarkerDrag = useProjectStore((state) => state.commitMarkerDrag)
+  const removePins = useProjectStore((state) => state.removePins)
+  const [draggingPinId, setDraggingPinId] = useState(null)
 
   const visiblePins = useMemo(() => {
     const visibleLayerIdSet = new Set(layers.filter((layerItem) => layerItem.visible).map((layerItem) => layerItem.id))
@@ -106,9 +113,76 @@ function Map() {
         createRoutePath(routeDraft.start, clickedPoint)
         setRouteStart(null)
       }
+
+      if (currentMode === TOOL_MODES.SELECT) {
+        selectPin(null)
+        clearPinSelection()
+      }
     },
-    [addMarker, appendLinePoint, appendMeasurePoint, createRoutePath, currentMode, routeDraft.start, setRouteStart],
+    [addMarker, appendLinePoint, appendMeasurePoint, clearPinSelection, createRoutePath, currentMode, routeDraft.start, selectPin, setRouteStart],
   )
+
+  const handlePinClick = useCallback(
+    (pinId, event) => {
+      if (currentMode !== TOOL_MODES.SELECT) return
+      if (event?.domEvent?.shiftKey) {
+        togglePinInSelection(pinId)
+        return
+      }
+      selectPin(pinId)
+    },
+    [currentMode, selectPin, togglePinInSelection],
+  )
+
+  const handlePinDragStart = useCallback(
+    (pinId) => {
+      if (currentMode !== TOOL_MODES.SELECT) return
+      setDraggingPinId(pinId)
+    },
+    [currentMode],
+  )
+
+  const handlePinDrag = useCallback(
+    (pinId, event) => {
+      if (currentMode !== TOOL_MODES.SELECT) return
+      const latitude = event.latLng?.lat()
+      const longitude = event.latLng?.lng()
+      if (latitude === undefined || longitude === undefined) return
+      updatePin(pinId, { position: { lat: latitude, lng: longitude } })
+    },
+    [currentMode, updatePin],
+  )
+
+  const handlePinDragEnd = useCallback(
+    (pinId, event) => {
+      if (currentMode !== TOOL_MODES.SELECT) return
+      const latitude = event.latLng?.lat()
+      const longitude = event.latLng?.lng()
+      if (latitude === undefined || longitude === undefined) {
+        setDraggingPinId(null)
+        return
+      }
+      const nextPosition = { lat: latitude, lng: longitude }
+      updatePin(pinId, { position: nextPosition })
+      const currentMarkers = useProjectStore.getState().markers
+      commitMarkerDrag(currentMarkers)
+      setDraggingPinId(null)
+    },
+    [commitMarkerDrag, currentMode, updatePin],
+  )
+
+  useEffect(() => {
+    const handleDeleteKeyDown = (event) => {
+      if (currentMode !== TOOL_MODES.SELECT) return
+      if (event.key !== 'Delete' && event.key !== 'Backspace') return
+      if (!selectedPinIds.length) return
+      event.preventDefault()
+      removePins(selectedPinIds)
+    }
+
+    window.addEventListener('keydown', handleDeleteKeyDown)
+    return () => window.removeEventListener('keydown', handleDeleteKeyDown)
+  }, [currentMode, removePins, selectedPinIds])
 
   return (
     <>
@@ -137,8 +211,13 @@ function Map() {
           <PinMarker
             key={pinItem.id}
             pin={pinItem}
-            onClick={() => selectPin(pinItem.id)}
+            onClick={(event) => handlePinClick(pinItem.id, event)}
             indexLabel={currentMode === TOOL_MODES.ADD_ROUTE ? String(pinIndex + 1) : ''}
+            draggable={currentMode === TOOL_MODES.SELECT}
+            isDragging={draggingPinId === pinItem.id}
+            onDragStart={() => handlePinDragStart(pinItem.id)}
+            onDrag={(event) => handlePinDrag(pinItem.id, event)}
+            onDragEnd={(event) => handlePinDragEnd(pinItem.id, event)}
           />
         ))}
 
