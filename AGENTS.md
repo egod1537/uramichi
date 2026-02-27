@@ -481,3 +481,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `src/components/Sidebar/LayerPanel.jsx`에 이름 변경 포커스/편집 대상 상태를 추가하고, 전역 `F2` 키 입력 시 현재 포커스된 레이어/핀 이름을 즉시 인라인 입력 필드로 전환하도록 연결함.
 - `src/components/Sidebar/LayerRow.jsx`에서 레이어 이름/핀 이름을 인라인 편집 가능한 입력으로 전환하고, Enter/blur 저장·Escape 취소 동작을 지원하도록 변경함.
 - 레이어/핀 옵션의 `이름 변경` 메뉴는 기존 `prompt` 대신 동일 인라인 편집 진입 흐름(`onStartRename`)을 사용하도록 통일함.
+[codex] 2026-02-27 지도 핀 SVG 아이콘 전환 메모
+- `public/svg/`에 지도 핀 아이콘 SVG 파일(`pin-transit`, `pin-restaurant`, `pin-tour`, `pin-hotel`, `pin-photo`, `pin-default`)을 추가함.
+- `src/utils/constants.js`의 `TRAVEL_PIN_ICON_PRESETS`에 `svgPath`를 연결하고 기본 아이콘 경로 상수(`DEFAULT_PIN_SVG_PATH`)를 추가함.
+- `src/components/Map/PinMarker.jsx`를 SVG URL 기반 `Marker.icon` 렌더링으로 변경해 지도 핀이 이모지 라벨 대신 SVG 아이콘으로 보이도록 수정함.
