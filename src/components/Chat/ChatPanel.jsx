@@ -11,6 +11,7 @@ class ChatPanel extends React.Component {
       },
     ],
     draftMessage: '',
+    isSubmitting: false,
   }
 
   getPanelClassName() {
@@ -19,7 +20,9 @@ class ChatPanel extends React.Component {
     }`
   }
 
-  handleSendMessage = () => {
+  handleSendMessage = async () => {
+    if (this.state.isSubmitting) return
+
     const trimmedMessage = this.state.draftMessage.trim()
     if (!trimmedMessage) return
 
@@ -38,7 +41,54 @@ class ChatPanel extends React.Component {
     this.setState((previousState) => ({
       messageList: [...previousState.messageList, submittedMessage, pendingAssistantMessage],
       draftMessage: '',
+      isSubmitting: true,
     }))
+
+    const historyMessageList = this.state.messageList
+      .filter((messageItem) => messageItem.role === 'user' || messageItem.role === 'assistant')
+      .map((messageItem) => ({ role: messageItem.role, text: messageItem.text }))
+    const requestMessageList = [...historyMessageList, { role: 'user', text: trimmedMessage }]
+
+    try {
+      const response = await fetch('/api/chat/claude', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: requestMessageList }),
+      })
+
+      const responseBody = await response.json()
+      const assistantText = response.ok
+        ? responseBody?.text || '응답을 받지 못했어요. 잠시 후 다시 시도해 주세요.'
+        : responseBody?.error || 'AI 응답을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.'
+
+      this.setState((previousState) => ({
+        messageList: previousState.messageList.map((messageItem) => {
+          if (messageItem.id !== pendingAssistantMessage.id) {
+            return messageItem
+          }
+
+          return {
+            ...messageItem,
+            text: assistantText,
+          }
+        }),
+        isSubmitting: false,
+      }))
+    } catch {
+      this.setState((previousState) => ({
+        messageList: previousState.messageList.map((messageItem) => {
+          if (messageItem.id !== pendingAssistantMessage.id) {
+            return messageItem
+          }
+
+          return {
+            ...messageItem,
+            text: '네트워크 문제로 응답을 받지 못했어요. 연결 상태를 확인해 주세요.',
+          }
+        }),
+        isSubmitting: false,
+      }))
+    }
   }
 
   handleTextareaKeyDown = (event) => {
@@ -87,9 +137,10 @@ class ChatPanel extends React.Component {
             <button
               type="button"
               onClick={this.handleSendMessage}
+              disabled={this.state.isSubmitting}
               className="rounded-md bg-[#CC785C] px-3 py-2 text-sm font-medium text-white transition hover:bg-[#b1654d]"
             >
-              전송
+              {this.state.isSubmitting ? '전송 중...' : '전송'}
             </button>
           </div>
         </div>
