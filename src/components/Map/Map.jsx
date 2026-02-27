@@ -34,6 +34,7 @@ const routeTravelModeList = [
 const createGoogleMapsPlaceUrl = (placeId) => `https://www.google.com/maps/search/?api=1&query=Google&query_place_id=${placeId}`
 const MEASURE_LINE_WIDTH = 6
 const MEASURE_VERTEX_PIXEL_SIZE = 12
+const ADD_MARKER_DRAG_THRESHOLD_PX = 6
 
 const createSegmentLabelDataList = (measurePointPath) =>
   measurePointPath.slice(1).map((currentPoint, pointIndex) => {
@@ -127,6 +128,7 @@ const createUniqueRouteId = (routeList) => {
 
 function Map() {
   const mapInstanceRef = useRef(null)
+  const addMarkerMouseDownPositionRef = useRef(null)
   const currentMode = useProjectStore((state) => state.currentMode)
   const lines = useProjectStore((state) => state.lines)
   const measurements = useProjectStore((state) => state.measurements)
@@ -379,9 +381,30 @@ function Map() {
     ],
   )
 
+  const handleMapMouseDown = useCallback((event) => {
+    if (currentMode !== TOOL_MODES.ADD_MARKER) return
+    const clientX = event?.domEvent?.clientX
+    const clientY = event?.domEvent?.clientY
+    if (clientX === undefined || clientY === undefined) {
+      addMarkerMouseDownPositionRef.current = null
+      return
+    }
+    addMarkerMouseDownPositionRef.current = { clientX, clientY }
+  }, [currentMode])
+
   const handleMapMouseUp = useCallback(
     (event) => {
       if (currentMode !== TOOL_MODES.ADD_MARKER) return
+      const mouseDownPosition = addMarkerMouseDownPositionRef.current
+      addMarkerMouseDownPositionRef.current = null
+      const mouseUpClientX = event?.domEvent?.clientX
+      const mouseUpClientY = event?.domEvent?.clientY
+      if (mouseDownPosition && mouseUpClientX !== undefined && mouseUpClientY !== undefined) {
+        const deltaX = mouseUpClientX - mouseDownPosition.clientX
+        const deltaY = mouseUpClientY - mouseDownPosition.clientY
+        const dragDistance = Math.hypot(deltaX, deltaY)
+        if (dragDistance >= ADD_MARKER_DRAG_THRESHOLD_PX) return
+      }
       if (isPinClickInProgress) {
         setIsPinClickInProgress(false)
         return
@@ -570,6 +593,7 @@ function Map() {
         onClick={handleMapClick}
         onMouseUp={handleMapMouseUp}
         onMouseMove={handleMapMouseMove}
+        onMouseDown={handleMapMouseDown}
         onDblClick={handleMapDoubleClick}
         onRightClick={() => {
           if (currentMode === TOOL_MODES.DRAW_LINE) {
