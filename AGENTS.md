@@ -210,3 +210,9 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - 코드 주석: 한국어
 - 스타일링: Tailwind CSS (인라인 style 지양)
 - 컴포넌트 파일 하나에 컴포넌트 하나
+
+[codex] 2026-02-27 Zustand/Hook 리팩토링 메모
+- `src/stores/`에 `useEditorStore`, `useProjectStore`, `useUserStore` 3개 Zustand 스토어를 추가했고, 에디터 UI 상태는 `persist`로 localStorage 동기화함.
+- `src/utils/ProjectManager.js`, `src/utils/HistoryManager.js`, `src/utils/constants.js`를 추가해 프로젝트 초기값/유효성, undo-redo 스냅샷, 카테고리/색상/아이콘 프리셋을 분리함.
+- `src/App.jsx`, `src/components/**`, `src/pages/Testbed.jsx`를 함수형 컴포넌트 + React Hooks 기반으로 전환해 클래스 컴포넌트를 제거함.
+- 지도/툴바/사이드바 데이터 흐름은 컴포넌트 props 체인 대신 Zustand 스토어 구독 + 액션 호출로 통합함.
