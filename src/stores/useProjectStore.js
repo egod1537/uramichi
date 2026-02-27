@@ -26,6 +26,8 @@ const createDefaultPinData = (point, layerId, pinIndex) => ({
   images: [],
 })
 
+export const createRouteId = (routeCount) => `route-${Date.now()}-${routeCount + 1}`
+
 const resolveSelectablePinIdList = (pinIdList, pinList) => {
   const selectablePinIdSet = new Set(pinList.map((pinItem) => pinItem.id))
   return pinIdList.filter((pinId) => selectablePinIdSet.has(pinId))
@@ -240,11 +242,22 @@ const useProjectStore = create((set) => ({
       }
     }),
   removeRoute: (routeId) =>
-    set((state) => ({
-      routes: state.routes.filter((routeItem) => routeItem.id !== routeId),
-      routePaths: state.routes.filter((routeItem) => routeItem.id !== routeId).map((routeItem) => routeItem.path || []),
-      lastEditedAt: new Date().toISOString(),
-    })),
+    set((state) => {
+      const nextRoutes = state.routes.filter((routeItem) => routeItem.id !== routeId)
+      const nextRoutePaths = nextRoutes.map((routeItem) => routeItem.path || [])
+      const committedHistory = HistoryManager.commit(state.history, state.historyIndex, {
+        ...createSnapshotFromState(state),
+        routes: nextRoutes,
+        routePaths: nextRoutePaths,
+      })
+      return {
+        ...committedHistory.snapshot,
+        routeDraft: { start: null, travelMode: state.routeDraft.travelMode || defaultTravelMode },
+        history: committedHistory.history,
+        historyIndex: committedHistory.historyIndex,
+        lastEditedAt: new Date().toISOString(),
+      }
+    }),
   startDraftLine: (startPoint) => set({ draftLinePoints: [startPoint], linePath: [startPoint] }),
   appendDraftLinePoint: (point) =>
     set((state) => ({
@@ -301,7 +314,7 @@ const useProjectStore = create((set) => ({
   commitRoutePath: (path) =>
     set((state) => {
       const nextRouteData = {
-        id: `route-${Date.now()}-${state.routes.length + 1}`,
+        id: createRouteId(state.routes.length),
         layerId: state.activeLayerId,
         start: path[0] || null,
         end: path[path.length - 1] || null,
