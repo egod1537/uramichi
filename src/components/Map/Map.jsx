@@ -165,6 +165,7 @@ function Map() {
   const [draggingPinId, setDraggingPinId] = useState(null)
   const [hoverMeasurePoint, setHoverMeasurePoint] = useState(null)
   const [draggingMeasurePointIndex, setDraggingMeasurePointIndex] = useState(null)
+  const [isPinFilterExpanded, setIsPinFilterExpanded] = useState(false)
   const [selectedPoiDetail, setSelectedPoiDetail] = useState(null)
 
   const visibleLayerIdSet = useMemo(
@@ -758,33 +759,59 @@ function Map() {
       </GoogleMap>
 
 
-      <div className="absolute bottom-4 left-1/2 z-20 inline-flex max-w-[92vw] -translate-x-1/2 items-center gap-3 rounded-xl border border-gray-200 bg-white/95 px-3 py-2 shadow-lg">
-        <div className="flex shrink-0 items-center gap-2">
-          <p className="text-xs font-semibold text-gray-600">지도 핀 아이콘 필터</p>
+      <div
+        className={`absolute bottom-4 left-1/2 z-20 -translate-x-1/2 rounded-xl border border-gray-200 bg-white/95 px-3 py-2 shadow-lg transition-all duration-200 ${
+          isPinFilterExpanded ? 'inline-flex max-w-[92vw] items-center gap-3' : 'inline-flex w-[min(92vw,360px)] items-center justify-between'
+        }`}
+      >
+        <p className="shrink-0 text-xs font-semibold text-gray-600">지도 핀 아이콘 필터</p>
+
+        {isPinFilterExpanded ? (
+          <>
+            <button
+              type="button"
+              onClick={clearPinIconFilter}
+              disabled={!pinIconFilters.length}
+              className="shrink-0 text-xs text-gray-500 hover:text-gray-700 disabled:opacity-40"
+            >
+              초기화
+            </button>
+            <div className="flex max-w-[56vw] items-center gap-1 overflow-x-auto">
+              {ICON_FILTER_OPTIONS.map((filterItem) => {
+                const isActive = pinIconFilters.includes(filterItem.key)
+                return (
+                  <button
+                    key={`map-filter-${filterItem.key}`}
+                    type="button"
+                    onClick={() => togglePinIconFilter(filterItem.key)}
+                    className={`shrink-0 rounded-full border px-2 py-0.5 text-xs ${isActive ? 'border-blue-400 bg-blue-50 text-blue-700' : 'border-gray-200 bg-white text-gray-600'}`}
+                  >
+                    {filterItem.icon}
+                  </button>
+                )
+              })}
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsPinFilterExpanded(false)}
+              className="shrink-0 rounded-full border border-gray-200 px-2 py-0.5 text-lg font-semibold leading-none text-gray-700 transition hover:bg-gray-100"
+              aria-label="핀 아이콘 필터 접기"
+              title="핀 아이콘 필터 접기"
+            >
+              −
+            </button>
+          </>
+        ) : (
           <button
             type="button"
-            onClick={clearPinIconFilter}
-            disabled={!pinIconFilters.length}
-            className="text-xs text-gray-500 hover:text-gray-700 disabled:opacity-40"
+            onClick={() => setIsPinFilterExpanded(true)}
+            className="shrink-0 rounded-full border border-gray-200 px-2 py-0.5 text-lg font-semibold leading-none text-gray-700 transition hover:bg-gray-100"
+            aria-label="핀 아이콘 필터 펼치기"
+            title="핀 아이콘 필터 펼치기"
           >
-            초기화
+            +
           </button>
-        </div>
-        <div className="flex max-w-[56vw] items-center gap-1 overflow-x-auto">
-          {ICON_FILTER_OPTIONS.map((filterItem) => {
-            const isActive = pinIconFilters.includes(filterItem.key)
-            return (
-              <button
-                key={`map-filter-${filterItem.key}`}
-                type="button"
-                onClick={() => togglePinIconFilter(filterItem.key)}
-                className={`shrink-0 rounded-full border px-2 py-0.5 text-xs ${isActive ? 'border-blue-400 bg-blue-50 text-blue-700' : 'border-gray-200 bg-white text-gray-600'}`}
-              >
-                {filterItem.icon}
-              </button>
-            )
-          })}
-        </div>
+        )}
       </div>
 
       {currentMode === TOOL_MODES.ADD_ROUTE && (
