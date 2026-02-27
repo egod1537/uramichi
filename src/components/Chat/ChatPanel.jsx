@@ -2,6 +2,11 @@ import React from 'react'
 import ChatMessage from './ChatMessage'
 
 class ChatPanel extends React.Component {
+  constructor(props) {
+    super(props)
+    this.messageInputRef = React.createRef()
+  }
+
   state = {
     messageList: [
       {
@@ -12,6 +17,27 @@ class ChatPanel extends React.Component {
     ],
     draftMessage: '',
     isSubmitting: false,
+  }
+
+
+  componentDidMount() {
+    if (this.props.isOpen) {
+      this.focusMessageInput()
+    }
+  }
+
+  componentDidUpdate(previousProps) {
+    if (!previousProps.isOpen && this.props.isOpen) {
+      this.focusMessageInput()
+    }
+  }
+
+  focusMessageInput = () => {
+    if (!this.messageInputRef.current) {
+      return
+    }
+
+    this.messageInputRef.current.focus()
   }
 
   getPanelClassName() {
@@ -128,6 +154,7 @@ class ChatPanel extends React.Component {
         <div className="border-t border-gray-200 px-4 py-3">
           <div className="flex items-end gap-2">
             <textarea
+              ref={this.messageInputRef}
               value={this.state.draftMessage}
               onChange={this.handleDraftMessageChange}
               onKeyDown={this.handleTextareaKeyDown}

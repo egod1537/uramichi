@@ -547,6 +547,9 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - 기존에 선그리기와 거리측정이 공용으로 사용하던 `measurePath` 드래프트를 분리해, 선그리기는 `linePath`, 거리측정은 `measurePath`만 사용하도록 상태 흐름을 분리함.
 - `lineController`/`useLineInteraction`/`Map.jsx`에서 선 도구 입력·프리뷰·드래그·완료가 `appendLinePoint`/`setLinePath`/`cancelDraftLine` 경로로만 동작하도록 정리함.
 - 모드 전환 동기화(`syncDraftByMode`)도 `DRAW_LINE` 진입 시 거리 드래프트를 정리하고, `MEASURE_DISTANCE` 진입 시 선 드래프트를 정리하도록 상호 독립 규칙으로 갱신함.
+[codex] 2026-02-27 Tab 채팅 패널 토글/포커스 메모
+- `src/App.jsx`에 전역 `keydown` 리스너를 추가해 Tab 입력 시 AI 채팅 패널(`chatPanelOpen`)이 열림/닫힘 토글되도록 연결함.
+- `src/components/Chat/ChatPanel.jsx`에 `textarea` ref와 `componentDidUpdate` 포커스 로직을 추가해 패널이 열리는 순간 입력창으로 자동 포커스가 이동하도록 처리함.
 [codex] 2026-02-27 선그리기 이슈 대응 메모
 - 선그리기(draw_line)는 measurement 엔티티로 저장되는 구조를 유지하며, UX 요구사항(검정 기본색/거리라벨 비표시/완료 후 Select 복귀)을 렌더·상호작용 레이어에서 우선 반영함.
 - 우클릭 완료 시 남는 잔상 문제 대응으로 draw_line의 점선 스타일을 제거하고 실선 렌더로 통일함.
