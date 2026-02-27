@@ -27,3 +27,7 @@
 - 드래프트 포인트 드래그 스냅 참조도 `lines` 기반으로 동작하도록 조정함.
 [codex] 2026-02-27 MeasureLayer 범위 축소 메모
 - `MeasureLayer.jsx`에서 저장된 선/도형 렌더를 제거하고, 거리 측정 드래프트(`measurePath`, `previewMeasurePath`)와 측정 포인트 드래그 UI만 렌더하도록 범위를 축소함.
+
+[codex] 2026-02-27 MeasureLayer 꼭짓점 범위 제한 메모
+- `MeasureLayer`의 측정 꼭짓점 마커 렌더를 `MEASURE_DISTANCE` 모드일 때만 표시하도록 제한함.
+- 측정 포인트 드래그 UI가 draw/select 등 다른 도구 모드에 섞여 보이지 않도록 범위를 고정함.

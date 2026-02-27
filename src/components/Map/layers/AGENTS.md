@@ -6,3 +6,7 @@
 [codex] 2026-02-27 LineLayer 단일 렌더러 메모
 - `LineLayer.jsx`가 저장된 일반 선(`lines`) + draw_line 드래프트(`linePath`/`previewLinePath`)를 함께 렌더하는 단일 일반 선 렌더러 역할을 담당하도록 확장함.
 - 선/도형(`shapeType`) 렌더를 `LineLayer`에서 처리하고, 스타일 기본값은 `src/utils/lineStyle.js` 상수를 사용하도록 맞춤.
+
+[codex] 2026-02-27 LineLayer 선택 꼭짓점 표시 메모
+- 저장 선 꼭짓점 렌더는 유지하되, Select 모드에서는 `selectedLineId` 대상 선에만 꼭짓점을 노출하도록 조건을 조정함.
+- 선 클릭 후 하이라이트(strokeOpacity/zIndex)와 꼭짓점 노출이 동시에 유지되도록 선택 렌더 일관성을 맞춤.

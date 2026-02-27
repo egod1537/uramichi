@@ -12,6 +12,7 @@ const convertLegacyMeasurementsToLines = (measurementList = [], currentLineCount
     ...measurementItem,
     id: measurementItem.id || createLegacyLineId(currentLineCount, measurementIndex),
     shapeType: measurementItem.shapeType || 'line',
+    sourceType: measurementItem.sourceType || 'measurement',
   }))
 
 const normalizeLineList = (lineList = [], measurementList = []) =>
@@ -284,15 +285,36 @@ const useProjectStore = create((set) => ({
     }),
   addLine: (lineData) =>
     set((state) => {
+      const nextLayers = [...state.layers]
+      let resolvedLayerId = lineData.layerId
+      if (!resolvedLayerId || !nextLayers.some((layerItem) => layerItem.id === resolvedLayerId)) {
+        if (!nextLayers.length) {
+          const createdLayer = ProjectManager.createDefaultLayer(nextLayers.length)
+          nextLayers.push(createdLayer)
+          resolvedLayerId = createdLayer.id
+        } else {
+          resolvedLayerId = state.activeLayerId && nextLayers.some((layerItem) => layerItem.id === state.activeLayerId)
+            ? state.activeLayerId
+            : nextLayers[0].id
+        }
+      }
+
+      const normalizedLineData = {
+        ...lineData,
+        layerId: resolvedLayerId,
+        sourceType: lineData.sourceType || 'line',
+      }
       const committedHistory = HistoryManager.commit(state.history, state.historyIndex, {
         ...createSnapshotFromState(state),
-        lines: [...state.lines, lineData],
+        lines: [...state.lines, normalizedLineData],
         linePath: [],
       })
       return {
         ...committedHistory.snapshot,
+        layers: nextLayers,
+        activeLayerId: resolvedLayerId,
         draftLinePoints: [],
-        selectedLineId: lineData.id,
+        selectedLineId: normalizedLineData.id,
         history: committedHistory.history,
         historyIndex: committedHistory.historyIndex,
         lastEditedAt: new Date().toISOString(),
