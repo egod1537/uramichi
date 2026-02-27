@@ -481,3 +481,11 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `public/svg/`에 지도 핀 아이콘 SVG 파일(`pin-transit`, `pin-restaurant`, `pin-tour`, `pin-hotel`, `pin-photo`, `pin-default`)을 추가함.
 - `src/utils/constants.js`의 `TRAVEL_PIN_ICON_PRESETS`에 `svgPath`를 연결하고 기본 아이콘 경로 상수(`DEFAULT_PIN_SVG_PATH`)를 추가함.
 - `src/components/Map/PinMarker.jsx`를 SVG URL 기반 `Marker.icon` 렌더링으로 변경해 지도 핀이 이모지 라벨 대신 SVG 아이콘으로 보이도록 수정함.
+
+[codex] 2026-02-27 locales npm 인자 전달 메모
+- `scripts/pull-locales.js`에 `resolveCliArguments()`를 추가해 `process.argv`가 비어있는 실행 환경에서도 `npm_config_argv`의 original 인자를 파싱하도록 확장함.
+- 이제 `npm run locales toolbar` 형태로 실행해도 `toolbar` 시트만 선택되어 기존 `node scripts/pull-locales.js toolbar`와 동일하게 동작함.
+
+[codex] 2026-02-27 locales npm_config_argv 파싱 보완 메모
+- `resolveCliArguments()`의 `npm_config_argv.original` 파싱 인덱스를 `run` 다음 토큰을 스크립트명으로 해석하도록 수정함(`run locales ...` 패턴 대응).
+- npm이 전달하는 구분자 `--`는 인자 목록에서 제거하도록 처리해 시트 선택 인자가 깔끔하게 전달되도록 맞춤.
