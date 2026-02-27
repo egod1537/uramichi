@@ -88,3 +88,7 @@
 - DRAW_LINE 완료 엔티티 저장을 measurement 경로로 유지하되 색상을 기본 검은색(`#111111`)으로 고정해 선 두께/톤 불일치가 줄어들도록 조정함.
 - 지도 우클릭 종료 시 선그리기 완료 후 즉시 Select 모드로 복귀되는 기존 플로우를 유지하면서, draw_line에서는 거리 라벨을 렌더링하지 않도록 상호작용 훅 반환값을 비우는 방식으로 정리함.
 - DRAW_LINE 클릭/드래그 시 기존 레이어 오브젝트(저장 선/도형)의 꼭짓점에 근거리 스냅(25m)되도록 line controller에 스냅 포인트 계산을 추가함.
+[codex] 2026-02-27 거리 측정 우클릭 직후 클릭 누수 차단 메모
+- `src/components/Map/Map.jsx`에 `contextMenuTriggeredAtRef`를 추가해 우클릭 직후 짧은 시간(220ms) 내 후속 click 이벤트를 무시하도록 보강함.
+- 우클릭 종료는 기존처럼 모드 유지(`measure_distance`)를 유지하되, ghost 선분이 남는 케이스를 줄이기 위해 `onRightClick`/DOM `contextmenu` 경로 모두 동일 타임스탬프 가드를 사용함.
+- 거리 측정/선그리기 중에는 핀 상호작용과 기본 지도 POI 클릭(`clickableIcons`)을 막아 꼭짓점 추가 시 다른 오브젝트 클릭이 끼어들지 않도록 정리함.

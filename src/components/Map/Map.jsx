@@ -39,6 +39,7 @@ function Map() {
   const mapInstanceRef = useRef(null)
   const addMarkerMouseDownPositionRef = useRef(null)
   const shouldIgnoreNextMapClickRef = useRef(false)
+  const contextMenuTriggeredAtRef = useRef(0)
   const currentMode = useProjectStore((state) => state.currentMode)
   const lines = useProjectStore((state) => state.lines)
   const measurements = useProjectStore((state) => state.measurements)
@@ -305,6 +306,15 @@ function Map() {
 
   const handleMapClick = useCallback(
     (event) => {
+      const mouseButtonCode = event?.domEvent?.button
+      if (mouseButtonCode === 2) {
+        return
+      }
+
+      if (Date.now() - contextMenuTriggeredAtRef.current < 220) {
+        return
+      }
+
       if (shouldIgnoreNextMapClickRef.current) {
         shouldIgnoreNextMapClickRef.current = false
         return
@@ -361,6 +371,7 @@ function Map() {
   const handleMapRightClick = useCallback(
     (event) => {
       event?.domEvent?.preventDefault?.()
+      contextMenuTriggeredAtRef.current = Date.now()
       shouldIgnoreNextMapClickRef.current = true
       triggerMeasureComplete('contextmenu')
     },
@@ -373,6 +384,7 @@ function Map() {
 
     const handleMapContextMenu = (event) => {
       event.preventDefault()
+      contextMenuTriggeredAtRef.current = Date.now()
       shouldIgnoreNextMapClickRef.current = true
       triggerMeasureComplete('contextmenu')
     }
@@ -549,7 +561,7 @@ function Map() {
         onRightClick={handleMapRightClick}
         options={{
           ...MAP_OPTIONS,
-          clickableIcons: currentMode !== TOOL_MODES.MEASURE_DISTANCE,
+          clickableIcons: currentMode !== TOOL_MODES.MEASURE_DISTANCE && currentMode !== TOOL_MODES.DRAW_LINE,
           disableDoubleClickZoom: currentMode === TOOL_MODES.DRAW_LINE,
         }}
       >
@@ -558,7 +570,7 @@ function Map() {
           selectedPin={selectedPoiDetail ? null : selectedPin}
           selectedPinId={selectedPinId}
           currentMode={currentMode}
-          isPinInteractionBlocked={currentMode === TOOL_MODES.MEASURE_DISTANCE}
+          isPinInteractionBlocked={currentMode === TOOL_MODES.MEASURE_DISTANCE || currentMode === TOOL_MODES.DRAW_LINE}
           draggingPinId={draggingPinId}
           onPinMouseDown={() => setIsPinClickInProgress(true)}
           onPinClick={handlePinClick}
