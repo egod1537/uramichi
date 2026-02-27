@@ -97,6 +97,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - 패널 + 장소 검색 구현 중
 
 [codex] 2026-02-26 작업 메모
+
 - 지도 상단 오버레이 툴바 UI는 `src/components/TopToolbar.jsx`에서 관리하며, 검색 입력줄 1행 + 아이콘 툴바 1행 구조로 구현함.
 - 툴 모드는 `src/stores/toolbarStore.js`의 Zustand 스토어(`TOOL_MODES`)로 단일 활성 상태를 유지함.
 - Undo/Redo는 스냅샷 히스토리(`history`, `historyIndex`) 기반으로 마커/선/경로/거리 측정 상태를 되돌리도록 구현함.
@@ -105,6 +106,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - ESC 키로 Select 모드 복귀, 단축키 모달 및 모드 단축키(U/R/M/L/T/D)는 `TopToolbar`에서 처리함.
 
 [codex] 2026-02-26 구조 리팩토링 메모
+
 - `src/components/Map/Map.jsx`로 지도 컴포넌트 경로를 이동했고 `App.jsx` import를 새 경로로 변경함.
 - 상단 툴바를 `src/components/Toolbar/Toolbar.jsx`로 분리하고, 검색 입력은 `src/components/Toolbar/Search.jsx`, 버튼 단위 컴포넌트는 `src/components/Toolbar/ToolButton.jsx`로 구성함.
 - 기존 패널 구조를 `src/components/Sidebar/Sidebar.jsx`, `MapPanel.jsx`, `LayerPanel.jsx`로 분해해 사이드바 컨테이너 + 메타/레이어 영역으로 정리함.
@@ -112,6 +114,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `src/utils/` 디렉터리를 생성해 유틸 분리용 경로를 확보함.
 
 [codex] 2026-02-26 Sidebar 작업 메모
+
 - `src/components/Sidebar/Sidebar.jsx`를 360px 고정 폭 좌측 패널 + 접기/펼치기 구조로 구성하고, 상단 `MapPanel` 고정/하단 `LayerPanel` 스크롤 레이아웃으로 맞춤.
 - `src/components/Sidebar/MapPanel.jsx`에 지도 제목 인라인 편집, 마지막 수정일 표시, 액션 버튼(레이어 추가/공유/미리보기) UI를 연결함.
 - `src/components/Sidebar/LayerPanel.jsx`에서 레이어 체크박스(표시/숨기기), 접기/펼치기, 이름 변경/삭제 메뉴, 핀/경로 목록 렌더링 및 핀 선택 연동을 구현함.
@@ -124,3 +127,38 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `src/components/Toolbar/Search.jsx`는 Google Places Autocomplete를 유지하되 리스너 정리(cleanup)를 추가해 재마운트 시 이벤트 누수를 방지함.
 - `src/components/Toolbar/ToolButton.jsx`는 스크린샷 톤에 맞춰 회색 아이콘 기본 스타일 + 활성 시 파란 하이라이트 스타일로 조정함.
 - `src/components/Map/Map.jsx`도 `useMapStore`의 툴 상태/히스토리 데이터를 사용하도록 변경해 툴바 클릭과 지도 동작의 상태 소스를 일치시킴.
+- `src/components/Map/Map.jsx`에서 `useMapStore`의 레이어 가시성 기준으로
+
+핀 마커를 렌더링하고, 핀 선택 시 `panTo`와 `InfoWindow`가 열리도록 연결함.
+
+# 아키텍처 원칙
+
+### 클래스 컴포넌트
+
+- 클래스 컴포넌트만 사용한다. 함수형 컴포넌트 사용 금지.
+- 모든 컴포넌트는 React.Component를 상속한다.
+
+### 단일 상태 (Single Source of Truth)
+
+- App.jsx가 모든 앱 상태를 소유한다.
+- 자식 컴포넌트는 앱 데이터를 자체 state로 가지지 않는다 (UI 토글 같은 로컬 상태는 예외).
+- 자식에게 props로 데이터(읽기)와 콜백 함수(수정)를 전달한다.
+- 상태 수정은 반드시 App.jsx의 메서드를 통해서만 한다.
+
+### 금지 사항
+
+- Zustand, Redux, MobX 등 외부 상태관리 라이브러리 사용 금지.
+- React Hooks (useState, useEffect, useRef, useCallback, useContext, useReducer 등) 사용 금지.
+- DOM 참조가 필요하면 createRef()를 사용한다.
+
+### 파일 구분
+
+- .jsx — JSX를 포함하는 React 컴포넌트
+- .js — 순수 로직 (유틸, 상수, 헬퍼 함수)
+
+## 코드 스타일
+
+- 커밋 메시지: 영어 conventional commit (feat:, fix:, refactor:, chore:, docs:)
+- 코드 주석: 한국어
+- 스타일링: Tailwind CSS (인라인 style 지양)
+- 컴포넌트 파일 하나에 클래스 하나
