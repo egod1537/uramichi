@@ -261,3 +261,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - 이미지 선택 시 `convertFileToDataUrl` 결과를 사용해 `updatePin(id, { images: nextImages })` 형태로 핀 `images` 배열을 갱신함.
 - PinPopup 본문에 핀 이미지 썸네일 그리드 렌더링과 개별 삭제 버튼(✕)을 추가함.
 - 핀 기본 생성값의 `images: []`는 `src/stores/useProjectStore.js`의 `createDefaultPinData`에서 계속 보장됨.
+[codex] 2026-02-27 PinPopup 편집/삭제 UX 보강 메모
+- `src/components/Map/PinPopup.jsx` 편집 UI를 로컬 draft 상태(`editDraft`)와 스토어 저장 상태(`updatePin`)로 분리해 입력 중 값과 저장 반영 경계를 명확히 정리함.
+- 편집 항목(이름 인라인, 메모, 카테고리, 태그 추가/삭제, 체류시간, 예상비용)을 모두 `updatePin(id, patch)` 호출로 즉시 반영하도록 연결함.
+- 삭제 버튼 클릭 시 `window.confirm` 대신 팝업 내부 확인 모달을 표시하고, 확인 시 `removePin(id)`, 취소 시 기존 상태 유지 흐름으로 변경함.
