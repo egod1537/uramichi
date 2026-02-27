@@ -100,7 +100,6 @@ function Map() {
     () => measurements.filter((measurementItem) => visibleLayerIdSet.has(measurementItem.layerId)),
     [measurements, visibleLayerIdSet],
   )
-
   const selectedLine = useMemo(
     () => visibleLines.find((lineItem) => lineItem.id === selectedLineId) || null,
     [selectedLineId, visibleLines],
@@ -138,6 +137,7 @@ function Map() {
     activeLayerId,
     layers,
     measurements,
+    setHoverMeasurePoint,
     cancelDraftMeasure,
     addMeasurement,
     setMeasurePath,
@@ -146,7 +146,7 @@ function Map() {
   })
 
   const triggerMeasureComplete = useCallback(() => {
-    if (currentMode !== TOOL_MODES.DRAW_LINE) return
+    if (currentMode !== TOOL_MODES.MEASURE_DISTANCE && currentMode !== TOOL_MODES.DRAW_LINE) return
     completeMeasureInteraction()
   }, [completeMeasureInteraction, currentMode])
 
