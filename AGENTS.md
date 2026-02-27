@@ -288,3 +288,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `src/utils/DirectionsCache.js`를 추가해 동일 start/end/travelMode 요청은 캐시된 route 데이터를 재사용하도록 구현함.
 - `src/stores/useProjectStore.js`에 `routeDraft.travelMode`와 `setRouteTravelMode()`를 추가하고, `addRoute()` 저장 경로와 routeDraft 초기화 로직이 이동수단 상태를 유지하도록 조정함.
 - `src/components/Sidebar/LayerPanel.jsx`에 routes 목록을 추가해 `"A → B"` 형식의 경로 요약을 표시하도록 구현함.
+
+[codex] 2026-02-27 PinPopup 삭제 핸들러 버그 수정 메모
+- `src/components/Map/PinPopup.jsx`에서 휴지통 버튼 `onClick`이 정의되지 않은 `handleDelete`를 참조해 런타임 `ReferenceError`가 발생하던 문제를 확인함.
+- 삭제 확인 모달 오픈 핸들러인 `handleOpenDeleteModal`로 연결을 수정해 핀 팝업에서 삭제 버튼 클릭 시 에러 없이 기존 확인 플로우가 동작하도록 복구함.

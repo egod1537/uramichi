@@ -180,7 +180,7 @@ function PinPopup({ pin }) {
                 ✏️
               </button>
               <button type="button" onClick={handleImageButtonClick} className="rounded p-1 hover:bg-gray-100" aria-label="사진 추가">📷</button>
-              <button type="button" onClick={handleDelete} className="rounded p-1 hover:bg-gray-100" aria-label="삭제">🗑️</button>
+              <button type="button" onClick={handleOpenDeleteModal} className="rounded p-1 hover:bg-gray-100" aria-label="삭제">🗑️</button>
             </div>
           </div>
 
