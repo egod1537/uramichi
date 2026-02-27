@@ -28,3 +28,6 @@
 - `src/components/Map/layers/`에 `PinLayer.jsx`, `LineLayer.jsx`, `RouteLayer.jsx`, `MeasureLayer.jsx`를 추가해 지도 오브젝트 렌더 블록을 레이어 단위로 분리함.
 - `src/components/Map/MapOverlays.jsx`를 추가해 하단 핀 아이콘 필터 바와 상단 경로 이동수단 바 렌더 책임을 분리함.
 - `src/components/Map/Map.jsx`는 `GoogleMap` 컨테이너와 공통 이벤트 연결 유지 + 레이어/오버레이 조합만 담당하도록 정리함.
+
+[codex] 2026-02-27 기본 핀 아이콘 SVG 고정 메모
+- `PinPopup`의 현재 아이콘 버튼 fallback을 카테고리 emoji에서 `DEFAULT_PIN_SVG_PATH` 이미지로 변경해, 기본 상태에서도 이모지가 노출되지 않도록 수정함.

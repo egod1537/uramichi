@@ -1,5 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { CATEGORY_PRESETS, TRANSPORT_PRESETS, TRAVEL_PIN_ICON_PRESETS, getTravelPinIconKey, getTravelPinIconPreset } from '../../utils/constants'
+import {
+  CATEGORY_PRESETS,
+  DEFAULT_PIN_SVG_PATH,
+  TRANSPORT_PRESETS,
+  TRAVEL_PIN_ICON_PRESETS,
+  getTravelPinIconKey,
+  getTravelPinIconPreset,
+} from '../../utils/constants'
 import useProjectStore from '../../stores/useProjectStore'
 
 function LayerRow({
@@ -282,10 +289,7 @@ function LayerRow({
                       >
                         {(() => {
                           const currentIconPreset = getTravelPinIconPreset(pinItem.icon || CATEGORY_PRESETS[pinItem.category]?.icon || CATEGORY_PRESETS.default.icon)
-                          if (currentIconPreset) {
-                            return <img src={currentIconPreset.svgPath} alt={currentIconPreset.label} className="h-5 w-5" />
-                          }
-                          return pinItem.icon || CATEGORY_PRESETS[pinItem.category]?.icon || CATEGORY_PRESETS.default.icon
+                          return <img src={currentIconPreset?.svgPath || DEFAULT_PIN_SVG_PATH} alt={currentIconPreset?.label || '기본 아이콘'} className="h-5 w-5" />
                         })()}
                       </button>
                       {iconPickerPinId === pinItem.id ? (
