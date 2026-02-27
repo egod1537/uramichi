@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { GoogleMap, Polyline } from '@react-google-maps/api'
+import { GoogleMap, OverlayView, Polyline } from '@react-google-maps/api'
 import TOOL_MODES from '../../utils/toolModes'
 import { COLOR_PRESETS } from '../../utils/constants'
 import useProjectStore from '../../stores/useProjectStore'
 import PinMarker from './PinMarker'
 import PinPopup from './PinPopup'
+import { formatDistanceLabel, getMidpoint, getPathDistanceInMeters } from '../../utils/geo'
 
 const containerStyle = { width: '100%', height: '100%' }
 const defaultCenter = { lat: 35.6812, lng: 139.7671 }
@@ -18,23 +19,31 @@ const mapOptions = {
   fullscreenControl: false,
 }
 
+const measureOverlayPane = OverlayView.OVERLAY_MOUSE_TARGET
+
+const createSegmentLabelDataList = (measurePointPath) =>
+  measurePointPath.slice(1).map((currentPoint, pointIndex) => {
+    const previousPoint = measurePointPath[pointIndex]
+    const segmentDistanceInMeters = getPathDistanceInMeters([previousPoint, currentPoint])
+    return {
+      id: `measure-segment-${pointIndex + 1}`,
+      position: getMidpoint(previousPoint, currentPoint),
+      label: formatDistanceLabel(segmentDistanceInMeters),
+    }
+  })
+
+const createTotalLabelData = (measurePointPath) => {
+  const totalDistanceInMeters = getPathDistanceInMeters(measurePointPath)
+  if (!totalDistanceInMeters) return null
+  const terminalPoint = measurePointPath[measurePointPath.length - 1]
+  return { id: 'measure-total', position: terminalPoint, label: `총 ${formatDistanceLabel(totalDistanceInMeters)}` }
+}
+
 const getRouteRequest = (startPoint, endPoint) => ({
   origin: startPoint,
   destination: endPoint,
   travelMode: window.google.maps.TravelMode.WALKING,
 })
-
-const getPathDistanceInMeters = (path) => {
-  if (path.length < 2) return 0
-  return path.slice(1).reduce((distanceSum, currentPoint, pointIndex) => {
-    const previousPoint = path[pointIndex]
-    const segmentDistance = window.google.maps.geometry.spherical.computeDistanceBetween(
-      new window.google.maps.LatLng(previousPoint.lat, previousPoint.lng),
-      new window.google.maps.LatLng(currentPoint.lat, currentPoint.lng),
-    )
-    return distanceSum + segmentDistance
-  }, 0)
-}
 
 function Map() {
   const mapInstanceRef = useRef(null)
@@ -51,6 +60,7 @@ function Map() {
   const addMarker = useProjectStore((state) => state.addMarker)
   const appendLinePoint = useProjectStore((state) => state.appendLinePoint)
   const appendMeasurePoint = useProjectStore((state) => state.appendMeasurePoint)
+  const cancelDraftMeasure = useProjectStore((state) => state.cancelDraftMeasure)
   const setRouteStart = useProjectStore((state) => state.setRouteStart)
   const commitRoutePath = useProjectStore((state) => state.commitRoutePath)
   const selectPin = useProjectStore((state) => state.selectPin)
@@ -77,12 +87,15 @@ function Map() {
     }
   }, [selectedPin])
 
-  const measuredDistanceLabel = useMemo(() => {
-    const distanceInMeters = getPathDistanceInMeters(measurePath)
-    if (!distanceInMeters) return ''
-    if (distanceInMeters < 1000) return `${distanceInMeters.toFixed(0)} m`
-    return `${(distanceInMeters / 1000).toFixed(2)} km`
-  }, [measurePath])
+  useEffect(() => {
+    if (currentMode !== TOOL_MODES.MEASURE_DISTANCE) {
+      cancelDraftMeasure()
+    }
+  }, [cancelDraftMeasure, currentMode])
+
+  const measureSegmentLabelDataList = useMemo(() => createSegmentLabelDataList(measurePath), [measurePath])
+
+  const measureTotalLabelData = useMemo(() => createTotalLabelData(measurePath), [measurePath])
 
   const createRoutePath = useCallback(
     (startPoint, endPoint) => {
@@ -171,8 +184,18 @@ function Map() {
     [commitMarkerDrag, currentMode, updatePin],
   )
 
+  const handleMapDoubleClick = useCallback(() => {
+    if (currentMode !== TOOL_MODES.MEASURE_DISTANCE) return
+    cancelDraftMeasure()
+  }, [cancelDraftMeasure, currentMode])
+
   useEffect(() => {
     const handleDeleteKeyDown = (event) => {
+      if (event.key === 'Escape' && currentMode === TOOL_MODES.MEASURE_DISTANCE) {
+        cancelDraftMeasure()
+        return
+      }
+
       if (currentMode !== TOOL_MODES.SELECT) return
       if (event.key !== 'Delete' && event.key !== 'Backspace') return
       if (!selectedPinIds.length) return
@@ -182,7 +205,7 @@ function Map() {
 
     window.addEventListener('keydown', handleDeleteKeyDown)
     return () => window.removeEventListener('keydown', handleDeleteKeyDown)
-  }, [currentMode, removePins, selectedPinIds])
+  }, [cancelDraftMeasure, currentMode, removePins, selectedPinIds])
 
   return (
     <>
@@ -190,7 +213,6 @@ function Map() {
         mapContainerStyle={containerStyle}
         center={defaultCenter}
         zoom={12}
-        options={mapOptions}
         onLoad={(loadedMap) => {
           mapInstanceRef.current = loadedMap
         }}
@@ -198,6 +220,8 @@ function Map() {
           mapInstanceRef.current = null
         }}
         onClick={handleMapClick}
+        onDblClick={handleMapDoubleClick}
+        options={{ ...mapOptions, disableDoubleClickZoom: currentMode === TOOL_MODES.MEASURE_DISTANCE }}
       >
         {markers.map((markerPoint, markerIndex) => (
           <PinMarker
@@ -240,17 +264,27 @@ function Map() {
             }}
           />
         )}
+
+        {measureSegmentLabelDataList.map((segmentLabelData) => (
+          <OverlayView key={segmentLabelData.id} position={segmentLabelData.position} mapPaneName={measureOverlayPane}>
+            <div className="-translate-x-1/2 -translate-y-1/2 rounded bg-white/95 px-2 py-0.5 text-xs font-medium text-gray-700 shadow">
+              {segmentLabelData.label}
+            </div>
+          </OverlayView>
+        ))}
+
+        {measureTotalLabelData ? (
+          <OverlayView key={measureTotalLabelData.id} position={measureTotalLabelData.position} mapPaneName={measureOverlayPane}>
+            <div className="-translate-x-1/2 -translate-y-[calc(100%+12px)] rounded bg-[#f97316] px-2 py-1 text-xs font-semibold text-white shadow">
+              {measureTotalLabelData.label}
+            </div>
+          </OverlayView>
+        ) : null}
       </GoogleMap>
 
       {routeDraft.start && (
         <div className="absolute bottom-4 left-1/2 z-20 -translate-x-1/2 rounded-md bg-white px-3 py-2 text-sm shadow">
           도착점을 클릭해 경로를 완성하세요
-        </div>
-      )}
-
-      {measuredDistanceLabel && (
-        <div className="absolute bottom-16 left-1/2 z-20 -translate-x-1/2 rounded-md bg-white px-3 py-2 text-sm shadow">
-          총 거리: {measuredDistanceLabel}
         </div>
       )}
     </>
