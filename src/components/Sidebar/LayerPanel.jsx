@@ -18,7 +18,9 @@ function LayerPanel() {
   const selectedPinIds = useProjectStore((state) => state.selectedPinIds)
   const removePins = useProjectStore((state) => state.removePins)
   const movePinsToLayer = useProjectStore((state) => state.movePinsToLayer)
+  const reorderLayers = useProjectStore((state) => state.reorderLayers)
   const [targetLayerId, setTargetLayerId] = useState('')
+  const [dragLayerId, setDragLayerId] = useState(null)
 
   const selectedPinCount = selectedPinIds.length
 
@@ -95,7 +97,18 @@ function LayerPanel() {
       )}
 
       {layers.map((layerItem) => (
-        <LayerRow key={layerItem.id} layer={layerItem} />
+        <LayerRow
+          key={layerItem.id}
+          layer={layerItem}
+          isDraggingLayer={dragLayerId === layerItem.id}
+          onLayerDragStart={(layerId) => setDragLayerId(layerId)}
+          onLayerDragEnd={() => setDragLayerId(null)}
+          onLayerDrop={(targetLayerId) => {
+            if (!dragLayerId) return
+            reorderLayers(dragLayerId, targetLayerId)
+            setDragLayerId(null)
+          }}
+        />
       ))}
     </div>
   )
