@@ -535,3 +535,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `src/components/Map/PoiDetailOverlay.jsx`에 `지도에 추가` 버튼을 추가해 커스텀 POI 상세에서 바로 핀 생성 액션을 호출할 수 있게 연결함.
 - POI 평점 표시는 `평점 N` 텍스트 대신 별 문자열(★/☆) + 숫자(소수 1자리) 조합으로 변경함.
 - `src/stores/useProjectStore.js`의 `addMarker`는 선택적 `pinPatchData`를 받도록 확장해, POI 이름/카테고리/메모를 핀 생성 시점에 함께 주입할 수 있게 맞춤.
+
+[codex] 2026-02-27 chat 404 대응 메모
+- `vite.config.js`의 Claude 프록시 플러그인에 `configurePreviewServer`를 추가해 `vite preview` 환경에서도 `/api/chat/claude` 경로가 404 없이 동작하도록 맞춤.
+- dev/preview 공통으로 동일 핸들러를 재사용하도록 `handleClaudeRequest`를 분리해 라우트 동작 일관성을 유지함.
