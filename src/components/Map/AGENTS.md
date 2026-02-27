@@ -16,3 +16,7 @@
 - `PoiDetailOverlay.jsx`를 추가해 `Map.jsx` 내부 `selectedPoiDetail` Overlay JSX를 컴포넌트로 이관함.
 - `hooks/usePoiDetail.js`를 추가해 `requestPoiDetail`, `selectedPoiDetail`, `poiDetailStatus(loading/error/success)`와 닫기 액션(`clearPoiDetail`)을 분리함.
 - `Map.jsx`는 place 클릭 시 `requestPoiDetail(placeId, position)` 호출만 담당하고, 렌더는 `<PoiDetailOverlay poiDetail={selectedPoiDetail} onClose={clearPoiDetail} />`로 단순화함.
+[codex] 2026-02-27 Map/PinPopup 아이콘 SVG 표시 전환 메모
+- `PinPopup` 아이콘 버튼/피커에서 이모지 문자 대신 `public/svg/pin-*.svg` 이미지를 렌더링하도록 변경함.
+- 아이콘 선택 저장값을 `iconPreset.icon`(emoji)에서 `iconPreset.key`로 바꾸고, 기존 데이터 호환은 `getTravelPinIconKey/getTravelPinIconPreset`로 유지함.
+- 지도 하단 핀 아이콘 필터도 버튼 내부를 SVG 이미지로 렌더링하고, 필터 판별은 key 기준으로 비교하도록 수정함.

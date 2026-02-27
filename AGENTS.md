@@ -499,3 +499,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 [codex] 2026-02-27 패널 열기 버튼 삼단 아이콘 적용 메모
 - `public/svg/sidebar-open-menu.svg` 파일을 추가해 패널 열기용 삼단(햄버거) 아이콘 에셋을 분리함.
 - `src/components/Sidebar/Sidebar.jsx`의 패널 열기 버튼 텍스트를 아이콘 `<img src="/svg/sidebar-open-menu.svg">` 렌더링으로 교체하고, 원형 아이콘 버튼 스타일/접근성 라벨을 적용함.
+[codex] 2026-02-27 핀 아이콘 SVG 치환 후속 메모
+- 핀 아이콘 관련 UI(핀 팝업/사이드바/지도 필터)에서 이모지 텍스트를 직접 그리던 부분을 `public/svg` 이미지 렌더링으로 통일함.
+- 핀 데이터의 `icon` 필드는 기존 emoji 값도 읽을 수 있게 유지하면서, 신규 저장은 `TRAVEL_PIN_ICON_PRESETS.key` 기반으로 전환함.
+- 아이콘 필터 매칭은 key 기준으로 변경해 데이터 포맷 전환 중에도 필터 동작이 깨지지 않도록 함.
