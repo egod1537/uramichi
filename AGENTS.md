@@ -464,3 +464,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 [codex] 2026-02-27 핀 추가 드래그 임계값 메모
 - `src/components/Map/Map.jsx`에서 ADD_MARKER 모드일 때 마우스 다운/업의 화면 좌표 이동량(px)을 계산하고, 임계값(6px) 이상 드래그한 경우 mouse up 시 `addMarker`를 호출하지 않도록 조정함.
 - 지도 패닝 후 mouse up으로 핀이 의도치 않게 생성되던 문제를 완화함.
+[codex] 2026-02-27 AI 챗 버튼 아이콘 경로 변경 메모
+- `src/components/Chat/ChatButton.jsx`의 FAB 아이콘을 인라인 SVG 대신 `public/claude.svg` 파일을 로드하는 `<img src="/claude.svg">`로 교체함.
+[codex] 2026-02-27 AI 챗 버튼 배경색 조정 메모
+- `src/components/Chat/ChatButton.jsx`의 FAB 배경색을 흰색(`bg-white`)으로 변경하고 hover 색상을 `hover:bg-gray-100`으로 조정함.
