@@ -3,6 +3,7 @@ import { OverlayView } from '@react-google-maps/api'
 import useProjectStore from '../../stores/useProjectStore'
 import { CATEGORY_PRESETS, DEFAULT_PIN_SVG_PATH, PIN_MARKER_COLOR_PRESETS, TRAVEL_PIN_ICON_PRESETS, getTravelPinIconKey, getTravelPinIconPreset } from '../../utils/constants'
 import { convertFileToDataUrl } from '../../utils/file'
+import TimelineBar from './TimelineBar'
 
 const overlayPane = OverlayView.OVERLAY_MOUSE_TARGET
 
@@ -391,6 +392,7 @@ function PinPopup({ pin }) {
               </div>
             </div>
           ) : null}
+          <TimelineBar openingHours={pin.openingHours} />
         </div>
 
         <div className="absolute left-1/2 top-full h-0 w-0 -translate-x-1/2 border-l-[12px] border-r-[12px] border-t-[14px] border-l-transparent border-r-transparent border-t-white" />

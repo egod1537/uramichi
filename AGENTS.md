@@ -535,3 +535,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `src/components/Map/PoiDetailOverlay.jsx`에 `지도에 추가` 버튼을 추가해 커스텀 POI 상세에서 바로 핀 생성 액션을 호출할 수 있게 연결함.
 - POI 평점 표시는 `평점 N` 텍스트 대신 별 문자열(★/☆) + 숫자(소수 1자리) 조합으로 변경함.
 - `src/stores/useProjectStore.js`의 `addMarker`는 선택적 `pinPatchData`를 받도록 확장해, POI 이름/카테고리/메모를 핀 생성 시점에 함께 주입할 수 있게 맞춤.
+[codex] 2026-02-27 PinPopup 영업시간 타임라인 바 작업 메모
+- `src/components/Map/TimelineBar.jsx`를 추가해 핀 `openingHours` 복수 구간을 24시간 타임라인(회색 배경, 주황 구간, 상단 시작/종료 라벨, 하단 0/6/12/18/24 눈금)으로 렌더링함.
+- `src/utils/time.js`를 추가해 시간 문자열 파싱/퍼센트 계산/자정 넘김 구간 분리 로직을 분리함.
+- `src/components/Map/PinPopup.jsx` 하단에 타임라인을 삽입했고, `src/stores/useProjectStore.js` 기본 핀 데이터에 `openingHours: []`를 추가해 데이터 미존재 시 기본적으로 타임라인이 숨겨지도록 맞춤.

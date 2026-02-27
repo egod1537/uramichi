@@ -6,3 +6,6 @@
 [codex] 2026-02-27 핀 아이콘 키/프리셋 정규화 메모
 - `getTravelPinIconPreset(iconValue)`와 `getTravelPinIconKey(iconValue)`를 추가해 기존 이모지 저장값과 신규 key 저장값을 모두 동일하게 해석하도록 정리함.
 - 핀 아이콘 관련 UI/필터가 점진적으로 `icon`의 key 기반(`transit`, `restaurant` 등)으로 저장/비교할 수 있도록 유틸 레이어를 제공함.
+[codex] 2026-02-27 time 유틸 추가 메모
+- `time.js`를 추가해 `HH:MM -> 분`, `분 -> 0~100%`, 자정 넘김 구간 분할(`normalizeOpeningHours`) 유틸을 제공함.
+- `24:00`은 하루 끝점(1440분)으로 처리하되 위치 계산은 100%로 표시되도록 정규화함.
