@@ -443,3 +443,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 [codex] 2026-02-27 툴바 툴팁 한국어 번역 메모
 - `src/components/Toolbar/Toolbar.jsx`의 `toolbarButtons` tooltip 문구를 한국어로 변경해 마우스 호버 시 한국어 안내가 표시되도록 수정함.
 - 단축키 표기는 기존과 동일하게 `(Z/Y/Q/W/E/R/T)` 형식을 유지함.
+[codex] 2026-02-27 Sidebar 핀 아이콘 피커 확장 메모
+- `src/components/Sidebar/LayerRow.jsx`에서 핀 아이콘(이모지) 클릭 시 `TRAVEL_PIN_ICON_PRESETS` 기반 아이콘 피커 팝업이 열리도록 상태(`iconPickerPinId`)와 UI를 추가함.
+- 아이콘 피커에서 아이콘 선택 시 `updatePin(pinItem.id, { icon })`를 호출해 사이드바에서도 PinPopup과 동일하게 핀 아이콘을 즉시 변경할 수 있도록 연결함.
+- 레이어/핀 행의 바깥 영역 클릭 시 핀 옵션 메뉴와 아이콘 피커가 함께 닫히도록 정리해 패널 내 상호작용 충돌을 줄임.
