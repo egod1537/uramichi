@@ -1,11 +1,29 @@
 import TOOL_MODES from '../../utils/toolModes'
 import { ICON_FILTER_OPTIONS } from '../../utils/constants'
+import { convertTimeStringToMinutes } from '../../utils/time'
 
 const routeTravelModeList = [
   { value: 'WALKING', label: '도보' },
   { value: 'TRANSIT', label: '대중교통' },
   { value: 'DRIVING', label: '차량' },
 ]
+
+const TIME_SLIDER_MINUTES_STEP = 30
+const TIME_SLIDER_MINUTES_MAX = 24 * 60
+
+const normalizeSliderMinutes = (minutesValue, fallbackMinutes) => {
+  if (typeof minutesValue !== 'number' || Number.isNaN(minutesValue)) return fallbackMinutes
+  const boundedMinutes = Math.max(0, Math.min(TIME_SLIDER_MINUTES_MAX, minutesValue))
+  return Math.round(boundedMinutes / TIME_SLIDER_MINUTES_STEP) * TIME_SLIDER_MINUTES_STEP
+}
+
+const convertMinutesToTimeText = (minutesValue) => {
+  const boundedMinutes = Math.max(0, Math.min(TIME_SLIDER_MINUTES_MAX, minutesValue))
+  if (boundedMinutes === TIME_SLIDER_MINUTES_MAX) return '24:00'
+  const hourValue = Math.floor(boundedMinutes / 60)
+  const minuteValue = boundedMinutes % 60
+  return `${String(hourValue).padStart(2, '0')}:${String(minuteValue).padStart(2, '0')}`
+}
 
 function MapOverlays({
   currentMode,
@@ -21,10 +39,29 @@ function MapOverlays({
   onSetPinFilterExpanded,
   onSetRouteTravelMode,
 }) {
+  const startMinutes = normalizeSliderMinutes(convertTimeStringToMinutes(timeFilterRange.start), 9 * 60)
+  const endMinutes = normalizeSliderMinutes(convertTimeStringToMinutes(timeFilterRange.end), 18 * 60)
+  const sliderStartMinutes = Math.min(startMinutes, endMinutes)
+  const sliderEndMinutes = Math.max(startMinutes, endMinutes)
+  const sliderRangeWidthPercent = ((sliderEndMinutes - sliderStartMinutes) / TIME_SLIDER_MINUTES_MAX) * 100
+  const sliderRangeLeftPercent = (sliderStartMinutes / TIME_SLIDER_MINUTES_MAX) * 100
+
+  const handleStartSliderChange = (nextStartMinutesText) => {
+    const nextStartMinutes = normalizeSliderMinutes(Number(nextStartMinutesText), sliderStartMinutes)
+    const resolvedStartMinutes = Math.min(nextStartMinutes, sliderEndMinutes)
+    onSetTimeFilterRange('start', convertMinutesToTimeText(resolvedStartMinutes))
+  }
+
+  const handleEndSliderChange = (nextEndMinutesText) => {
+    const nextEndMinutes = normalizeSliderMinutes(Number(nextEndMinutesText), sliderEndMinutes)
+    const resolvedEndMinutes = Math.max(nextEndMinutes, sliderStartMinutes)
+    onSetTimeFilterRange('end', convertMinutesToTimeText(resolvedEndMinutes))
+  }
+
   return (
     <>
       <div
-        className={`absolute bottom-20 left-1/2 z-20 -translate-x-1/2 rounded-xl border border-gray-200 bg-white/95 px-3 py-2 shadow-lg transition-all duration-200 ${
+        className={`absolute bottom-16 left-1/2 z-20 -translate-x-1/2 rounded-xl border border-gray-200 bg-white/95 px-3 py-2 shadow-lg transition-all duration-200 ${
           isTimeFilterExpanded ? 'inline-flex max-w-[92vw] items-center gap-3' : 'inline-flex w-auto items-center gap-2'
         }`}
       >
@@ -32,26 +69,39 @@ function MapOverlays({
 
         {isTimeFilterExpanded ? (
           <>
-            <div className="flex items-center gap-2 text-xs text-gray-700">
-              <label className="flex items-center gap-1">
-                <span>시작</span>
-                <input
-                  type="time"
-                  value={timeFilterRange.start}
-                  onChange={(event) => onSetTimeFilterRange('start', event.target.value)}
-                  className="rounded border border-gray-300 px-1.5 py-1 text-xs"
+            <div className="flex w-[300px] flex-col gap-2 text-xs text-gray-700">
+              <div className="flex items-center justify-between text-[11px] text-gray-500">
+                <span>{timeFilterRange.start}</span>
+                <span>{timeFilterRange.end}</span>
+              </div>
+              <div className="relative h-6">
+                <div className="absolute top-1/2 h-1 w-full -translate-y-1/2 rounded-full bg-gray-200" />
+                <div
+                  className="absolute top-1/2 h-1 -translate-y-1/2 rounded-full bg-orange-300"
+                  style={{
+                    left: `${sliderRangeLeftPercent}%`,
+                    width: `${sliderRangeWidthPercent}%`,
+                  }}
                 />
-              </label>
-              <span className="text-gray-400">~</span>
-              <label className="flex items-center gap-1">
-                <span>종료</span>
                 <input
-                  type="time"
-                  value={timeFilterRange.end}
-                  onChange={(event) => onSetTimeFilterRange('end', event.target.value)}
-                  className="rounded border border-gray-300 px-1.5 py-1 text-xs"
+                  type="range"
+                  min={0}
+                  max={TIME_SLIDER_MINUTES_MAX}
+                  step={TIME_SLIDER_MINUTES_STEP}
+                  value={sliderStartMinutes}
+                  onChange={(event) => handleStartSliderChange(event.target.value)}
+                  className="pointer-events-auto absolute top-1/2 h-6 w-full -translate-y-1/2 appearance-none bg-transparent"
                 />
-              </label>
+                <input
+                  type="range"
+                  min={0}
+                  max={TIME_SLIDER_MINUTES_MAX}
+                  step={TIME_SLIDER_MINUTES_STEP}
+                  value={sliderEndMinutes}
+                  onChange={(event) => handleEndSliderChange(event.target.value)}
+                  className="pointer-events-auto absolute top-1/2 h-6 w-full -translate-y-1/2 appearance-none bg-transparent"
+                />
+              </div>
             </div>
             <button
               type="button"
