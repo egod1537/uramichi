@@ -288,3 +288,11 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `src/utils/DirectionsCache.js`를 추가해 동일 start/end/travelMode 요청은 캐시된 route 데이터를 재사용하도록 구현함.
 - `src/stores/useProjectStore.js`에 `routeDraft.travelMode`와 `setRouteTravelMode()`를 추가하고, `addRoute()` 저장 경로와 routeDraft 초기화 로직이 이동수단 상태를 유지하도록 조정함.
 - `src/components/Sidebar/LayerPanel.jsx`에 routes 목록을 추가해 `"A → B"` 형식의 경로 요약을 표시하도록 구현함.
+
+[codex] 2026-02-27 Toolbar 툴팁 작업 메모
+- `src/components/Toolbar/ToolButton.jsx`의 버튼에 `title` 속성을 추가해 마우스 호버 시 각 툴의 라벨 툴팁이 브라우저 기본 UI로 표시되도록 반영함.
+
+[codex] 2026-02-27 Toolbar 버튼별 툴팁 보강 메모
+- `src/components/Toolbar/Toolbar.jsx`의 `toolbarButtons`에 버튼별 `tooltip` 문구를 추가해 각 도구에 단축키 포함 툴팁이 뜨도록 연결함.
+- 툴바 검색 버튼에도 `title="장소 검색"`을 추가해 상단 검색 액션 버튼 호버 시 툴팁이 표시되도록 맞춤.
+- `src/components/Toolbar/ToolButton.jsx`는 `tooltip` prop을 받아 `title`로 우선 적용하고, 값이 없으면 기존 `label`을 fallback으로 사용하도록 조정함.
