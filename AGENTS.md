@@ -481,3 +481,6 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `public/svg/`에 지도 핀 아이콘 SVG 파일(`pin-transit`, `pin-restaurant`, `pin-tour`, `pin-hotel`, `pin-photo`, `pin-default`)을 추가함.
 - `src/utils/constants.js`의 `TRAVEL_PIN_ICON_PRESETS`에 `svgPath`를 연결하고 기본 아이콘 경로 상수(`DEFAULT_PIN_SVG_PATH`)를 추가함.
 - `src/components/Map/PinMarker.jsx`를 SVG URL 기반 `Marker.icon` 렌더링으로 변경해 지도 핀이 이모지 라벨 대신 SVG 아이콘으로 보이도록 수정함.
+[codex] 2026-02-27 패널 열기 버튼 삼단 아이콘 적용 메모
+- `public/svg/sidebar-open-menu.svg` 파일을 추가해 패널 열기용 삼단(햄버거) 아이콘 에셋을 분리함.
+- `src/components/Sidebar/Sidebar.jsx`의 패널 열기 버튼 텍스트를 아이콘 `<img src="/svg/sidebar-open-menu.svg">` 렌더링으로 교체하고, 원형 아이콘 버튼 스타일/접근성 라벨을 적용함.
