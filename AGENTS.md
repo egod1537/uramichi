@@ -343,3 +343,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - 같은 파일에서 측정 경로 각 꼭짓점에 드래그 가능한 점(`Circle`)을 렌더링해 점 단위 위치 수정이 가능하도록 연결함.
 - 같은 파일에서 측정 모드 중 마지막 점 이후 마우스 위치까지 실시간 프리뷰 선(`previewMeasurePath`)을 추가해 다음 점 추가 위치를 미리 확인할 수 있도록 구현함.
 - `src/stores/useProjectStore.js`에 `setMeasurePath(measurePointList)` 액션을 추가해 꼭짓점 드래그 시 측정 경로를 즉시 갱신하도록 연결함.
+
+[codex] 2026-02-27 핀 추가 입력 타이밍 변경 메모
+- `src/components/Map/Map.jsx`에서 핀 추가(`addMarker`) 트리거를 지도 `onClick`에서 `onMouseDown`으로 이동해, 클릭 업이 아닌 클릭 다운 시점에 핀이 생성되도록 변경함.
+- 기존 지도 클릭 핸들러는 Select/Line/Route/Measure 흐름만 유지하도록 정리함.
