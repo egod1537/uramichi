@@ -15,7 +15,7 @@ const defaultCenter = { lat: 35.6812, lng: 139.7671 }
 const mapOptions = {
   disableDefaultUI: true,
   gestureHandling: 'greedy',
-  zoomControl: true,
+  zoomControl: false,
   zoomControlOptions: { position: 9 },
   mapTypeControl: false,
   streetViewControl: false,
