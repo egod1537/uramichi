@@ -402,3 +402,6 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `src/components/Map/Map.jsx`의 지도 핀 아이콘 필터 컨테이너를 우측 하단 고정에서 중앙 하단 고정으로 이동하고, `left-1/2 -translate-x-1/2` 정렬로 배치함.
 - 필터 UI를 세로 카드 형태에서 가로 바 형태로 변경해 라벨/초기화 버튼 + 아이콘 버튼 목록이 한 줄로 길게 보이도록 조정함.
 - 아이콘 버튼 목록은 `overflow-x-auto` + `shrink-0`를 적용해 좁은 뷰포트에서도 가로 스크롤로 접근 가능하도록 유지함.
+[codex] 2026-02-27 지도 핀 아이콘 필터 폭 자동 맞춤 메모
+- `src/components/Map/Map.jsx`의 하단 핀 아이콘 필터 바를 고정 폭(`w-[min(92vw,860px)]`)에서 내용 기반 `inline-flex + max-w` 구조로 변경해 우측 여백이 과하게 비는 문제를 줄임.
+- 아이콘 버튼 영역은 `flex-1` 확장 대신 `max-w-[56vw] overflow-x-auto`로 제한해, 버튼 수에 맞춰 폭이 자연스럽게 늘고 좁은 화면에서는 가로 스크롤로 대응하도록 조정함.
