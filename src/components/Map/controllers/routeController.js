@@ -8,5 +8,6 @@ export const handleRouteMapClick = ({ currentMode, clickedPoint, state, actions 
   }
   actions.requestRoute(state.routeDraft.start, clickedPoint, state.routeDraft.travelMode || 'WALKING')
   actions.setRouteStart(null)
+  actions.setMode(TOOL_MODES.SELECT)
   return true
 }

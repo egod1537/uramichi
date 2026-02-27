@@ -52,6 +52,7 @@ function Map() {
   const selectedLineId = useProjectStore((state) => state.selectedLineId)
   const activeLayerId = useProjectStore((state) => state.activeLayerId)
   const addMarker = useProjectStore((state) => state.addMarker)
+  const setMode = useProjectStore((state) => state.setMode)
   const cancelDraftLine = useProjectStore((state) => state.cancelDraftLine)
   const appendMeasurePoint = useProjectStore((state) => state.appendMeasurePoint)
   const setMeasurePath = useProjectStore((state) => state.setMeasurePath)
@@ -99,7 +100,6 @@ function Map() {
     () => measurements.filter((measurementItem) => visibleLayerIdSet.has(measurementItem.layerId)),
     [measurements, visibleLayerIdSet],
   )
-
   const selectedLine = useMemo(
     () => visibleLines.find((lineItem) => lineItem.id === selectedLineId) || null,
     [selectedLineId, visibleLines],
@@ -137,14 +137,16 @@ function Map() {
     activeLayerId,
     layers,
     measurements,
+    setHoverMeasurePoint,
     cancelDraftMeasure,
     addMeasurement,
     setMeasurePath,
     setDraggingMeasurePointIndex,
+    setMode,
   })
 
   const triggerMeasureComplete = useCallback(() => {
-    if (currentMode !== TOOL_MODES.DRAW_LINE) return
+    if (currentMode !== TOOL_MODES.MEASURE_DISTANCE && currentMode !== TOOL_MODES.DRAW_LINE) return
     completeMeasureInteraction()
   }, [completeMeasureInteraction, currentMode])
 
@@ -197,6 +199,7 @@ function Map() {
           clearPinSelection,
           setIsPinClickInProgress,
           addMarker,
+          setMode,
         },
         refs: {
           addMarkerMouseDownPositionRef,
@@ -217,6 +220,7 @@ function Map() {
       selectPin,
       setHoverMeasurePoint,
       setRouteStart,
+      setMode,
     ],
   )
 
@@ -350,6 +354,22 @@ function Map() {
     [clearPinSelection, currentMode, selectLine, selectPin],
   )
 
+  const handleAddPoiToMap = useCallback(
+    (poiDetail) => {
+      if (!poiDetail?.position) return
+      const poiRating = typeof poiDetail.rating === 'number' ? poiDetail.rating.toFixed(1) : null
+      addMarker(poiDetail.position, {
+        name: poiDetail.name || 'POI',
+        category: 'tour',
+        memo: poiRating ? `Rating: ${poiRating}` : '',
+      })
+      selectPin(null)
+      clearPinSelection()
+      clearPoiDetail()
+    },
+    [addMarker, clearPinSelection, clearPoiDetail, selectPin],
+  )
+
   const handlePinDragStart = useCallback(
     (pinId) => {
       if (currentMode !== TOOL_MODES.SELECT) return
@@ -386,10 +406,6 @@ function Map() {
     [commitMarkerDrag, currentMode, updatePin],
   )
 
-  const handleMapDoubleClick = useCallback(() => {
-    triggerMeasureComplete()
-  }, [triggerMeasureComplete])
-
   useEffect(() => {
     const handleDeleteKeyDown = (event) => {
       const eventTarget = event.target
@@ -400,11 +416,6 @@ function Map() {
           || eventTarget.tagName === 'SELECT'
           || eventTarget.isContentEditable)
       if (isInputControlTarget && event.key !== 'Escape') return
-
-      if (event.key === 'Escape') {
-        triggerMeasureComplete()
-        return
-      }
 
       if (currentMode !== TOOL_MODES.SELECT) return
 
@@ -429,7 +440,6 @@ function Map() {
     window.addEventListener('keydown', handleDeleteKeyDown)
     return () => window.removeEventListener('keydown', handleDeleteKeyDown)
   }, [
-    triggerMeasureComplete,
     currentMode,
     removeLine,
     removePins,
@@ -455,7 +465,6 @@ function Map() {
         onMouseUp={handleMapMouseUp}
         onMouseMove={handleMapMouseMove}
         onMouseDown={handleMapMouseDown}
-        onDblClick={handleMapDoubleClick}
         onRightClick={handleMapRightClick}
         options={{ ...MAP_OPTIONS, disableDoubleClickZoom: currentMode === TOOL_MODES.DRAW_LINE }}
       >
@@ -472,7 +481,7 @@ function Map() {
           onPinDragEnd={handlePinDragEnd}
         />
 
-        <PoiDetailOverlay poiDetail={selectedPoiDetail} onClose={clearPoiDetail} />
+        <PoiDetailOverlay poiDetail={selectedPoiDetail} onClose={clearPoiDetail} onAddPoiToMap={handleAddPoiToMap} />
 
         <LineLayer lines={visibleLines} currentMode={currentMode} selectedLineId={selectedLineId} onLineClick={handleLineClick} />
 

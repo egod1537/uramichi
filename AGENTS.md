@@ -515,3 +515,23 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `.env.local` 기반 Anthropic 키는 `ANTHROPIC_API_KEY` 이름으로 읽도록 고정했고, 선택값으로 `ANTHROPIC_MODEL`, `ANTHROPIC_MAX_TOKENS`를 함께 지원함.
 - `vite.config.js`에 개발 서버 미들웨어 `/api/chat/claude`를 추가해 프런트에서 키를 노출하지 않고 Claude Messages API를 호출하도록 연결함.
 - `src/components/Chat/ChatPanel.jsx`의 전송 흐름을 API 호출 기반으로 변경해, 임시 응답 메시지를 실제 Claude 응답/에러 메시지로 치환하도록 수정함.
+
+[codex] 2026-02-27 핀 SVG 가독성 보강 메모
+- `public/svg/pin-*.svg` 아이콘 6종(default/transit/restaurant/tour/hotel/photo)을 채움형(filled) 실루엣으로 재작성해 작은 렌더링 크기에서도 식별이 잘 되도록 조정함.
+- 기존 선(stroke) 중심 아이콘 대비 내부 여백을 줄이고 도형 점유율을 키워 지도/사이드바의 `h-4~h-6` 썸네일에서도 선명하게 보이도록 맞춤.
+[codex] 2026-02-27 선 그리기 종료 입력/도형 저장 반영 메모
+- 선 그리기(`draw_line`)는 ESC/더블클릭 종료를 제거하고, 우클릭으로만 종료되도록 맵 입력 흐름을 고정함.
+- 우클릭 종료 시 드래프트 경로를 레이어 데이터(`measurements`)로 커밋하고, 폐곡선 판정 시 `shapeType: polygon` + 닫힌 좌표로 저장함.
+- 저장된 폐곡선은 지도에서 반투명 채움 Polygon으로 렌더링하고, Sidebar 라벨도 `도형`/`선분`으로 구분해 표시함.
+[codex] 2026-02-27 핀 SVG 검정 테두리 보강 메모
+- `public/svg/pin-default.svg`, `pin-hotel.svg`, `pin-photo.svg`, `pin-restaurant.svg`, `pin-tour.svg`, `pin-transit.svg`의 메인 컬러 도형에 진한 검정(`stroke #111111`) 테두리를 추가해 지도/사이드바 썸네일에서 아이콘 윤곽이 더 선명하게 보이도록 조정함.
+[codex] 2026-02-27 거리 측정 도구 요구 반영 메모
+- 거리 측정 도구(`measure_distance`)는 지도 위 드래프트 오버레이(파란 점선 + 꼭짓점 + 라벨)만 표시하고, 우클릭 종료 시 레이어 영구 데이터(`measurements`)에 커밋하지 않는 방향으로 정리함.
+- 우클릭 종료 입력은 `GoogleMap onRightClick`와 지도 DOM `contextmenu` 리스너를 함께 사용해 브라우저/지도 이벤트 누락 케이스를 방어하는 기존 방식을 유지함.
+[codex] 2026-02-27 선 도구 종료 입력 정책 정리 메모
+- 사용자 요구사항 기준으로 선 그리기 모드에서 ESC 단축키는 모드 전환/종료 입력으로 사용하지 않으며, 종료는 마우스 우클릭으로만 처리하는 정책을 유지함.
+- 레이어 패널 선분/도형 표기와 폐곡선 반투명 채움 렌더링은 기존 구현(`measurement.shapeType` 기반) 그대로 동작함을 확인함.
+[codex] 2026-02-27 POI 지도 추가/별점 UI 메모
+- `src/components/Map/PoiDetailOverlay.jsx`에 `지도에 추가` 버튼을 추가해 커스텀 POI 상세에서 바로 핀 생성 액션을 호출할 수 있게 연결함.
+- POI 평점 표시는 `평점 N` 텍스트 대신 별 문자열(★/☆) + 숫자(소수 1자리) 조합으로 변경함.
+- `src/stores/useProjectStore.js`의 `addMarker`는 선택적 `pinPatchData`를 받도록 확장해, POI 이름/카테고리/메모를 핀 생성 시점에 함께 주입할 수 있게 맞춤.

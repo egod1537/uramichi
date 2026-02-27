@@ -18,13 +18,14 @@ const createSnapshotFromState = (state) => ({
 
 const createMarkersFromPins = (pinList) => pinList.map((pinItem) => pinItem.position)
 
-const createDefaultPinData = (point, layerId, pinIndex) => ({
+const createDefaultPinData = (point, layerId, pinIndex, pinPatchData = {}) => ({
   id: `pin-${Date.now()}-${pinIndex + 1}`,
   layerId,
   name: `Pin ${pinIndex + 1}`,
   category: 'default',
   position: point,
   images: [],
+  ...pinPatchData,
 })
 
 export const createRouteId = (routeCount) => `route-${Date.now()}-${routeCount + 1}`
@@ -110,7 +111,7 @@ const useProjectStore = create((set) => ({
         historyIndex: committedHistory.historyIndex,
       }
     }),
-  addMarker: (point) =>
+  addMarker: (point, pinPatchData = {}) =>
     set((state) => {
       const nextLayers = [...state.layers]
       let nextActiveLayerId = state.activeLayerId
@@ -121,7 +122,7 @@ const useProjectStore = create((set) => ({
         nextActiveLayerId = createdLayer.id
       }
 
-      const createdPin = createDefaultPinData(point, nextActiveLayerId, state.pins.length)
+      const createdPin = createDefaultPinData(point, nextActiveLayerId, state.pins.length, pinPatchData)
       const nextPins = [...state.pins, createdPin]
       const committedHistory = HistoryManager.commit(state.history, state.historyIndex, {
         ...createSnapshotFromState(state),

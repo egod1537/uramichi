@@ -47,7 +47,7 @@ class Toolbar extends React.Component {
 
     const projectStore = useProjectStore.getState()
     const loweredKey = event.key.toLowerCase()
-    if (event.key === 'Escape') projectStore.resetToSelectMode()
+    if (event.key === 'Escape' && projectStore.currentMode !== TOOL_MODES.DRAW_LINE) projectStore.resetToSelectMode()
     if (loweredKey === 'z') projectStore.undo()
     if (loweredKey === 'y') projectStore.redo()
     if (loweredKey === 'q') projectStore.setMode(TOOL_MODES.SELECT)
@@ -118,7 +118,7 @@ class Toolbar extends React.Component {
             <div className="w-full max-w-sm rounded-lg bg-white p-4 shadow-xl">
               <h2 className="text-base font-semibold">Keyboard Shortcuts</h2>
               <ul className="mt-3 space-y-2 text-sm text-gray-700">
-                <li>ESC: Select/Pan 모드로 복귀</li>
+                <li>ESC: Select/Pan 모드로 복귀 (선 그리기 모드 제외)</li>
                 <li>Z: Undo</li>
                 <li>Y: Redo</li>
                 <li>Q: Select/Pan 모드</li>

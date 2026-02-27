@@ -8,6 +8,10 @@ class UserButton extends React.Component {
 
   googleSignInInitialized = false
 
+  isGoogleLoginPending = false
+
+  googleLoginRetryTimeoutId = null
+
   state = {
     isDropdownOpen: false,
     toastMessage: '',
@@ -34,6 +38,8 @@ class UserButton extends React.Component {
     }
     this.detachOutsideClickListener()
     this.clearToastTimeout()
+    this.clearGoogleLoginRetryTimeout()
+    this.detachGoogleLoginResumeListeners()
   }
 
   componentDidUpdate(previousProps, previousState) {
@@ -64,6 +70,47 @@ class UserButton extends React.Component {
       window.clearTimeout(this.toastTimeoutId)
       this.toastTimeoutId = null
     }
+  }
+
+  clearGoogleLoginRetryTimeout() {
+    if (this.googleLoginRetryTimeoutId) {
+      window.clearTimeout(this.googleLoginRetryTimeoutId)
+      this.googleLoginRetryTimeoutId = null
+    }
+  }
+
+  attachGoogleLoginResumeListeners() {
+    window.addEventListener('focus', this.handleGoogleLoginResume)
+    document.addEventListener('visibilitychange', this.handleGoogleLoginResume)
+  }
+
+  detachGoogleLoginResumeListeners() {
+    window.removeEventListener('focus', this.handleGoogleLoginResume)
+    document.removeEventListener('visibilitychange', this.handleGoogleLoginResume)
+  }
+
+  stopGoogleLoginFlow() {
+    this.isGoogleLoginPending = false
+    this.clearGoogleLoginRetryTimeout()
+    this.detachGoogleLoginResumeListeners()
+  }
+
+  scheduleGoogleLoginRetry() {
+    this.clearGoogleLoginRetryTimeout()
+    this.googleLoginRetryTimeoutId = window.setTimeout(() => {
+      this.googleLoginRetryTimeoutId = null
+      this.handleGoogleLoginResume()
+    }, 300)
+  }
+
+  handleGoogleLoginResume = () => {
+    if (!this.isGoogleLoginPending || this.state.isLoggedIn) {
+      return
+    }
+    if (document.visibilityState !== 'visible' || !document.hasFocus()) {
+      return
+    }
+    this.promptGoogleSignIn()
   }
 
   decodeJwtPayload(jwtToken) {
@@ -112,12 +159,14 @@ class UserButton extends React.Component {
 
   handleGoogleCredentialResponse = (response) => {
     if (!response?.credential) {
+      this.stopGoogleLoginFlow()
       this.setState({ toastMessage: 'Google 로그인에 실패했습니다' })
       return
     }
 
     const profilePayload = this.decodeJwtPayload(response.credential)
     if (!profilePayload) {
+      this.stopGoogleLoginFlow()
       this.setState({ toastMessage: 'Google 계정 정보를 읽지 못했습니다' })
       return
     }
@@ -129,6 +178,26 @@ class UserButton extends React.Component {
       email: profilePayload.email || '',
       avatarUrl: profilePayload.picture || '',
     })
+
+    this.stopGoogleLoginFlow()
+  }
+
+  promptGoogleSignIn() {
+    try {
+      window.google.accounts.id.prompt((momentNotification) => {
+        if (!this.isGoogleLoginPending || this.state.isLoggedIn) {
+          return
+        }
+        const isSkipped = momentNotification?.isSkippedMoment?.() === true
+        const isDismissed = momentNotification?.isDismissedMoment?.() === true
+        const isNotDisplayed = momentNotification?.isNotDisplayed?.() === true
+        if (isSkipped || isDismissed || isNotDisplayed) {
+          this.scheduleGoogleLoginRetry()
+        }
+      })
+    } catch {
+      this.scheduleGoogleLoginRetry()
+    }
   }
 
   initializeGoogleSignIn() {
@@ -153,13 +222,20 @@ class UserButton extends React.Component {
   }
 
   handleGoogleLogin = async () => {
+    if (this.isGoogleLoginPending) {
+      return
+    }
+
     try {
       await this.loadGoogleSignInScript()
       const isInitialized = this.initializeGoogleSignIn()
       if (!isInitialized) return
 
-      window.google.accounts.id.prompt()
+      this.isGoogleLoginPending = true
+      this.attachGoogleLoginResumeListeners()
+      this.promptGoogleSignIn()
     } catch {
+      this.stopGoogleLoginFlow()
       this.setState({ toastMessage: 'Google 로그인 창을 열지 못했습니다' })
     }
   }
@@ -188,6 +264,7 @@ class UserButton extends React.Component {
   }
 
   handleLogout = () => {
+    this.stopGoogleLoginFlow()
     if (window.google?.accounts?.id) {
       window.google.accounts.id.disableAutoSelect()
     }

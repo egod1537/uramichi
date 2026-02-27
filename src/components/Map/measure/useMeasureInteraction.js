@@ -1,18 +1,38 @@
 import { useCallback, useMemo } from 'react'
 import TOOL_MODES from '../../../utils/toolModes'
 import { COLOR_PRESETS } from '../../../utils/constants'
-import { formatDistanceLabel, getMidpoint, getPathDistanceInMeters } from '../../../utils/geo'
+import { formatDistanceLabel, getHaversineDistance, getMidpoint, getPathDistanceInMeters } from '../../../utils/geo'
 import { handleLineDraftComplete, handleLineMeasurePointDrag } from '../controllers/lineController'
 
-export const MEASURE_LINE_WIDTH = 6
+export const MEASURE_LINE_WIDTH = 4
+const POLYGON_CLOSE_DISTANCE_METERS = 30
 
-const createMeasurementEntity = (measurePointPath, activeLayerId, measurementCount) => ({
-  id: `measure-${Date.now()}-${measurementCount + 1}`,
-  layerId: activeLayerId,
-  points: measurePointPath,
-  color: COLOR_PRESETS.measureOrange,
-  width: MEASURE_LINE_WIDTH,
-})
+const resolveMeasurementShapeType = (measurePointPath) => {
+  if (measurePointPath.length < 3) return 'line'
+  const firstPoint = measurePointPath[0]
+  const lastPoint = measurePointPath[measurePointPath.length - 1]
+  const isLoopClosed = getHaversineDistance(firstPoint, lastPoint) <= POLYGON_CLOSE_DISTANCE_METERS
+  return isLoopClosed ? 'polygon' : 'line'
+}
+
+const createMeasurementEntity = (measurePointPath, activeLayerId, measurementCount) => {
+  const shapeType = resolveMeasurementShapeType(measurePointPath)
+  const firstPoint = measurePointPath[0]
+  const lastPoint = measurePointPath[measurePointPath.length - 1]
+  const pointsForPolygon =
+    shapeType === 'polygon' && firstPoint && lastPoint && (firstPoint.lat !== lastPoint.lat || firstPoint.lng !== lastPoint.lng)
+      ? [...measurePointPath, firstPoint]
+      : measurePointPath
+
+  return {
+    id: `measure-${Date.now()}-${measurementCount + 1}`,
+    layerId: activeLayerId,
+    points: pointsForPolygon,
+    color: COLOR_PRESETS.measureOrange,
+    width: MEASURE_LINE_WIDTH,
+    shapeType,
+  }
+}
 
 const createSegmentLabelDataList = (measurePointPath) =>
   measurePointPath.slice(1).map((currentPoint, pointIndex) => {
@@ -45,24 +65,31 @@ function useMeasureInteraction({
   addMeasurement,
   setMeasurePath,
   setDraggingMeasurePointIndex,
+  setMode,
 }) {
   const measureSegmentLabelDataList = useMemo(() => createSegmentLabelDataList(measurePath), [measurePath])
 
   const measureTotalLabelData = useMemo(() => createTotalLabelData(measurePath), [measurePath])
 
   const previewMeasurePath = useMemo(() => {
-    if (currentMode !== TOOL_MODES.DRAW_LINE) return []
+    if (currentMode !== TOOL_MODES.MEASURE_DISTANCE && currentMode !== TOOL_MODES.DRAW_LINE) return []
     if (!measurePath.length || !hoverMeasurePoint) return []
     return [...measurePath, hoverMeasurePoint]
   }, [currentMode, hoverMeasurePoint, measurePath])
 
   const completeMeasureInteraction = useCallback(() => {
+    if (currentMode === TOOL_MODES.MEASURE_DISTANCE) {
+      setHoverMeasurePoint(null)
+      cancelDraftMeasure()
+      return
+    }
+
     handleLineDraftComplete({
       currentMode,
       state: { measurePath, activeLayerId, layers, measurements, createMeasurementEntity },
-      actions: { setHoverMeasurePoint, cancelDraftMeasure, addMeasurement },
+      actions: { setHoverMeasurePoint, cancelDraftMeasure, addMeasurement, setMode },
     })
-  }, [activeLayerId, addMeasurement, cancelDraftMeasure, currentMode, layers, measurePath, measurements, setHoverMeasurePoint])
+  }, [activeLayerId, addMeasurement, cancelDraftMeasure, currentMode, layers, measurePath, measurements, setHoverMeasurePoint, setMode])
 
   const handleMeasurePointDrag = useCallback(
     (pointIndex, event) => {
@@ -70,14 +97,14 @@ function useMeasureInteraction({
       const longitude = event?.latLng?.lng()
       const clickedPoint = latitude === undefined || longitude === undefined ? null : { lat: latitude, lng: longitude }
       handleLineMeasurePointDrag({
-        currentMode,
+        currentMode: TOOL_MODES.DRAW_LINE,
         pointIndex,
         clickedPoint,
         state: { measurePath },
         actions: { setMeasurePath },
       })
     },
-    [currentMode, measurePath, setMeasurePath],
+    [measurePath, setMeasurePath],
   )
 
   const handleMeasurePointDragStart = useCallback((pointIndex) => {
