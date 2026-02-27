@@ -330,6 +330,19 @@ function Map() {
 
   const handleMapClick = useCallback(
     (event) => {
+      const isLineOrMeasureMode =
+        currentMode === TOOL_MODES.DRAW_LINE || currentMode === TOOL_MODES.MEASURE_DISTANCE
+      const mapDomEventType = event?.domEvent?.type
+      const mapDomEventButton = event?.domEvent?.button
+
+      if (isLineOrMeasureMode && mapDomEventType === 'contextmenu') {
+        return
+      }
+
+      if (isLineOrMeasureMode && mapDomEventButton !== 0) {
+        return
+      }
+
       if (shouldIgnoreNextMapClickRef.current) {
         shouldIgnoreNextMapClickRef.current = false
         return

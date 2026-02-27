@@ -115,3 +115,7 @@
 [codex] 2026-02-27 Map 선/측정 렌더 경계 분리 메모
 - `Map.jsx`에서 일반 선 렌더는 `LineLayer`로, 거리 측정 렌더는 `MeasureLayer`로 명확히 분리해 혼합 표시를 제거함.
 - 선 스냅 포인트 계산은 `lines`만 기준으로 사용하도록 정리해 measurement 레거시 데이터 의존을 제거함.
+[codex] 2026-02-27 Map 클릭 버튼 가드 보강 메모
+- `src/components/Map/Map.jsx`의 `handleMapClick` 시작부에서 `DRAW_LINE`/`MEASURE_DISTANCE` 공통 가드(`isLineOrMeasureMode`)를 추가함.
+- 두 모드에서는 `event?.domEvent?.type === "contextmenu"`를 즉시 반환해 우클릭 컨텍스트 메뉴 이벤트가 모드 클릭 핸들러로 내려가지 않게 차단함.
+- 두 모드에서는 `event?.domEvent?.button !== 0`일 때 즉시 반환해 좌클릭(버튼 0)만 클릭 핸들러로 전달되도록 제한함.
