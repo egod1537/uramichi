@@ -3,6 +3,7 @@ import TOOL_MODES from '../../../utils/toolModes'
 export const handleRouteMapClick = ({ currentMode, clickedPoint, state, actions }) => {
   if (currentMode !== TOOL_MODES.ADD_ROUTE || !clickedPoint) return false
   if (!state.routeDraft.start) {
+    actions.setRecentRouteInfo(null)
     actions.setRouteStart(clickedPoint)
     return true
   }

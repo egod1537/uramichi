@@ -1,6 +1,7 @@
 import TOOL_MODES from '../../utils/toolModes'
 import { ICON_FILTER_OPTIONS } from '../../utils/constants'
 import { convertTimeStringToMinutes } from '../../utils/time'
+import RouteSummaryPopup from './RouteSummaryPopup'
 
 const routeTravelModeList = [
   { value: 'WALKING', label: '도보' },
@@ -31,6 +32,7 @@ function MapOverlays({
   isPinFilterExpanded,
   pinIconFilters,
   routeDraft,
+  recentRouteInfo,
   timeFilterRange,
   onSetTimeFilterExpanded,
   onSetTimeFilterRange,
@@ -38,6 +40,7 @@ function MapOverlays({
   onTogglePinIconFilter,
   onSetPinFilterExpanded,
   onSetRouteTravelMode,
+  onCloseRouteSummary,
 }) {
   const startMinutes = normalizeSliderMinutes(convertTimeStringToMinutes(timeFilterRange.start), 9 * 60)
   const endMinutes = normalizeSliderMinutes(convertTimeStringToMinutes(timeFilterRange.end), 18 * 60)
@@ -199,6 +202,8 @@ function MapOverlays({
           <span className="text-gray-700">{routeDraft.start ? '도착점을 클릭해 경로를 완성하세요' : '출발점을 클릭하세요'}</span>
         </div>
       )}
+
+      <RouteSummaryPopup routeInfo={recentRouteInfo} onClose={onCloseRouteSummary} />
     </>
   )
 }

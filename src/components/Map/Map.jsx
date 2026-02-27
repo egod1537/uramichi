@@ -86,6 +86,7 @@ function Map() {
   const [isPinFilterExpanded, setIsPinFilterExpanded] = useState(false)
   const [isTimeFilterExpanded, setIsTimeFilterExpanded] = useState(false)
   const [timeFilterRange, setTimeFilterRange] = useState({ start: '09:00', end: '18:00' })
+  const [recentRouteInfo, setRecentRouteInfo] = useState(null)
   const {
     selectedPoiDetail,
     requestPoiDetail,
@@ -162,6 +163,7 @@ function Map() {
   useEffect(() => {
     syncDraftByMode({ currentMode, actions: { cancelDraftMeasure, cancelDraftLine } })
   }, [cancelDraftLine, cancelDraftMeasure, currentMode])
+
 
   const {
     linePreviewPath,
@@ -251,6 +253,7 @@ function Map() {
       }
 
       addRoute(routeEntity)
+      setRecentRouteInfo(routeEntity)
     },
     [activeLayerId, addRoute, layers, routes, setRouteStart],
   )
@@ -280,6 +283,7 @@ function Map() {
           appendMeasurePoint,
           setRouteStart,
           requestRoute,
+          setRecentRouteInfo,
           selectPin,
           selectLine,
           clearPinSelection,
@@ -632,6 +636,7 @@ function Map() {
         isPinFilterExpanded={isPinFilterExpanded}
         pinIconFilters={pinIconFilters}
         routeDraft={routeDraft}
+        recentRouteInfo={recentRouteInfo}
         timeFilterRange={timeFilterRange}
         onSetTimeFilterExpanded={setIsTimeFilterExpanded}
         onSetTimeFilterRange={(timeFieldKey, nextTimeValue) => {
@@ -644,6 +649,7 @@ function Map() {
         onTogglePinIconFilter={togglePinIconFilter}
         onSetPinFilterExpanded={setIsPinFilterExpanded}
         onSetRouteTravelMode={setRouteTravelMode}
+        onCloseRouteSummary={() => setRecentRouteInfo(null)}
       />
     </>
   )
