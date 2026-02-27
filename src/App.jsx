@@ -1,7 +1,10 @@
+import { useState } from 'react'
 import { LoadScript } from '@react-google-maps/api'
 import Map from './components/Map/Map'
 import Sidebar from './components/Sidebar/Sidebar'
 import Toolbar from './components/Toolbar/Toolbar'
+import ChatButton from './components/Chat/ChatButton'
+import ChatPanel from './components/Chat/ChatPanel'
 import Testbed from './pages/Testbed'
 import { getRoute } from './route'
 import useProjectStore from './stores/useProjectStore'
@@ -13,6 +16,7 @@ function App() {
   const currentMode = useProjectStore((state) => state.currentMode)
   const historyIndex = useProjectStore((state) => state.historyIndex)
   const historyLength = useProjectStore((state) => state.history.length)
+  const [chatPanelOpen, setChatPanelOpen] = useState(false)
 
   if (currentRoute === 'testbed') {
     return (
@@ -36,6 +40,8 @@ function App() {
         <Map />
         <Sidebar />
         <Toolbar currentMode={currentMode} historyIndex={historyIndex} historyLength={historyLength} />
+        {!chatPanelOpen && <ChatButton onClick={() => setChatPanelOpen(true)} />}
+        <ChatPanel isOpen={chatPanelOpen} onClose={() => setChatPanelOpen(false)} />
       </div>
     </LoadScript>
   )

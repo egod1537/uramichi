@@ -230,6 +230,12 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `src/components/Map/PinMarker.jsx`는 핀에 저장된 `color` 값이 있으면 마커 배경색에 우선 반영하도록 조정함.
 - `src/stores/useProjectStore.js`에 `updatePin`, `removePin` 액션을 추가해 팝업 편집/삭제 상태 연동을 지원함.
 
+[codex] 2026-02-27 AI 채팅 패널 UI 작업 메모
+- `src/components/Chat/ChatButton.jsx`에 지도 우측 하단 FAB 버튼을 추가했고, Claude 스타일의 스파클 SVG 아이콘과 주황-베이지 계열 색상을 적용함.
+- `src/components/Chat/ChatPanel.jsx`에 우측 슬라이드 패널(380px), 헤더(裏道 AI/닫기), 메시지 스크롤 영역, 입력창+전송 버튼 UI를 구현함.
+- `ChatPanel` 로컬 상태로 메시지 목록/입력값을 관리하며 Enter 전송, Shift+Enter 줄바꿈, 사용자 메시지 추가 후 "AI 응답 준비 중..." 임시 응답 추가 흐름을 연결함.
+- `src/components/Chat/ChatMessage.jsx`에서 AI/사용자 메시지 정렬과 배경색(회색/파란색) 스타일을 분기함.
+- `src/App.jsx`에서 채팅 패널 열림 상태를 로컬 `useState`로 관리하고, 패널이 열려 있을 때 FAB를 숨기도록 통합함.
 [codex] 2026-02-27 활성 레이어 기반 핀 추가 작업 메모
 - `src/stores/useProjectStore.js`에 `activeLayerId` 상태와 `setActiveLayer` 액션을 추가하고, 핀 추가(`addMarker`) 시 활성 레이어가 없으면 기본 레이어를 자동 생성한 뒤 `layerId`를 자동 할당하도록 변경함.
 - `src/utils/ProjectManager.js`의 초기 더미 데이터를 제거해 `pins`, `layers`, `routes`를 모두 빈 배열로 시작하도록 정리함.
