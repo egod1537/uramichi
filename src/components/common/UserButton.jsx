@@ -1,5 +1,6 @@
 import React from 'react'
 import useUserStore from '../../stores/useUserStore'
+import MyMapsModal from './MyMapsModal'
 
 class UserButton extends React.Component {
   containerRef = React.createRef()
@@ -17,6 +18,7 @@ class UserButton extends React.Component {
     displayName: useUserStore.getState().displayName,
     email: useUserStore.getState().email,
     avatarUrl: useUserStore.getState().avatarUrl,
+    isMyMapsModalOpen: false,
   }
 
   componentDidMount() {
@@ -206,6 +208,18 @@ class UserButton extends React.Component {
     }))
   }
 
+
+  handleOpenMyMapsModal = () => {
+    this.setState({
+      isDropdownOpen: false,
+      isMyMapsModalOpen: true,
+    })
+  }
+
+  handleCloseMyMapsModal = () => {
+    this.setState({ isMyMapsModalOpen: false })
+  }
+
   handleLogout = () => {
     this.stopGoogleLoginFlow()
     if (window.google?.accounts?.id) {
@@ -260,7 +274,11 @@ class UserButton extends React.Component {
 
               <div className="my-2 h-px bg-gray-200" />
 
-              <button type="button" className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50">
+              <button
+                type="button"
+                onClick={this.handleOpenMyMapsModal}
+                className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+              >
                 내 지도 목록
               </button>
               <button type="button" className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50">
@@ -279,6 +297,8 @@ class UserButton extends React.Component {
             </div>
           )}
         </div>
+
+        <MyMapsModal isOpen={this.state.isMyMapsModalOpen} onClose={this.handleCloseMyMapsModal} />
 
         {this.state.toastMessage && (
           <div className="absolute top-12 right-0 rounded-md bg-gray-900 px-3 py-2 text-xs font-medium text-white shadow-lg">
