@@ -364,3 +364,6 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - route id 생성 규칙 일관성을 위해 `src/stores/useProjectStore.js`에 `createRouteId(routeCount)`를 추가하고 기존 `commitRoutePath`도 동일 유틸을 사용하도록 맞춤.
 - `src/utils/DirectionsCache.js`는 route 전체 대신 `path/distanceMeters/durationSeconds/summary/lineName`만 저장하도록 조정해 id/layerId/start/end는 add 시점에 결정되도록 분리함.
 - route 추가 직전에 현재 `routes` id 집합 기반 충돌 검사(`createUniqueRouteId`)를 거쳐 중복 id 생성을 방어하도록 연결함.
+[codex] 2026-02-27 핀 추가 도구 클릭 우선순위 수정 메모
+- `src/components/Map/Map.jsx`의 `onMouseDown` 핀 추가 분기에 `isPinClickInProgress` 가드를 추가해, 핀 버튼 영역을 누른 경우 `addMarker`를 실행하지 않도록 조정함.
+- `src/components/Map/PinMarker.jsx`에 `onMouseDown` 콜백 전달을 추가하고 버튼 `mousedown`에서 전파를 차단해, 핀 클릭 시 팝업 선택 동작이 먼저 처리되도록 연결함.

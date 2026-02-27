@@ -308,12 +308,16 @@ function Map() {
   const handleMapMouseDown = useCallback(
     (event) => {
       if (currentMode !== TOOL_MODES.ADD_MARKER) return
+      if (isPinClickInProgress) {
+        setIsPinClickInProgress(false)
+        return
+      }
       const latitude = event.latLng?.lat()
       const longitude = event.latLng?.lng()
       if (latitude === undefined || longitude === undefined) return
       addMarker({ lat: latitude, lng: longitude })
     },
-    [addMarker, currentMode],
+    [addMarker, currentMode, isPinClickInProgress],
   )
 
   const handleMapMouseMove = useCallback(
@@ -505,6 +509,7 @@ function Map() {
           <PinMarker
             key={pinItem.id}
             pin={pinItem}
+            onMouseDown={() => setIsPinClickInProgress(true)}
             onClick={(event) => handlePinClick(pinItem.id, event)}
             indexLabel={currentMode === TOOL_MODES.ADD_ROUTE ? String(pinIndex + 1) : ''}
             draggable={currentMode === TOOL_MODES.SELECT && selectedPinId === pinItem.id}
