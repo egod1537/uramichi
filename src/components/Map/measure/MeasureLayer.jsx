@@ -2,7 +2,7 @@ import { Fragment } from 'react'
 import { Marker, Polygon, Polyline } from '@react-google-maps/api'
 import TOOL_MODES from '../../../utils/toolModes'
 import { COLOR_PRESETS } from '../../../utils/constants'
-import { MEASURE_LINE_WIDTH } from './useMeasureInteraction'
+import { MEASURE_LINE_WIDTH } from './constants'
 
 const MEASURE_VERTEX_PIXEL_SIZE = 12
 const MEASURE_STROKE_COLOR = '#3b82f6'
