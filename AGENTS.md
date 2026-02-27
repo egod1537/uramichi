@@ -368,3 +368,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `src/components/Map/PinPopup.jsx`에 아이콘 버튼/아이콘 피커 드롭다운을 추가해 핀 팝업에서 여행용 아이콘(대중교통/식당/관광지/숙소 등)을 즉시 선택할 수 있게 구현함.
 - 선택한 아이콘은 `updatePin(pin.id, { icon })`으로 핀 데이터에 저장되며, 동일 세션에서 PinPopup/지도 마커/사이드바 핀 목록 아이콘이 함께 동기화되도록 연결함.
 - 아이콘 프리셋은 `src/utils/constants.js`의 `TRAVEL_PIN_ICON_PRESETS`로 분리해 재사용 가능하게 관리함.
+[codex] 2026-02-27 Sidebar 레이어/핀 순서 재배치 메모
+- `src/stores/useProjectStore.js`에 `reorderLayers(sourceLayerId, targetLayerId)`와 `reorderPinsInLayer(layerId, sourcePinId, targetPinId)` 액션을 추가해 레이어 목록/레이어 내부 핀 목록의 순서를 드래그 앤 드롭으로 재정렬할 수 있게 함.
+- `src/components/Sidebar/LayerPanel.jsx`에서 레이어 행 드래그 상태(`dragLayerId`)를 관리하고, 레이어 행 드롭 시 스토어 `reorderLayers`를 호출하도록 연결함.
+- `src/components/Sidebar/LayerRow.jsx`에서 레이어 행과 핀 행 모두 `draggable` 처리하고, 핀 드롭 시 `reorderPinsInLayer`를 호출해 같은 레이어 내 핀 순서를 reorderable list처럼 바꿀 수 있게 함.

@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { CATEGORY_PRESETS, TRANSPORT_PRESETS } from '../../utils/constants'
 import useProjectStore from '../../stores/useProjectStore'
 
-function LayerRow({ layer }) {
+function LayerRow({ layer, isDraggingLayer, onLayerDragStart, onLayerDragEnd, onLayerDrop }) {
   const pins = useProjectStore((state) => state.pins)
   const activeLayerId = useProjectStore((state) => state.activeLayerId)
   const setActiveLayer = useProjectStore((state) => state.setActiveLayer)
@@ -13,8 +13,10 @@ function LayerRow({ layer }) {
   const selectPin = useProjectStore((state) => state.selectPin)
   const updatePin = useProjectStore((state) => state.updatePin)
   const removePin = useProjectStore((state) => state.removePin)
+  const reorderPinsInLayer = useProjectStore((state) => state.reorderPinsInLayer)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [pinOptionsPinId, setPinOptionsPinId] = useState(null)
+  const [dragPinId, setDragPinId] = useState(null)
 
   const layerPins = useMemo(() => pins.filter((pinItem) => pinItem.layerId === layer.id), [layer.id, pins])
   const isActiveLayer = activeLayerId === layer.id
@@ -38,7 +40,24 @@ function LayerRow({ layer }) {
 
   return (
     <div
-      className={`border-b py-2 last:border-b-0 ${isActiveLayer ? 'border-blue-200 bg-blue-50/70' : 'border-gray-200'}`}
+      className={`border-b py-2 last:border-b-0 ${isActiveLayer ? 'border-blue-200 bg-blue-50/70' : 'border-gray-200'} ${
+        isDraggingLayer ? 'opacity-60' : ''
+      }`}
+      draggable
+      onDragStart={(event) => {
+        event.stopPropagation()
+        onLayerDragStart(layer.id)
+      }}
+      onDragOver={(event) => {
+        event.preventDefault()
+        event.stopPropagation()
+      }}
+      onDrop={(event) => {
+        event.preventDefault()
+        event.stopPropagation()
+        onLayerDrop(layer.id)
+      }}
+      onDragEnd={() => onLayerDragEnd()}
       onClick={() => {
         if (pinOptionsPinId) {
           setPinOptionsPinId(null)
@@ -92,7 +111,27 @@ function LayerRow({ layer }) {
             const nextPin = layerPins[pinIndex + 1]
             const routeItem = layer.routes.find((routeData) => routeData.fromPinId === pinItem.id && routeData.toPinId === nextPin?.id)
             return (
-              <div key={pinItem.id} className="space-y-1">
+              <div
+                key={pinItem.id}
+                className="space-y-1"
+                draggable
+                onDragStart={(event) => {
+                  event.stopPropagation()
+                  setDragPinId(pinItem.id)
+                }}
+                onDragOver={(event) => {
+                  event.preventDefault()
+                  event.stopPropagation()
+                }}
+                onDrop={(event) => {
+                  event.preventDefault()
+                  event.stopPropagation()
+                  if (!dragPinId) return
+                  reorderPinsInLayer(layer.id, dragPinId, pinItem.id)
+                  setDragPinId(null)
+                }}
+                onDragEnd={() => setDragPinId(null)}
+              >
                 <div className="flex items-center gap-1">
                   <button
                     type="button"

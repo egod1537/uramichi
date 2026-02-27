@@ -33,6 +33,31 @@ const resolveSelectablePinIdList = (pinIdList, pinList) => {
   return pinIdList.filter((pinId) => selectablePinIdSet.has(pinId))
 }
 
+const reorderItemList = (itemList, fromIndex, toIndex) => {
+  if (fromIndex < 0 || toIndex < 0 || fromIndex === toIndex) return itemList
+  if (fromIndex >= itemList.length || toIndex >= itemList.length) return itemList
+  const nextItemList = [...itemList]
+  const [movedItem] = nextItemList.splice(fromIndex, 1)
+  nextItemList.splice(toIndex, 0, movedItem)
+  return nextItemList
+}
+
+const reorderPinsByLayer = (pinList, layerId, sourcePinId, targetPinId) => {
+  if (!sourcePinId || !targetPinId || sourcePinId === targetPinId) return pinList
+  const layerPinIdList = pinList.filter((pinItem) => pinItem.layerId === layerId).map((pinItem) => pinItem.id)
+  const sourceIndex = layerPinIdList.indexOf(sourcePinId)
+  const targetIndex = layerPinIdList.indexOf(targetPinId)
+  if (sourceIndex < 0 || targetIndex < 0) return pinList
+  const reorderedLayerPinIdList = reorderItemList(layerPinIdList, sourceIndex, targetIndex)
+  const pinOrderMap = new Map(reorderedLayerPinIdList.map((pinId, pinOrderIndex) => [pinId, pinOrderIndex]))
+  return [...pinList].sort((firstPin, secondPin) => {
+    const isFirstPinInLayer = firstPin.layerId === layerId
+    const isSecondPinInLayer = secondPin.layerId === layerId
+    if (!isFirstPinInLayer || !isSecondPinInLayer) return 0
+    return (pinOrderMap.get(firstPin.id) ?? 0) - (pinOrderMap.get(secondPin.id) ?? 0)
+  })
+}
+
 const useProjectStore = create((set) => ({
   ...initialProjectState,
   selectedLineId: null,
@@ -185,6 +210,27 @@ const useProjectStore = create((set) => ({
         pins: nextPins,
         markers: createMarkersFromPins(nextPins),
         activeLayerId: layerId,
+        lastEditedAt: new Date().toISOString(),
+      }
+    }),
+  reorderLayers: (sourceLayerId, targetLayerId) =>
+    set((state) => {
+      if (!sourceLayerId || !targetLayerId || sourceLayerId === targetLayerId) return state
+      const sourceLayerIndex = state.layers.findIndex((layerItem) => layerItem.id === sourceLayerId)
+      const targetLayerIndex = state.layers.findIndex((layerItem) => layerItem.id === targetLayerId)
+      if (sourceLayerIndex < 0 || targetLayerIndex < 0) return state
+      return {
+        layers: reorderItemList(state.layers, sourceLayerIndex, targetLayerIndex),
+        lastEditedAt: new Date().toISOString(),
+      }
+    }),
+  reorderPinsInLayer: (layerId, sourcePinId, targetPinId) =>
+    set((state) => {
+      const nextPins = reorderPinsByLayer(state.pins, layerId, sourcePinId, targetPinId)
+      if (nextPins === state.pins) return state
+      return {
+        pins: nextPins,
+        markers: createMarkersFromPins(nextPins),
         lastEditedAt: new Date().toISOString(),
       }
     }),
