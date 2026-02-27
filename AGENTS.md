@@ -308,3 +308,9 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `src/utils/L.js`를 추가해 현재 언어(`useEditorStore.language`) 기반 동적 import 로케일 로딩, `{index}` 포맷 치환, 키 누락 시 key 반환 동작을 구현함.
 - `src/locales/ko.json`, `src/locales/ja.json`, `src/locales/en.json` 플랫 키 번역 리소스를 추가함.
 - 앱 시작 시 `src/App.jsx`에서 `initializeLocalization()`을 호출하도록 연결했고, `src/stores/useEditorStore.js`에 `language`/`setLanguage` 상태를 추가함.
+
+[codex] 2026-02-27 locale pull 스크립트 작업 메모
+- `scripts/pull-locales.js`를 추가해 `.env.local`/환경변수의 `LOCALE_SHEET_CSV_URL`에서 CSV를 가져오고, 직접 구현한 CSV 파서(따옴표/쉼표/줄바꿈 이스케이프 지원)로 파싱 후 `src/locales/{lang}.json`을 생성하도록 구현함.
+- 헤더에서 `key`를 제외한 언어 코드를 자동 감지하고, 번역 빈 값은 key 문자열로 대체해 누락 표시가 되도록 처리함.
+- 실행 결과 리포트에 총 key 수, 언어별 완료/누락 수, 누락 key 목록을 출력하도록 추가함.
+- `package.json`에 `locale:pull` 스크립트를 등록해 `pnpm run locale:pull`로 실행 가능하게 연결함.
