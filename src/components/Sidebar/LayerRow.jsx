@@ -138,7 +138,7 @@ function LayerRow({ layer, isDraggingLayer, onLayerDragStart, onLayerDragEnd, on
                     onClick={() => selectPin(pinItem.id)}
                     className="flex min-w-0 flex-1 items-center gap-2 rounded px-2 py-1 text-sm text-gray-700 hover:bg-gray-100"
                   >
-                    <span>{CATEGORY_PRESETS[pinItem.category]?.icon ?? CATEGORY_PRESETS.default.icon}</span>
+                    <span>{pinItem.icon || CATEGORY_PRESETS[pinItem.category]?.icon || CATEGORY_PRESETS.default.icon}</span>
                     <span className="truncate">{pinItem.name}</span>
                   </button>
                   <div className="relative">

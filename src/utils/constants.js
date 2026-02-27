@@ -9,6 +9,21 @@ export const CATEGORY_PRESETS = {
   spot: { icon: '📍', label: 'Spot' },
 }
 
+export const TRAVEL_PIN_ICON_PRESETS = [
+  { key: 'transit', icon: '🚇', label: '대중교통' },
+  { key: 'restaurant', icon: '🍽️', label: '식당' },
+  { key: 'tour', icon: '🗼', label: '관광지' },
+  { key: 'hotel', icon: '🏨', label: '숙소' },
+  { key: 'cafe', icon: '☕', label: '카페' },
+  { key: 'shopping', icon: '🛍️', label: '쇼핑' },
+  { key: 'museum', icon: '🏛️', label: '박물관' },
+  { key: 'park', icon: '🌳', label: '공원' },
+  { key: 'onsen', icon: '♨️', label: '온천' },
+  { key: 'bar', icon: '🍶', label: '바' },
+  { key: 'night', icon: '🌃', label: '야경' },
+  { key: 'photo', icon: '📷', label: '포토스팟' },
+]
+
 export const TRANSPORT_PRESETS = {
   flight: { icon: '✈️', color: '#34a853' },
   train: { icon: '🚂', color: '#4285f4' },
