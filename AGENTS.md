@@ -329,3 +329,9 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - 같은 파일에서 비-Select 모드에서도 핀 클릭 시 `selectPin(pinId)`가 동작하도록 분기해, 어떤 모드에서도 핀 팝업을 열 수 있게 정리함.
 - 같은 파일에서 핀 드래그 가능 조건을 `selectedPinId === pin.id`로 제한해 지도 이동 중 핀이 튀는 것처럼 보이는 오조작 가능성을 줄임.
 - `src/components/Map/PinPopup.jsx` 루트 컨테이너에 `onMouseDown/onClick stopPropagation`을 추가해 팝업 내부 버튼 클릭이 지도 클릭으로 전파되어 편집/삭제 액션이 끊기던 문제를 방지함.
+
+[codex] 2026-02-27 거리툴 UX 보강 작업 메모
+- `src/components/Map/Map.jsx`에서 거리 측정 라벨의 y 오프셋/line-height/padding을 조정해 텍스트가 말풍선 밖으로 삐져나오는 현상을 완화함.
+- 같은 파일에서 측정 경로 각 꼭짓점에 드래그 가능한 점(`Circle`)을 렌더링해 점 단위 위치 수정이 가능하도록 연결함.
+- 같은 파일에서 측정 모드 중 마지막 점 이후 마우스 위치까지 실시간 프리뷰 선(`previewMeasurePath`)을 추가해 다음 점 추가 위치를 미리 확인할 수 있도록 구현함.
+- `src/stores/useProjectStore.js`에 `setMeasurePath(measurePointList)` 액션을 추가해 꼭짓점 드래그 시 측정 경로를 즉시 갱신하도록 연결함.

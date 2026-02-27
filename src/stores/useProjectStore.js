@@ -397,6 +397,11 @@ const useProjectStore = create((set) => ({
       draftMeasurePoints: [...state.draftMeasurePoints, point],
       measurePath: [...state.draftMeasurePoints, point],
     })),
+  setMeasurePath: (measurePointList) =>
+    set({
+      draftMeasurePoints: measurePointList,
+      measurePath: measurePointList,
+    }),
 }))
 
 export default useProjectStore
