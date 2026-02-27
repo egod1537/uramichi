@@ -394,3 +394,11 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 [codex] 2026-02-27 핀 아이콘 필터 축소 메모
 - `src/utils/constants.js`의 `TRAVEL_PIN_ICON_PRESETS`를 사용자 요청 기준 5개(대중교통/식당/관광지/숙소/포토스팟)만 남기고 나머지 옵션을 제거함.
 - 같은 파일의 `PIN_ICON_STYLE_PRESETS`도 동일한 5개 키만 유지해 필터/아이콘 선택 목록과 스타일 프리셋 집합이 일치하도록 정리함.
+
+[codex] 2026-02-27 .env.local 키 복구 메모
+- `.env.local`에 `VITE_GOOGLE_MAPS_API_KEY`를 다시 추가해 `src/App.jsx`에서 참조하는 Google Maps 키가 로컬 환경에서 복구되도록 반영함.
+- 기존 `LOCALE_SHEET_CSV_URL` 항목은 유지함.
+[codex] 2026-02-27 지도 핀 아이콘 필터 위치 조정 메모
+- `src/components/Map/Map.jsx`의 지도 핀 아이콘 필터 컨테이너를 우측 하단 고정에서 중앙 하단 고정으로 이동하고, `left-1/2 -translate-x-1/2` 정렬로 배치함.
+- 필터 UI를 세로 카드 형태에서 가로 바 형태로 변경해 라벨/초기화 버튼 + 아이콘 버튼 목록이 한 줄로 길게 보이도록 조정함.
+- 아이콘 버튼 목록은 `overflow-x-auto` + `shrink-0`를 적용해 좁은 뷰포트에서도 가로 스크롤로 접근 가능하도록 유지함.
