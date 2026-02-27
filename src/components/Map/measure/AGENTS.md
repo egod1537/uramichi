@@ -12,3 +12,6 @@
 [codex] 2026-02-27 measure 훅 상태 소스 분리 메모
 - `useLineInteraction`의 입력 상태를 `measurePath`에서 `linePath`로 교체하고, 업데이트 액션도 `setMeasurePath` 대신 `setLinePath`를 사용하도록 변경함.
 - 선그리기 완료 시 드래프트 정리 액션을 `cancelDraftMeasure`가 아닌 `cancelDraftLine`으로 고정해 거리측정 드래프트 상태와 완전히 분리함.
+[codex] 2026-02-27 draw_line 렌더 스타일 보정 메모
+- draw_line 드래프트/프리뷰/저장 렌더를 거리측정 점선과 분리해, draw_line 모드에서는 검은 실선으로 표시되도록 MeasureLayer 분기를 추가함.
+- 저장된 선/도형 꼭짓점 마커의 외곽선도 엔티티 색상(기본 검정)을 따라가도록 맞춰, 일부 꼭짓점이 다른 색으로 보이던 문제를 줄임.
