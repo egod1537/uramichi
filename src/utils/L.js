@@ -1,37 +1,63 @@
+import localizationConfig from '../../locales.config.js'
 import useEditorStore from '../stores/useEditorStore'
 
-const localeLoaders = {
-  ko: () => import('../locales/ko.json'),
-  ja: () => import('../locales/ja.json'),
-  en: () => import('../locales/en.json'),
-}
-
-const DEFAULT_LANGUAGE = 'ko'
+const localeModules = import.meta.glob('../locales/*/*.json')
+const DEFAULT_LANGUAGE = localizationConfig.defaultLanguage
 
 let activeLanguage = DEFAULT_LANGUAGE
 let activeMessages = {}
 let isLocalizationInitialized = false
 
 function resolveLanguage(languageValue) {
-  if (localeLoaders[languageValue]) {
+  if (localizationConfig.languages.includes(languageValue)) {
     return languageValue
   }
 
   return DEFAULT_LANGUAGE
 }
 
+function parseLocaleModulePath(modulePath) {
+  const pathMatchResult = modulePath.match(/\.\.\/locales\/([^/]+)\/([^/]+)\.json$/)
+
+  if (!pathMatchResult) {
+    return null
+  }
+
+  return {
+    categoryName: pathMatchResult[1],
+    languageCode: pathMatchResult[2],
+  }
+}
+
 async function loadLanguageMessages(languageValue) {
   const nextLanguage = resolveLanguage(languageValue)
+  const mergedMessages = {}
+  let loadedModuleCount = 0
 
-  try {
-    const localeModule = await localeLoaders[nextLanguage]()
-    activeLanguage = nextLanguage
-    activeMessages = localeModule.default ?? localeModule
-  } catch {
-    if (nextLanguage !== DEFAULT_LANGUAGE) {
-      await loadLanguageMessages(DEFAULT_LANGUAGE)
+  for (const [modulePath, loadModule] of Object.entries(localeModules)) {
+    const parsedPath = parseLocaleModulePath(modulePath)
+
+    if (!parsedPath || parsedPath.languageCode !== nextLanguage) {
+      continue
     }
+
+    const localeModule = await loadModule()
+    const localeMessages = localeModule.default ?? localeModule
+
+    for (const [messageKey, messageValue] of Object.entries(localeMessages)) {
+      mergedMessages[`${parsedPath.categoryName}.${messageKey}`] = messageValue
+    }
+
+    loadedModuleCount += 1
   }
+
+  if (loadedModuleCount === 0 && nextLanguage !== DEFAULT_LANGUAGE) {
+    await loadLanguageMessages(DEFAULT_LANGUAGE)
+    return
+  }
+
+  activeLanguage = nextLanguage
+  activeMessages = mergedMessages
 }
 
 function formatMessage(templateText, formatArgs) {

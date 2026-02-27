@@ -436,6 +436,12 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `src/components/Map/Map.jsx`에서 ADD_MARKER 모드의 `pendingMarkerPoint` 확인 배너("선택 위치에 핀을 추가할까요?")를 제거함.
 - 지도 `onMouseUp`에서 좌표 클릭 즉시 `addMarker`를 호출하도록 변경해 추가 확인 단계 없이 핀이 바로 생성되도록 맞춤.
 - 확인 UI 제거에 맞춰 `pendingMarkerPoint` 관련 로컬 상태/리셋 코드를 함께 정리함.
+[codex] 2026-02-27 로컬라이제이션 멀티시트 전환 메모
+- `locales.config.js`를 추가해 spreadsheetId/sheets/languages/defaultLanguage/outputDir 설정을 코드로 관리하도록 전환함.
+- `scripts/pull-locales.js`를 멀티시트 CLI(`pnpm locales`)로 개편해 `--list`, `all`, 시트명 필터 인자, 시트별 에러 스킵/리포트 출력 흐름을 지원하도록 변경함.
+- `src/utils/L.js`를 `import.meta.glob('../locales/*/*.json')` 기반 카테고리 병합 로더로 바꿔 `category.key` 네임스페이스 조회를 지원하도록 맞춤.
+- 기존 단일 파일(`src/locales/{ko,ja,en}.json`)은 제거하고 `src/locales/{common,toolbar,sidebar,pin,chat}/{ko,ja,en}.json` 구조로 정리함.
+- `.env.local`에서 `LOCALE_SHEET_CSV_URL`를 제거하고 로케일 소스 설정을 `locales.config.js` 단일 경로로 통합함.
 [codex] 2026-02-27 PinMarker 단일 상호작용 구조 정리 메모
 - `src/components/Map/PinMarker.jsx`에서 기존 `Marker(드래그)` + `OverlayView(렌더링)` 이중 구조를 제거하고 단일 `Marker`로 렌더링/클릭/드래그를 모두 처리하도록 통합함.
 - 마커 원형 스타일은 `icon(Symbol path)`로 유지하고, 아이콘/경로 인덱스 표시는 `label`로 처리해 좌표 소스를 단일화함.
