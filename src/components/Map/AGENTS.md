@@ -72,3 +72,7 @@
 - `TimelineBar.jsx`를 추가해 핀 `openingHours` 배열(복수 구간)을 24시간 바(회색 배경 + 주황 구간)로 렌더링하도록 구현함.
 - 자정 넘김 구간은 정규화 결과에 따라 `18:00~24:00`, `00:00~02:00`처럼 분리 렌더링하며, 각 구간 시작/종료 라벨과 하단 눈금(0/6/12/18/24)을 함께 표시함.
 - `PinPopup.jsx` 하단에 `<TimelineBar openingHours={pin.openingHours} />`를 삽입해 영업시간 데이터가 없을 때는 타임라인 자체가 렌더링되지 않도록 연결함.
+[codex] 2026-02-27 지도 시간 필터 UX 수정 메모
+- `src/components/Map/MapOverlays.jsx`의 시간 필터 오버레이 위치를 `bottom-16`으로 내려 핀 아이콘 필터와 간격을 줄임.
+- 기존 시작/종료 `type="time"` 입력 대신 30분 단위 양방향 범위 슬라이더(두 개의 range 핸들)로 시간 범위 조절 UI를 교체함.
+- 슬라이더 값은 `HH:MM` 문자열로 변환해 기존 `timeFilterRange` 상태(`start`, `end`)와 동일한 props 인터페이스로 동기화함.
