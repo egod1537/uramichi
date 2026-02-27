@@ -19,23 +19,14 @@ import LineLayer from './layers/LineLayer'
 import RouteLayer from './layers/RouteLayer'
 import MeasureLayer from './layers/MeasureLayer'
 import MapOverlays from './MapOverlays'
-
-const containerStyle = { width: '100%', height: '100%' }
-const defaultCenter = { lat: 35.6812, lng: 139.7671 }
-
-const mapOptions = {
-  disableDefaultUI: true,
-  gestureHandling: 'greedy',
-  zoomControl: false,
-  zoomControlOptions: { position: 9 },
-  mapTypeControl: false,
-  streetViewControl: false,
-  fullscreenControl: false,
-  clickableIcons: true,
-}
+import {
+  ADD_MARKER_DRAG_THRESHOLD_PX,
+  MAP_CONTAINER_STYLE,
+  MAP_DEFAULT_CENTER,
+  MAP_OPTIONS,
+} from './config'
 
 const lineColorSequence = [COLOR_PRESETS.primaryBlue, COLOR_PRESETS.routeGreen, COLOR_PRESETS.measureOrange, '#8b5cf6']
-const ADD_MARKER_DRAG_THRESHOLD_PX = 6
 
 const getNextLineColor = (currentColor) => {
   const currentColorIndex = lineColorSequence.indexOf(currentColor)
@@ -451,8 +442,8 @@ function Map() {
   return (
     <>
       <GoogleMap
-        mapContainerStyle={containerStyle}
-        center={defaultCenter}
+        mapContainerStyle={MAP_CONTAINER_STYLE}
+        center={MAP_DEFAULT_CENTER}
         zoom={12}
         onLoad={(loadedMap) => {
           mapInstanceRef.current = loadedMap
@@ -466,7 +457,7 @@ function Map() {
         onMouseDown={handleMapMouseDown}
         onDblClick={handleMapDoubleClick}
         onRightClick={handleMapRightClick}
-        options={{ ...mapOptions, disableDoubleClickZoom: currentMode === TOOL_MODES.DRAW_LINE }}
+        options={{ ...MAP_OPTIONS, disableDoubleClickZoom: currentMode === TOOL_MODES.DRAW_LINE }}
       >
         <PinLayer
           pins={visiblePins}
