@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { OverlayView } from '@react-google-maps/api'
 import useProjectStore from '../../stores/useProjectStore'
-import { CATEGORY_PRESETS, PIN_MARKER_COLOR_PRESETS, TRAVEL_PIN_ICON_PRESETS } from '../../utils/constants'
+import { CATEGORY_PRESETS, PIN_MARKER_COLOR_PRESETS, TRAVEL_PIN_ICON_PRESETS, resolveTravelPinIconKey } from '../../utils/constants'
 import { convertFileToDataUrl } from '../../utils/file'
 
 const overlayPane = OverlayView.OVERLAY_MOUSE_TARGET
@@ -43,7 +43,7 @@ function PinPopup({ pin }) {
   }))
 
   const categoryPreset = useMemo(() => CATEGORY_PRESETS[pin.category] || CATEGORY_PRESETS.default, [pin.category])
-  const currentPinIcon = pin.icon || categoryPreset.icon
+  const currentPinIconKey = resolveTravelPinIconKey(pin.icon) || resolveTravelPinIconKey(categoryPreset.icon) || 'transit'
 
   useEffect(() => {
     const handleOutsideClick = (event) => {
@@ -146,26 +146,26 @@ function PinPopup({ pin }) {
                 aria-label="아이콘 선택"
                 title="아이콘 선택"
               >
-                {currentPinIcon}
+                <img src={(TRAVEL_PIN_ICON_PRESETS.find((iconPreset) => iconPreset.key === currentPinIconKey)?.svgPath) || '/svg/pin-default.svg'} alt="현재 핀 아이콘" className="h-6 w-6" />
               </button>
               {isIconPickerOpen ? (
                 <div className="absolute left-0 top-9 z-30 w-56 rounded-xl border border-gray-200 bg-white p-2 shadow-xl">
                   <div className="grid grid-cols-6 gap-1">
                     {TRAVEL_PIN_ICON_PRESETS.map((iconPreset) => {
-                      const isSelectedIcon = currentPinIcon === iconPreset.icon
+                      const isSelectedIcon = currentPinIconKey === iconPreset.key
                       return (
                         <button
                           key={iconPreset.key}
                           type="button"
                           onClick={() => {
-                            updatePin(pin.id, { icon: iconPreset.icon })
+                            updatePin(pin.id, { icon: iconPreset.key })
                             setIsIconPickerOpen(false)
                           }}
                           className={`rounded-md px-1 py-1 text-xl hover:bg-gray-100 ${isSelectedIcon ? 'bg-blue-50 ring-1 ring-blue-300' : ''}`}
                           title={iconPreset.label}
                           aria-label={iconPreset.label}
                         >
-                          {iconPreset.icon}
+                          <img src={iconPreset.svgPath} alt={iconPreset.label} className="h-6 w-6" />
                         </button>
                       )
                     })}

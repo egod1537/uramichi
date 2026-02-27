@@ -10,14 +10,34 @@ export const CATEGORY_PRESETS = {
 }
 
 export const TRAVEL_PIN_ICON_PRESETS = [
-  { key: 'transit', icon: '🚇', label: '대중교통', svgPath: '/svg/pin-transit.svg' },
-  { key: 'restaurant', icon: '🍽️', label: '식당', svgPath: '/svg/pin-restaurant.svg' },
-  { key: 'tour', icon: '🗼', label: '관광지', svgPath: '/svg/pin-tour.svg' },
-  { key: 'hotel', icon: '🏨', label: '숙소', svgPath: '/svg/pin-hotel.svg' },
-  { key: 'photo', icon: '📷', label: '포토스팟', svgPath: '/svg/pin-photo.svg' },
+  { key: 'transit', label: '대중교통', svgPath: '/svg/pin-transit.svg' },
+  { key: 'restaurant', label: '식당', svgPath: '/svg/pin-restaurant.svg' },
+  { key: 'tour', label: '관광지', svgPath: '/svg/pin-tour.svg' },
+  { key: 'hotel', label: '숙소', svgPath: '/svg/pin-hotel.svg' },
+  { key: 'photo', label: '포토스팟', svgPath: '/svg/pin-photo.svg' },
 ]
 
 export const DEFAULT_PIN_SVG_PATH = '/svg/pin-default.svg'
+
+const LEGACY_TRAVEL_ICON_KEY_MAP = {
+  '🚇': 'transit',
+  '🍽️': 'restaurant',
+  '🗼': 'tour',
+  '🏨': 'hotel',
+  '📷': 'photo',
+}
+
+export const resolveTravelPinIconKey = (pinIconValue) => {
+  if (!pinIconValue) {
+    return null
+  }
+
+  if (TRAVEL_PIN_ICON_PRESETS.some((iconPreset) => iconPreset.key === pinIconValue)) {
+    return pinIconValue
+  }
+
+  return LEGACY_TRAVEL_ICON_KEY_MAP[pinIconValue] || null
+}
 
 export const TRANSPORT_PRESETS = {
   flight: { icon: '✈️', color: '#34a853' },

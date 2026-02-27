@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { Marker } from '@react-google-maps/api'
 import useProjectStore from '../../stores/useProjectStore'
-import { CATEGORY_PRESETS, DEFAULT_PIN_SVG_PATH, TRAVEL_PIN_ICON_PRESETS } from '../../utils/constants'
+import { CATEGORY_PRESETS, DEFAULT_PIN_SVG_PATH, TRAVEL_PIN_ICON_PRESETS, resolveTravelPinIconKey } from '../../utils/constants'
 
 function PinMarker({
   pin,
@@ -19,8 +19,8 @@ function PinMarker({
   const markerPreset = useMemo(() => {
     const categoryKey = pin.category || 'default'
     const categoryInfo = CATEGORY_PRESETS[categoryKey] || CATEGORY_PRESETS.default
-    const pinIcon = pin.icon || categoryInfo.icon
-    const iconPreset = TRAVEL_PIN_ICON_PRESETS.find((presetItem) => presetItem.icon === pinIcon)
+    const resolvedPinIconKey = resolveTravelPinIconKey(pin.icon) || resolveTravelPinIconKey(categoryInfo.icon)
+    const iconPreset = TRAVEL_PIN_ICON_PRESETS.find((presetItem) => presetItem.key === resolvedPinIconKey)
 
     return {
       svgPath: iconPreset?.svgPath || DEFAULT_PIN_SVG_PATH,

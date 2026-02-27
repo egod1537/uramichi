@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { GoogleMap, OverlayView, Polyline } from '@react-google-maps/api'
 import TOOL_MODES from '../../utils/toolModes'
-import { COLOR_PRESETS } from '../../utils/constants'
+import { COLOR_PRESETS, resolveTravelPinIconKey } from '../../utils/constants'
 import useProjectStore from '../../stores/useProjectStore'
 import PinMarker from './PinMarker'
 import PinPopup from './PinPopup'
@@ -99,8 +99,8 @@ function Map() {
   const visiblePins = useMemo(() => {
     const layerVisiblePins = pins.filter((pinItem) => visibleLayerIdSet.has(pinItem.layerId))
     if (!pinIconFilters.length) return layerVisiblePins
-    const activeIconSet = new Set(ICON_FILTER_OPTIONS.filter((filterItem) => pinIconFilters.includes(filterItem.key)).map((filterItem) => filterItem.icon))
-    return layerVisiblePins.filter((pinItem) => activeIconSet.has(pinItem.icon))
+    const activeIconKeySet = new Set(pinIconFilters)
+    return layerVisiblePins.filter((pinItem) => activeIconKeySet.has(resolveTravelPinIconKey(pinItem.icon)))
   }, [pinIconFilters, pins, visibleLayerIdSet])
   const visibleLines = useMemo(() => lines.filter((lineItem) => visibleLayerIdSet.has(lineItem.layerId)), [lines, visibleLayerIdSet])
   const visibleMeasurements = useMemo(
@@ -602,7 +602,7 @@ function Map() {
                     onClick={() => togglePinIconFilter(filterItem.key)}
                     className={`shrink-0 rounded-full border px-2 py-0.5 text-xs ${isActive ? 'border-blue-400 bg-blue-50 text-blue-700' : 'border-gray-200 bg-white text-gray-600'}`}
                   >
-                    {filterItem.icon}
+                    <img src={filterItem.svgPath} alt={filterItem.label} className="h-4 w-4" />
                   </button>
                 )
               })}

@@ -481,3 +481,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `public/svg/`에 지도 핀 아이콘 SVG 파일(`pin-transit`, `pin-restaurant`, `pin-tour`, `pin-hotel`, `pin-photo`, `pin-default`)을 추가함.
 - `src/utils/constants.js`의 `TRAVEL_PIN_ICON_PRESETS`에 `svgPath`를 연결하고 기본 아이콘 경로 상수(`DEFAULT_PIN_SVG_PATH`)를 추가함.
 - `src/components/Map/PinMarker.jsx`를 SVG URL 기반 `Marker.icon` 렌더링으로 변경해 지도 핀이 이모지 라벨 대신 SVG 아이콘으로 보이도록 수정함.
+[codex] 2026-02-27 핀 아이콘 SVG 일관화 메모
+- `TRAVEL_PIN_ICON_PRESETS`의 아이콘 저장값을 emoji가 아닌 `key` 기반으로 사용하도록 전환했고, 레거시 emoji 데이터 호환을 위해 `resolveTravelPinIconKey` 매핑 유틸을 추가함.
+- 지도/사이드바/핀 팝업의 아이콘 표시 및 선택 UI는 `svgPath` 기반 `<img>` 렌더링으로 통일해, `public/svg` 리소스를 직접 사용하도록 맞춤.
+- 핀 아이콘 필터는 key 집합 비교로 변경해 새 포맷(`pin.icon = transit|restaurant|...`)과 레거시 emoji 포맷을 함께 처리함.

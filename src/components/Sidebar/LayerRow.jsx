@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { CATEGORY_PRESETS, TRANSPORT_PRESETS, TRAVEL_PIN_ICON_PRESETS } from '../../utils/constants'
+import { CATEGORY_PRESETS, TRANSPORT_PRESETS, TRAVEL_PIN_ICON_PRESETS, resolveTravelPinIconKey } from '../../utils/constants'
 import useProjectStore from '../../stores/useProjectStore'
 
 function LayerRow({ layer, filteredPins, measurements, isDraggingLayer, layerDropPreview, onLayerDragStart, onLayerDragEnd, onLayerDragOver, onLayerDrop }) {
@@ -172,7 +172,11 @@ function LayerRow({ layer, filteredPins, measurements, isDraggingLayer, layerDro
                         title="아이콘 변경"
                         aria-label="아이콘 변경"
                       >
-                        {pinItem.icon || CATEGORY_PRESETS[pinItem.category]?.icon || CATEGORY_PRESETS.default.icon}
+                        <img
+                          src={(TRAVEL_PIN_ICON_PRESETS.find((iconPreset) => iconPreset.key === (resolveTravelPinIconKey(pinItem.icon) || resolveTravelPinIconKey(CATEGORY_PRESETS[pinItem.category]?.icon) || 'transit'))?.svgPath) || '/svg/pin-default.svg'}
+                          alt="핀 아이콘"
+                          className="h-5 w-5"
+                        />
                       </button>
                       {iconPickerPinId === pinItem.id ? (
                         <div
@@ -181,20 +185,21 @@ function LayerRow({ layer, filteredPins, measurements, isDraggingLayer, layerDro
                         >
                           <div className="grid grid-cols-5 gap-1">
                             {TRAVEL_PIN_ICON_PRESETS.map((iconPreset) => {
-                              const isSelectedIcon = (pinItem.icon || CATEGORY_PRESETS[pinItem.category]?.icon || CATEGORY_PRESETS.default.icon) === iconPreset.icon
+                              const selectedPinIconKey = resolveTravelPinIconKey(pinItem.icon) || resolveTravelPinIconKey(CATEGORY_PRESETS[pinItem.category]?.icon)
+                              const isSelectedIcon = selectedPinIconKey === iconPreset.key
                               return (
                                 <button
                                   key={iconPreset.key}
                                   type="button"
                                   onClick={() => {
-                                    updatePin(pinItem.id, { icon: iconPreset.icon })
+                                    updatePin(pinItem.id, { icon: iconPreset.key })
                                     setIconPickerPinId(null)
                                   }}
                                   className={`rounded-md px-1 py-1 text-lg hover:bg-gray-100 ${isSelectedIcon ? 'bg-blue-50 ring-1 ring-blue-300' : ''}`}
                                   title={iconPreset.label}
                                   aria-label={iconPreset.label}
                                 >
-                                  {iconPreset.icon}
+                                  <img src={iconPreset.svgPath} alt={iconPreset.label} className="h-5 w-5" />
                                 </button>
                               )
                             })}

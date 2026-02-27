@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import LayerRow from './LayerRow'
 import useProjectStore from '../../stores/useProjectStore'
-import { ICON_FILTER_OPTIONS } from '../../utils/constants'
+import { ICON_FILTER_OPTIONS, resolveTravelPinIconKey } from '../../utils/constants'
 
 const findPinNameByPosition = (pinList, targetPosition) => {
   if (!targetPosition) return 'Unknown'
@@ -32,8 +32,8 @@ function LayerPanel() {
 
   const filteredPins = useMemo(() => {
     if (!pinIconFilters.length) return pins
-    const activeIconSet = new Set(ICON_FILTER_OPTIONS.filter((filterItem) => pinIconFilters.includes(filterItem.key)).map((filterItem) => filterItem.icon))
-    return pins.filter((pinItem) => activeIconSet.has(pinItem.icon))
+    const activeIconKeySet = new Set(pinIconFilters)
+    return pins.filter((pinItem) => activeIconKeySet.has(resolveTravelPinIconKey(pinItem.icon)))
   }, [pinIconFilters, pins])
 
   const movableLayerOptions = useMemo(() => {
@@ -79,7 +79,7 @@ function LayerPanel() {
                 onClick={() => togglePinIconFilter(filterItem.key)}
                 className={`rounded-full border px-2 py-0.5 text-xs ${isActive ? 'border-blue-400 bg-blue-50 text-blue-700' : 'border-gray-200 bg-white text-gray-600'}`}
               >
-                {filterItem.icon} {filterItem.label}
+                <img src={filterItem.svgPath} alt={filterItem.label} className="h-4 w-4" /> {filterItem.label}
               </button>
             )
           })}

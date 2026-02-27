@@ -12,3 +12,7 @@
 - `src/components/Map/measure/` 폴더를 추가하고, 측정 선/포인트 렌더(`MeasureLayer.jsx`), 거리 라벨 렌더(`MeasureLabels.jsx`), 측정 상호작용/계산 훅(`useMeasureInteraction.js`)으로 역할을 분리함.
 - `Map.jsx`는 측정 렌더 JSX 블록을 제거하고 `measurePath`, `currentMode`, 콜백을 measure 전용 모듈로 전달하는 조합 구조로 정리함.
 - 측정 종료 트리거(ESC/더블클릭/우클릭)는 `triggerMeasureComplete` 단일 함수로 통일함.
+[codex] 2026-02-27 Map 핀 아이콘 SVG 강제 메모
+- `PinPopup.jsx` 아이콘 버튼/아이콘 피커를 emoji 텍스트 대신 SVG 이미지 렌더링으로 변경하고, 핀 저장값은 `iconPreset.key`를 사용하도록 조정함.
+- `PinMarker.jsx`는 `resolveTravelPinIconKey`로 레거시 emoji/신규 key를 모두 해석한 뒤 `svgPath`를 선택하도록 맞춤.
+- `Map.jsx` 핀 필터는 `pinIconFilters(key)` 기준으로 비교하고, 필터 칩 UI도 SVG 썸네일을 표시하도록 변경함.
