@@ -21,6 +21,7 @@ function LayerPanel() {
   const reorderLayers = useProjectStore((state) => state.reorderLayers)
   const [targetLayerId, setTargetLayerId] = useState('')
   const [dragLayerId, setDragLayerId] = useState(null)
+  const [layerDropPreview, setLayerDropPreview] = useState(null)
 
   const selectedPinCount = selectedPinIds.length
 
@@ -101,15 +102,44 @@ function LayerPanel() {
           key={layerItem.id}
           layer={layerItem}
           isDraggingLayer={dragLayerId === layerItem.id}
+          layerDropPreview={layerDropPreview}
           onLayerDragStart={(layerId) => setDragLayerId(layerId)}
-          onLayerDragEnd={() => setDragLayerId(null)}
-          onLayerDrop={(targetLayerId) => {
-            if (!dragLayerId) return
-            reorderLayers(dragLayerId, targetLayerId)
+          onLayerDragEnd={() => {
             setDragLayerId(null)
+            setLayerDropPreview(null)
+          }}
+          onLayerDragOver={(targetLayerId, dropPosition) => {
+            if (!dragLayerId || dragLayerId === targetLayerId) {
+              setLayerDropPreview(null)
+              return
+            }
+            setLayerDropPreview({ targetLayerId, dropPosition })
+          }}
+          onLayerDrop={(targetLayerId, dropPosition) => {
+            if (!dragLayerId) return
+            reorderLayers(dragLayerId, targetLayerId, dropPosition)
+            setDragLayerId(null)
+            setLayerDropPreview(null)
           }}
         />
       ))}
+      <div
+        className={`h-1 rounded bg-blue-500 transition-opacity ${layerDropPreview?.targetLayerId === '__end__' ? 'opacity-100' : 'opacity-0'}`}
+        onDragOver={(event) => {
+          event.preventDefault()
+          event.stopPropagation()
+          if (!dragLayerId) return
+          setLayerDropPreview({ targetLayerId: '__end__', dropPosition: 'end' })
+        }}
+        onDrop={(event) => {
+          event.preventDefault()
+          event.stopPropagation()
+          if (!dragLayerId || !layers.length) return
+          reorderLayers(dragLayerId, layers[layers.length - 1].id, 'end')
+          setDragLayerId(null)
+          setLayerDropPreview(null)
+        }}
+      />
     </div>
   )
 }

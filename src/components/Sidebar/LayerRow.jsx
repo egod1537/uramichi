@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { CATEGORY_PRESETS, TRANSPORT_PRESETS } from '../../utils/constants'
 import useProjectStore from '../../stores/useProjectStore'
 
-function LayerRow({ layer, isDraggingLayer, onLayerDragStart, onLayerDragEnd, onLayerDrop }) {
+function LayerRow({ layer, isDraggingLayer, layerDropPreview, onLayerDragStart, onLayerDragEnd, onLayerDragOver, onLayerDrop }) {
   const pins = useProjectStore((state) => state.pins)
   const activeLayerId = useProjectStore((state) => state.activeLayerId)
   const setActiveLayer = useProjectStore((state) => state.setActiveLayer)
@@ -17,9 +17,12 @@ function LayerRow({ layer, isDraggingLayer, onLayerDragStart, onLayerDragEnd, on
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [pinOptionsPinId, setPinOptionsPinId] = useState(null)
   const [dragPinId, setDragPinId] = useState(null)
+  const [pinDropPreview, setPinDropPreview] = useState(null)
 
   const layerPins = useMemo(() => pins.filter((pinItem) => pinItem.layerId === layer.id), [layer.id, pins])
   const isActiveLayer = activeLayerId === layer.id
+  const isLayerDropPreviewBefore = layerDropPreview?.targetLayerId === layer.id && layerDropPreview.dropPosition === 'before'
+  const isLayerDropPreviewAfter = layerDropPreview?.targetLayerId === layer.id && layerDropPreview.dropPosition === 'after'
 
   const pinNameMap = useMemo(
     () =>
@@ -51,11 +54,16 @@ function LayerRow({ layer, isDraggingLayer, onLayerDragStart, onLayerDragEnd, on
       onDragOver={(event) => {
         event.preventDefault()
         event.stopPropagation()
+        const targetRect = event.currentTarget.getBoundingClientRect()
+        const isUpperHalf = event.clientY < targetRect.top + targetRect.height / 2
+        onLayerDragOver(layer.id, isUpperHalf ? 'before' : 'after')
       }}
       onDrop={(event) => {
         event.preventDefault()
         event.stopPropagation()
-        onLayerDrop(layer.id)
+        const targetRect = event.currentTarget.getBoundingClientRect()
+        const isUpperHalf = event.clientY < targetRect.top + targetRect.height / 2
+        onLayerDrop(layer.id, isUpperHalf ? 'before' : 'after')
       }}
       onDragEnd={() => onLayerDragEnd()}
       onClick={() => {
@@ -64,6 +72,7 @@ function LayerRow({ layer, isDraggingLayer, onLayerDragStart, onLayerDragEnd, on
         }
       }}
     >
+      {isLayerDropPreviewBefore && <div className="mx-2 mb-1 h-1 rounded bg-blue-500" />}
       <div className="flex items-center gap-2 px-2">
         <input
           type="checkbox"
@@ -122,16 +131,28 @@ function LayerRow({ layer, isDraggingLayer, onLayerDragStart, onLayerDragEnd, on
                 onDragOver={(event) => {
                   event.preventDefault()
                   event.stopPropagation()
+                  const targetRect = event.currentTarget.getBoundingClientRect()
+                  const isUpperHalf = event.clientY < targetRect.top + targetRect.height / 2
+                  setPinDropPreview({ targetPinId: pinItem.id, dropPosition: isUpperHalf ? 'before' : 'after' })
                 }}
                 onDrop={(event) => {
                   event.preventDefault()
                   event.stopPropagation()
                   if (!dragPinId) return
-                  reorderPinsInLayer(layer.id, dragPinId, pinItem.id)
+                  const targetRect = event.currentTarget.getBoundingClientRect()
+                  const isUpperHalf = event.clientY < targetRect.top + targetRect.height / 2
+                  reorderPinsInLayer(layer.id, dragPinId, pinItem.id, isUpperHalf ? 'before' : 'after')
                   setDragPinId(null)
+                  setPinDropPreview(null)
                 }}
-                onDragEnd={() => setDragPinId(null)}
+                onDragEnd={() => {
+                  setDragPinId(null)
+                  setPinDropPreview(null)
+                }}
               >
+                {pinDropPreview?.targetPinId === pinItem.id && pinDropPreview.dropPosition === 'before' && (
+                  <div className="mx-2 h-1 rounded bg-blue-500" />
+                )}
                 <div className="flex items-center gap-1">
                   <button
                     type="button"
@@ -193,11 +214,34 @@ function LayerRow({ layer, isDraggingLayer, onLayerDragStart, onLayerDragEnd, on
                     </span>
                   </div>
                 )}
+                {pinDropPreview?.targetPinId === pinItem.id && pinDropPreview.dropPosition === 'after' && (
+                  <div className="mx-2 h-1 rounded bg-blue-500" />
+                )}
               </div>
             )
           })}
+          {!!layerPins.length && (
+            <div
+              className={`mx-2 h-1 rounded bg-blue-500 transition-opacity ${pinDropPreview?.targetPinId === '__end__' ? 'opacity-100' : 'opacity-0'}`}
+              onDragOver={(event) => {
+                event.preventDefault()
+                event.stopPropagation()
+                if (!dragPinId) return
+                setPinDropPreview({ targetPinId: '__end__', dropPosition: 'end' })
+              }}
+              onDrop={(event) => {
+                event.preventDefault()
+                event.stopPropagation()
+                if (!dragPinId || !layerPins.length) return
+                reorderPinsInLayer(layer.id, dragPinId, layerPins[layerPins.length - 1].id, 'end')
+                setDragPinId(null)
+                setPinDropPreview(null)
+              }}
+            />
+          )}
         </div>
       )}
+      {isLayerDropPreviewAfter && <div className="mx-2 mt-1 h-1 rounded bg-blue-500" />}
     </div>
   )
 }
