@@ -2,7 +2,7 @@ import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'rea
 import { GoogleMap, Marker, OverlayView, Polyline } from '@react-google-maps/api'
 import TOOL_MODES from '../../utils/toolModes'
 import { COLOR_PRESETS } from '../../utils/constants'
-import useProjectStore, { createRouteId } from '../../stores/useProjectStore'
+import useProjectStore from '../../stores/useProjectStore'
 import PinMarker from './PinMarker'
 import PinPopup from './PinPopup'
 import { handleLineDraftComplete, handleLineMapClick, handleLineMapMouseMove, handleLineMeasurePointDrag } from './controllers/lineController'
@@ -12,8 +12,8 @@ import { handleRouteMapClick } from './controllers/routeController'
 import { handleSelectMapClick } from './controllers/selectController'
 import { syncDraftByMode } from './controllers/syncDraftByMode'
 import { formatDistanceLabel, getMidpoint, getPathDistanceInMeters } from '../../utils/geo'
-import directionsCache from '../../utils/DirectionsCache'
 import { ICON_FILTER_OPTIONS } from '../../utils/constants'
+import RouteService from '../../utils/RouteService'
 
 const containerStyle = { width: '100%', height: '100%' }
 const defaultCenter = { lat: 35.6812, lng: 139.7671 }
@@ -68,68 +68,10 @@ const createMeasurementEntity = (measurePointPath, activeLayerId, measurementCou
   width: MEASURE_LINE_WIDTH,
 })
 
-const getRouteRequest = (startPoint, endPoint, travelMode) => ({
-  origin: startPoint,
-  destination: endPoint,
-  travelMode: window.google.maps.TravelMode[travelMode],
-})
-
 const getNextLineColor = (currentColor) => {
   const currentColorIndex = lineColorSequence.indexOf(currentColor)
   if (currentColorIndex === -1) return lineColorSequence[0]
   return lineColorSequence[(currentColorIndex + 1) % lineColorSequence.length]
-}
-
-const createRouteEntity = (
-  routeId,
-  routeData,
-  startPoint,
-  endPoint,
-  activeLayerId,
-  travelMode,
-) => ({
-  id: routeId,
-  layerId: activeLayerId,
-  start: startPoint,
-  end: endPoint,
-  travelMode,
-  summary: routeData.summary || '',
-  path: routeData.path,
-  distanceMeters: routeData.distanceMeters ?? 0,
-  durationSeconds: routeData.durationSeconds ?? 0,
-  lineName: routeData.lineName || '',
-})
-
-const createRouteCacheData = (routeResult, routePath) => {
-  const primaryRoute = routeResult.routes?.[0]
-  const firstLeg = primaryRoute?.legs?.[0]
-  const firstTransitStep = firstLeg?.steps?.find((stepItem) => stepItem.travel_mode === 'TRANSIT')
-  const transitLineName =
-    firstTransitStep?.transit?.line?.short_name || firstTransitStep?.transit?.line?.name || firstTransitStep?.instructions || ''
-
-  return {
-    path: routePath,
-    distanceMeters: firstLeg?.distance?.value ?? 0,
-    durationSeconds: firstLeg?.duration?.value ?? 0,
-    summary: primaryRoute?.summary || '',
-    lineName: transitLineName,
-  }
-}
-
-const hasRouteIdConflict = (routeId, routeList) => routeList.some((routeItem) => routeItem.id === routeId)
-
-const createUniqueRouteId = (routeList) => {
-  const routeIdSet = new Set(routeList.map((routeItem) => routeItem.id))
-  let retryCount = 0
-  let generatedRouteId = createRouteId(routeList.length)
-
-  while (routeIdSet.has(generatedRouteId) && retryCount < 5) {
-    generatedRouteId = createRouteId(routeList.length + retryCount + 1)
-    retryCount += 1
-  }
-
-  if (routeIdSet.has(generatedRouteId)) return null
-  return generatedRouteId
 }
 
 function Map() {
@@ -276,39 +218,22 @@ function Map() {
   )
 
   const requestRoute = useCallback(
-    (startPoint, endPoint, travelMode) => {
-      const routeLayerId = activeLayerId || layers[0]?.id || null
-      if (!routeLayerId) {
+    async (startPoint, endPoint, travelMode) => {
+      const resolvedLayerId = activeLayerId || layers[0]?.id || null
+      const routeEntity = await RouteService.createRouteEntityOrNull({
+        start: startPoint,
+        end: endPoint,
+        travelMode,
+        currentRoutes: routes,
+        activeLayerId: resolvedLayerId,
+      })
+
+      if (!routeEntity) {
         setRouteStart(null)
         return
       }
 
-      const buildRouteEntity = (routeData) => {
-        const routeId = createUniqueRouteId(routes)
-        if (!routeId || hasRouteIdConflict(routeId, routes)) return null
-        return createRouteEntity(routeId, routeData, startPoint, endPoint, routeLayerId, travelMode)
-      }
-
-      const cachedRouteData = directionsCache.get(startPoint, endPoint, travelMode)
-      if (cachedRouteData) {
-        const cachedRouteEntity = buildRouteEntity(cachedRouteData)
-        if (!cachedRouteEntity) return
-        addRoute(cachedRouteEntity)
-        return
-      }
-
-      const directionsService = new window.google.maps.DirectionsService()
-      directionsService.route(getRouteRequest(startPoint, endPoint, travelMode), (result, status) => {
-        if (status !== window.google.maps.DirectionsStatus.OK || !result) return
-        const overviewPath = result.routes[0]?.overview_path ?? []
-        if (!overviewPath.length) return
-        const normalizedPath = overviewPath.map((locationPoint) => ({ lat: locationPoint.lat(), lng: locationPoint.lng() }))
-        const routeCacheData = createRouteCacheData(result, normalizedPath)
-        directionsCache.set(startPoint, endPoint, travelMode, routeCacheData)
-        const createdRouteEntity = buildRouteEntity(routeCacheData)
-        if (!createdRouteEntity) return
-        addRoute(createdRouteEntity)
-      })
+      addRoute(routeEntity)
     },
     [activeLayerId, addRoute, layers, routes, setRouteStart],
   )
