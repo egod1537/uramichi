@@ -477,3 +477,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - 다음 검토 대상(중간 우선순위)은 `src/components/Sidebar/MapPanel.jsx`, `src/pages/Testbed.jsx`, `src/components/Map/PinMarker.jsx`, `src/components/Sidebar/Sidebar.jsx`로 기록함.
 [codex] 2026-02-27 지도 아이콘 필터 접힘 너비 축소 메모
 - `src/components/Map/Map.jsx`의 핀 아이콘 필터 컨테이너 접힘 상태 클래스를 `w-[min(92vw,360px)] justify-between`에서 `w-auto gap-2`로 변경해, 접혀 있을 때 필요한 최소 가로 너비만 차지하도록 조정함.
+[codex] 2026-02-27 Sidebar 이름 변경 UX(F2/인라인 편집) 메모
+- `src/components/Sidebar/LayerPanel.jsx`에 이름 변경 포커스/편집 대상 상태를 추가하고, 전역 `F2` 키 입력 시 현재 포커스된 레이어/핀 이름을 즉시 인라인 입력 필드로 전환하도록 연결함.
+- `src/components/Sidebar/LayerRow.jsx`에서 레이어 이름/핀 이름을 인라인 편집 가능한 입력으로 전환하고, Enter/blur 저장·Escape 취소 동작을 지원하도록 변경함.
+- 레이어/핀 옵션의 `이름 변경` 메뉴는 기존 `prompt` 대신 동일 인라인 편집 진입 흐름(`onStartRename`)을 사용하도록 통일함.
