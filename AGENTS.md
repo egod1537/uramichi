@@ -314,3 +314,8 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - 같은 파일에서 거리 측정 라벨 Overlay에 `whitespace-nowrap`와 상단 오프셋 정렬을 적용해 라벨 텍스트와 말풍선 레이아웃이 어긋나던 문제를 보정함.
 - `src/stores/useProjectStore.js`에서 핀 삭제(`removePin`, `removePins`)와 선 삭제(`removeLine`)를 히스토리 커밋 경로로 통일해 Undo/Redo가 삭제 액션을 되돌릴 수 있도록 수정함.
 - 스토어의 `markers` 스냅샷이 `pins` 좌표와 항상 일치하도록 `createMarkersFromPins` 동기화를 추가해, 드래그/삭제 이후 Undo/Redo 시 좌표 복원이 불안정하던 문제를 수정함.
+[codex] 2026-02-27 locale pull 스크립트 작업 메모
+- `scripts/pull-locales.js`를 추가해 `.env.local`/환경변수의 `LOCALE_SHEET_CSV_URL`에서 CSV를 가져오고, 직접 구현한 CSV 파서(따옴표/쉼표/줄바꿈 이스케이프 지원)로 파싱 후 `src/locales/{lang}.json`을 생성하도록 구현함.
+- 헤더에서 `key`를 제외한 언어 코드를 자동 감지하고, 번역 빈 값은 key 문자열로 대체해 누락 표시가 되도록 처리함.
+- 실행 결과 리포트에 총 key 수, 언어별 완료/누락 수, 누락 key 목록을 출력하도록 추가함.
+- `package.json`에 `locale:pull` 스크립트를 등록해 `pnpm run locale:pull`로 실행 가능하게 연결함.
