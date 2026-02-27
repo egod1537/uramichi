@@ -17,6 +17,19 @@ export const TRAVEL_PIN_ICON_PRESETS = [
   { key: 'photo', icon: '📷', label: '포토스팟', svgPath: '/svg/pin-photo.svg' },
 ]
 
+export const getTravelPinIconPreset = (iconValue) => {
+  if (!iconValue) {
+    return null
+  }
+
+  return TRAVEL_PIN_ICON_PRESETS.find((presetItem) => presetItem.key === iconValue || presetItem.icon === iconValue) || null
+}
+
+export const getTravelPinIconKey = (iconValue) => {
+  const matchedPreset = getTravelPinIconPreset(iconValue)
+  return matchedPreset?.key || ''
+}
+
 export const DEFAULT_PIN_SVG_PATH = '/svg/pin-default.svg'
 
 export const TRANSPORT_PRESETS = {

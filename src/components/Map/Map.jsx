@@ -11,7 +11,7 @@ import { handleMeasureMapClick } from './controllers/measureController'
 import { handleRouteMapClick } from './controllers/routeController'
 import { handleSelectMapClick } from './controllers/selectController'
 import { syncDraftByMode } from './controllers/syncDraftByMode'
-import { ICON_FILTER_OPTIONS } from '../../utils/constants'
+import { ICON_FILTER_OPTIONS, getTravelPinIconKey } from '../../utils/constants'
 import RouteService from '../../utils/RouteService'
 import MeasureLayer from './measure/MeasureLayer'
 import MeasureLabels from './measure/MeasureLabels'
@@ -104,8 +104,8 @@ function Map() {
   const visiblePins = useMemo(() => {
     const layerVisiblePins = pins.filter((pinItem) => visibleLayerIdSet.has(pinItem.layerId))
     if (!pinIconFilters.length) return layerVisiblePins
-    const activeIconSet = new Set(ICON_FILTER_OPTIONS.filter((filterItem) => pinIconFilters.includes(filterItem.key)).map((filterItem) => filterItem.icon))
-    return layerVisiblePins.filter((pinItem) => activeIconSet.has(pinItem.icon))
+    const activeIconSet = new Set(ICON_FILTER_OPTIONS.filter((filterItem) => pinIconFilters.includes(filterItem.key)).map((filterItem) => filterItem.key))
+    return layerVisiblePins.filter((pinItem) => activeIconSet.has(getTravelPinIconKey(pinItem.icon)))
   }, [pinIconFilters, pins, visibleLayerIdSet])
   const visibleLines = useMemo(() => lines.filter((lineItem) => visibleLayerIdSet.has(lineItem.layerId)), [lines, visibleLayerIdSet])
   const visibleMeasurements = useMemo(
@@ -515,7 +515,7 @@ function Map() {
                     onClick={() => togglePinIconFilter(filterItem.key)}
                     className={`shrink-0 rounded-full border px-2 py-0.5 text-xs ${isActive ? 'border-blue-400 bg-blue-50 text-blue-700' : 'border-gray-200 bg-white text-gray-600'}`}
                   >
-                    {filterItem.icon}
+                    <img src={filterItem.svgPath} alt={filterItem.label} className="h-4 w-4" />
                   </button>
                 )
               })}
