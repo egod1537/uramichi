@@ -32,5 +32,6 @@ export const handleMarkerMouseUp = ({ currentMode, event, state, actions, refs }
 
   if (event.placeId || !state.clickedPoint) return true
   actions.addMarker(state.clickedPoint)
+  actions.setMode(TOOL_MODES.SELECT)
   return true
 }

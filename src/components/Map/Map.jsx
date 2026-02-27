@@ -52,6 +52,7 @@ function Map() {
   const selectedLineId = useProjectStore((state) => state.selectedLineId)
   const activeLayerId = useProjectStore((state) => state.activeLayerId)
   const addMarker = useProjectStore((state) => state.addMarker)
+  const setMode = useProjectStore((state) => state.setMode)
   const cancelDraftLine = useProjectStore((state) => state.cancelDraftLine)
   const appendMeasurePoint = useProjectStore((state) => state.appendMeasurePoint)
   const setMeasurePath = useProjectStore((state) => state.setMeasurePath)
@@ -141,6 +142,7 @@ function Map() {
     addMeasurement,
     setMeasurePath,
     setDraggingMeasurePointIndex,
+    setMode,
   })
 
   const triggerMeasureComplete = useCallback(() => {
@@ -197,6 +199,7 @@ function Map() {
           clearPinSelection,
           setIsPinClickInProgress,
           addMarker,
+          setMode,
         },
         refs: {
           addMarkerMouseDownPositionRef,
@@ -217,6 +220,7 @@ function Map() {
       selectPin,
       setHoverMeasurePoint,
       setRouteStart,
+      setMode,
     ],
   )
 
