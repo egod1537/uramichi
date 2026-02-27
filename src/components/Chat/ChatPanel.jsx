@@ -152,23 +152,36 @@ class ChatPanel extends React.Component {
         </div>
 
         <div className="border-t border-gray-200 px-4 py-3">
-          <div className="flex items-end gap-2">
+          <div className="rounded-3xl border border-[#d6d6d6] bg-[#f6f6f4] px-4 pb-3 pt-3 shadow-[0_2px_6px_rgba(0,0,0,0.05)]">
             <textarea
               ref={this.messageInputRef}
               value={this.state.draftMessage}
               onChange={this.handleDraftMessageChange}
               onKeyDown={this.handleTextareaKeyDown}
-              placeholder="메시지를 입력하세요"
-              className="max-h-32 min-h-[44px] flex-1 resize-y rounded-md border border-gray-300 px-3 py-2 text-sm outline-none ring-[#D4A574] focus:ring-2"
+              placeholder="우즈지"
+              className="min-h-[28px] w-full resize-none bg-transparent text-[15px] text-gray-800 outline-none placeholder:text-gray-700"
             />
-            <button
-              type="button"
-              onClick={this.handleSendMessage}
-              disabled={this.state.isSubmitting}
-              className="rounded-md bg-[#CC785C] px-3 py-2 text-sm font-medium text-white transition hover:bg-[#b1654d]"
-            >
-              {this.state.isSubmitting ? '전송 중...' : '전송'}
-            </button>
+            <div className="mt-2 flex items-center justify-between">
+              <button
+                type="button"
+                className="flex h-8 w-8 items-center justify-center rounded-full text-2xl leading-none text-gray-500 transition hover:bg-gray-200"
+                aria-label="첨부"
+              >
+                +
+              </button>
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-gray-500">Opus 4.6 확장</span>
+                <button
+                  type="button"
+                  onClick={this.handleSendMessage}
+                  disabled={this.state.isSubmitting}
+                  className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#C86F42] text-lg text-white transition hover:bg-[#ad5e37] disabled:cursor-not-allowed disabled:bg-[#d9a186]"
+                  aria-label={this.state.isSubmitting ? '전송 중' : '전송'}
+                >
+                  ↑
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </section>
