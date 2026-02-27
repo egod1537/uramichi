@@ -88,3 +88,7 @@
 - DRAW_LINE 완료 엔티티 저장을 measurement 경로로 유지하되 색상을 기본 검은색(`#111111`)으로 고정해 선 두께/톤 불일치가 줄어들도록 조정함.
 - 지도 우클릭 종료 시 선그리기 완료 후 즉시 Select 모드로 복귀되는 기존 플로우를 유지하면서, draw_line에서는 거리 라벨을 렌더링하지 않도록 상호작용 훅 반환값을 비우는 방식으로 정리함.
 - DRAW_LINE 클릭/드래그 시 기존 레이어 오브젝트(저장 선/도형)의 꼭짓점에 근거리 스냅(25m)되도록 line controller에 스냅 포인트 계산을 추가함.
+[codex] 2026-02-27 Map 검색-POI 오버레이 소비 메모
+- `Map.jsx`에서 `poiSearchRequest`를 구독해 검색 요청이 들어오면 지도 `panTo`/줌 이동 후 POI 상세 오버레이를 열도록 `useEffect` 소비 경로를 추가함.
+- 검색 결과에 `placeId`가 없더라도 fallback 데이터(이름/주소/평점)로 커스텀 POI 상세를 렌더링할 수 있게 `usePoiDetail.requestPoiDetail(placeId, position, fallbackData)` 시그니처를 확장함.
+- 요청 처리 후 `consumePoiSearchRequest()`를 호출해 동일 요청이 재실행되지 않도록 단발성 소비 패턴으로 고정함.
