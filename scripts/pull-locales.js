@@ -1,259 +1,354 @@
-import { readFile, writeFile, mkdir } from 'node:fs/promises';
-import path from 'node:path';
-import process from 'node:process';
-import { fileURLToPath } from 'node:url';
+import { mkdir, writeFile } from 'node:fs/promises'
+import path from 'node:path'
+import process from 'node:process'
+import { fileURLToPath } from 'node:url'
+import localizationConfig from '../locales.config.js'
 
-const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
-const projectRootDirectory = path.resolve(scriptDirectory, '..');
-const localeOutputDirectory = path.join(projectRootDirectory, 'src', 'locales');
-const localeSheetUrlKey = 'LOCALE_SHEET_CSV_URL';
+const scriptDirectoryPath = path.dirname(fileURLToPath(import.meta.url))
+const projectRootPath = path.resolve(scriptDirectoryPath, '..')
 
 async function main() {
+  const normalizedConfig = normalizeConfig(localizationConfig)
+  const cliArguments = process.argv.slice(2)
+
+  if (cliArguments.includes('--list')) {
+    printSheetList(normalizedConfig.sheets)
+    return
+  }
+
+  const selectedSheets = resolveSelectedSheets(normalizedConfig.sheets, cliArguments)
+
+  if (selectedSheets.length === 0) {
+    console.log('[locales] No sheets selected.')
+    return
+  }
+
+  const sheetReports = []
+
+  for (const sheetConfig of selectedSheets) {
+    const sheetReport = await processSheet(normalizedConfig, sheetConfig)
+    sheetReports.push(sheetReport)
+  }
+
+  printFinalReport(sheetReports)
+
+}
+
+function normalizeConfig(rawConfig) {
+  if (!rawConfig || typeof rawConfig !== 'object') {
+    throw new Error('locales.config.js is invalid: config object is required.')
+  }
+
+  const spreadsheetId = String(rawConfig.spreadsheetId ?? '').trim()
+  if (!spreadsheetId) {
+    throw new Error('locales.config.js is invalid: spreadsheetId is required.')
+  }
+
+  const rawSheets = Array.isArray(rawConfig.sheets) ? rawConfig.sheets : []
+  if (rawSheets.length === 0) {
+    throw new Error('locales.config.js is invalid: sheets must include at least one item.')
+  }
+
+  const sheets = rawSheets.map((sheetConfig, sheetIndex) => {
+    const name = String(sheetConfig?.name ?? '').trim()
+    const gid = String(sheetConfig?.gid ?? '').trim()
+
+    if (!name) {
+      throw new Error(`locales.config.js is invalid: sheets[${sheetIndex}].name is required.`)
+    }
+
+    if (!gid) {
+      throw new Error(`locales.config.js is invalid: sheets[${sheetIndex}].gid is required.`)
+    }
+
+    return { name, gid }
+  })
+
+  const languages = Array.isArray(rawConfig.languages)
+    ? rawConfig.languages.map((languageCode) => String(languageCode).trim()).filter(Boolean)
+    : []
+
+  if (languages.length === 0) {
+    throw new Error('locales.config.js is invalid: languages must include at least one language code.')
+  }
+
+  const defaultLanguage = String(rawConfig.defaultLanguage ?? '').trim()
+  if (!defaultLanguage) {
+    throw new Error('locales.config.js is invalid: defaultLanguage is required.')
+  }
+
+  const outputDirectory = String(rawConfig.outputDir ?? '').trim()
+  if (!outputDirectory) {
+    throw new Error('locales.config.js is invalid: outputDir is required.')
+  }
+
+  return {
+    spreadsheetId,
+    sheets,
+    languages,
+    defaultLanguage,
+    outputDirectory,
+    absoluteOutputDirectory: path.resolve(projectRootPath, outputDirectory),
+  }
+}
+
+function printSheetList(sheetList) {
+  console.log('[locales] Registered sheets:')
+  for (const sheetConfig of sheetList) {
+    console.log(`- ${sheetConfig.name} (gid=${sheetConfig.gid})`)
+  }
+}
+
+function resolveSelectedSheets(sheetList, cliArguments) {
+  const normalizedArguments = cliArguments.filter((argumentValue) => argumentValue !== 'all')
+
+  if (normalizedArguments.length === 0) {
+    return sheetList
+  }
+
+  const requestedNameSet = new Set(normalizedArguments)
+  const selectedSheetList = []
+
+  for (const sheetConfig of sheetList) {
+    if (requestedNameSet.has(sheetConfig.name)) {
+      selectedSheetList.push(sheetConfig)
+      requestedNameSet.delete(sheetConfig.name)
+    }
+  }
+
+  for (const missingSheetName of requestedNameSet) {
+    console.warn(`[locales] Unknown sheet name skipped: ${missingSheetName}`)
+  }
+
+  return selectedSheetList
+}
+
+async function processSheet(config, sheetConfig) {
+  const csvUrl = `https://docs.google.com/spreadsheets/d/${config.spreadsheetId}/export?format=csv&gid=${sheetConfig.gid}`
+
+  let parsedRows
   try {
-    const localeSheetUrl = await resolveLocaleSheetUrl();
-
-    if (!localeSheetUrl) {
-      printMissingUrlGuide();
-      process.exitCode = 1;
-      return;
-    }
-
-    const csvText = await fetchCsvText(localeSheetUrl);
-    const parsedRows = parseCsv(csvText);
-
-    if (parsedRows.length === 0) {
-      throw new Error('CSV parsing failed: no rows found.');
-    }
-
-    const headerRow = parsedRows[0].map((columnValue) => columnValue.trim());
-    if (headerRow.length < 2) {
-      throw new Error('CSV parsing failed: header must include key and at least one language column.');
-    }
-
-    const keyColumnIndex = headerRow.findIndex((headerValue) => headerValue === 'key');
-    if (keyColumnIndex === -1) {
-      throw new Error('CSV parsing failed: header must include "key" column.');
-    }
-
-    const languageColumnMetadata = headerRow
-      .map((headerValue, columnIndex) => ({ languageCode: headerValue, columnIndex }))
-      .filter(({ columnIndex, languageCode }) => columnIndex !== keyColumnIndex && languageCode);
-
-    if (languageColumnMetadata.length === 0) {
-      throw new Error('CSV parsing failed: no language columns found in header.');
-    }
-
-    const localeRecordByLanguage = {};
-    const missingKeyRecordByLanguage = {};
-    const translatedCountByLanguage = {};
-
-    for (const { languageCode } of languageColumnMetadata) {
-      localeRecordByLanguage[languageCode] = {};
-      missingKeyRecordByLanguage[languageCode] = [];
-      translatedCountByLanguage[languageCode] = 0;
-    }
-
-    let totalKeyCount = 0;
-
-    for (let rowIndex = 1; rowIndex < parsedRows.length; rowIndex += 1) {
-      const rowValues = parsedRows[rowIndex];
-      const translationKey = (rowValues[keyColumnIndex] ?? '').trim();
-
-      if (!translationKey) {
-        continue;
-      }
-
-      totalKeyCount += 1;
-
-      for (const { languageCode, columnIndex } of languageColumnMetadata) {
-        const rawValue = rowValues[columnIndex] ?? '';
-        const trimmedValue = rawValue.trim();
-        const hasTranslation = trimmedValue.length > 0;
-
-        localeRecordByLanguage[languageCode][translationKey] = hasTranslation ? trimmedValue : translationKey;
-
-        if (hasTranslation) {
-          translatedCountByLanguage[languageCode] += 1;
-        } else {
-          missingKeyRecordByLanguage[languageCode].push(translationKey);
-        }
-      }
-    }
-
-    await mkdir(localeOutputDirectory, { recursive: true });
-
-    for (const { languageCode } of languageColumnMetadata) {
-      const localeJsonPath = path.join(localeOutputDirectory, `${languageCode}.json`);
-      const localeJsonContent = `${JSON.stringify(localeRecordByLanguage[languageCode], null, 2)}\n`;
-      await writeFile(localeJsonPath, localeJsonContent, 'utf8');
-    }
-
-    printReport({ totalKeyCount, languageColumnMetadata, translatedCountByLanguage, missingKeyRecordByLanguage });
+    const csvText = await fetchCsvText(csvUrl)
+    parsedRows = parseCsv(csvText)
   } catch (error) {
-    console.error(`[locale:pull] ${error.message}`);
-    process.exitCode = 1;
-  }
-}
-
-async function resolveLocaleSheetUrl() {
-  if (process.env[localeSheetUrlKey]) {
-    return process.env[localeSheetUrlKey].trim();
-  }
-
-  const envLocalFilePath = path.join(projectRootDirectory, '.env.local');
-
-  try {
-    const envLocalContent = await readFile(envLocalFilePath, 'utf8');
-    const envLocalRecord = parseEnvFile(envLocalContent);
-    return (envLocalRecord[localeSheetUrlKey] ?? '').trim();
-  } catch (error) {
-    return '';
-  }
-}
-
-function parseEnvFile(envContent) {
-  const envRecord = {};
-  const envLines = envContent.split(/\r?\n/);
-
-  for (const envLine of envLines) {
-    const trimmedLine = envLine.trim();
-    if (!trimmedLine || trimmedLine.startsWith('#')) {
-      continue;
+    console.error(`[locales] ${sheetConfig.name}: ${error.message}`)
+    return {
+      sheetName: sheetConfig.name,
+      status: 'error',
+      errorMessage: error.message,
     }
-
-    const equalSignIndex = trimmedLine.indexOf('=');
-    if (equalSignIndex === -1) {
-      continue;
-    }
-
-    const rawEnvKey = trimmedLine.slice(0, equalSignIndex).trim();
-    const rawEnvValue = trimmedLine.slice(equalSignIndex + 1).trim();
-    if (!rawEnvKey) {
-      continue;
-    }
-
-    envRecord[rawEnvKey] = normalizeEnvValue(rawEnvValue);
   }
-
-  return envRecord;
-}
-
-function normalizeEnvValue(rawEnvValue) {
-  if (
-    (rawEnvValue.startsWith('"') && rawEnvValue.endsWith('"')) ||
-    (rawEnvValue.startsWith("'") && rawEnvValue.endsWith("'"))
-  ) {
-    return rawEnvValue.slice(1, -1);
-  }
-  return rawEnvValue;
-}
-
-async function fetchCsvText(localeSheetUrl) {
-  let response;
 
   try {
-    response = await fetch(localeSheetUrl);
+    const sheetData = buildSheetLocaleData(parsedRows, config.languages)
+    await writeSheetLocaleFiles(config.absoluteOutputDirectory, sheetConfig.name, sheetData.localeRecordByLanguage)
+
+    return {
+      sheetName: sheetConfig.name,
+      status: 'ok',
+      totalKeyCount: sheetData.totalKeyCount,
+      languageReports: sheetData.languageReports,
+    }
   } catch (error) {
-    throw new Error(`fetch failed for LOCALE_SHEET_CSV_URL: ${error.message}`);
+    console.error(`[locales] ${sheetConfig.name}: ${error.message}`)
+    return {
+      sheetName: sheetConfig.name,
+      status: 'error',
+      errorMessage: error.message,
+    }
+  }
+}
+
+async function fetchCsvText(csvUrl) {
+  let response
+
+  try {
+    response = await fetch(csvUrl)
+  } catch (error) {
+    throw new Error(`fetch failed: ${error.message}`)
   }
 
   if (!response.ok) {
-    throw new Error(`fetch failed for LOCALE_SHEET_CSV_URL: ${response.status} ${response.statusText}`);
+    throw new Error(`fetch failed: ${response.status} ${response.statusText}`)
   }
 
-  return response.text();
+  return response.text()
 }
 
 function parseCsv(csvText) {
-  const parsedRows = [];
-  let currentRowValues = [];
-  let currentColumnValue = '';
-  let isInsideQuotedField = false;
+  const parsedRows = []
+  let currentRowValues = []
+  let currentColumnValue = ''
+  let isInsideQuotedField = false
 
   for (let characterIndex = 0; characterIndex < csvText.length; characterIndex += 1) {
-    const currentCharacter = csvText[characterIndex];
-    const nextCharacter = csvText[characterIndex + 1];
+    const currentCharacter = csvText[characterIndex]
+    const nextCharacter = csvText[characterIndex + 1]
 
     if (isInsideQuotedField) {
       if (currentCharacter === '"' && nextCharacter === '"') {
-        currentColumnValue += '"';
-        characterIndex += 1;
+        currentColumnValue += '"'
+        characterIndex += 1
       } else if (currentCharacter === '"') {
-        isInsideQuotedField = false;
+        isInsideQuotedField = false
       } else {
-        currentColumnValue += currentCharacter;
+        currentColumnValue += currentCharacter
       }
-      continue;
+      continue
     }
 
     if (currentCharacter === '"') {
-      isInsideQuotedField = true;
-      continue;
+      isInsideQuotedField = true
+      continue
     }
 
     if (currentCharacter === ',') {
-      currentRowValues.push(currentColumnValue);
-      currentColumnValue = '';
-      continue;
+      currentRowValues.push(currentColumnValue)
+      currentColumnValue = ''
+      continue
     }
 
     if (currentCharacter === '\n' || currentCharacter === '\r') {
       if (currentCharacter === '\r' && nextCharacter === '\n') {
-        characterIndex += 1;
+        characterIndex += 1
       }
 
-      currentRowValues.push(currentColumnValue);
-      const isRowNotCompletelyEmpty = currentRowValues.some((value) => value.length > 0);
+      currentRowValues.push(currentColumnValue)
+      const isRowNotCompletelyEmpty = currentRowValues.some((value) => value.length > 0)
       if (isRowNotCompletelyEmpty) {
-        parsedRows.push(currentRowValues);
+        parsedRows.push(currentRowValues)
       }
 
-      currentRowValues = [];
-      currentColumnValue = '';
-      continue;
+      currentRowValues = []
+      currentColumnValue = ''
+      continue
     }
 
-    currentColumnValue += currentCharacter;
+    currentColumnValue += currentCharacter
   }
 
   if (isInsideQuotedField) {
-    throw new Error('CSV parsing failed: unmatched quote found.');
+    throw new Error('CSV parsing failed: unmatched quote found.')
   }
 
-  currentRowValues.push(currentColumnValue);
-  const hasLastRowContent = currentRowValues.some((value) => value.length > 0);
+  currentRowValues.push(currentColumnValue)
+  const hasLastRowContent = currentRowValues.some((value) => value.length > 0)
   if (hasLastRowContent) {
-    parsedRows.push(currentRowValues);
+    parsedRows.push(currentRowValues)
   }
 
-  return parsedRows;
+  return parsedRows
 }
 
-function printMissingUrlGuide() {
-  console.error(`[locale:pull] Missing ${localeSheetUrlKey}.`);
-  console.error('[locale:pull] Usage:');
-  console.error('  1) Publish Google Sheet to web as CSV.');
-  console.error(`  2) Set ${localeSheetUrlKey} in .env.local or shell environment.`);
-  console.error(`  3) Run: pnpm run locale:pull`);
+function buildSheetLocaleData(parsedRows, supportedLanguages) {
+  if (!Array.isArray(parsedRows) || parsedRows.length === 0) {
+    throw new Error('CSV parsing failed: no rows found.')
+  }
+
+  const headerRow = parsedRows[0].map((columnValue) => columnValue.trim())
+  const keyColumnIndex = headerRow.findIndex((headerValue) => headerValue === 'key')
+
+  if (keyColumnIndex === -1) {
+    throw new Error('CSV parsing failed: header must include "key" column.')
+  }
+
+  const languageColumnIndexByCode = {}
+
+  for (const languageCode of supportedLanguages) {
+    const columnIndex = headerRow.findIndex((headerValue) => headerValue === languageCode)
+    if (columnIndex === -1) {
+      throw new Error(`CSV parsing failed: "${languageCode}" column is missing.`)
+    }
+
+    languageColumnIndexByCode[languageCode] = columnIndex
+  }
+
+  const localeRecordByLanguage = {}
+  const languageReports = {}
+
+  for (const languageCode of supportedLanguages) {
+    localeRecordByLanguage[languageCode] = {}
+    languageReports[languageCode] = {
+      translatedCount: 0,
+      missingCount: 0,
+      missingKeys: [],
+    }
+  }
+
+  let totalKeyCount = 0
+
+  for (let rowIndex = 1; rowIndex < parsedRows.length; rowIndex += 1) {
+    const rowValues = parsedRows[rowIndex]
+    const translationKey = String(rowValues[keyColumnIndex] ?? '').trim()
+
+    if (!translationKey) {
+      continue
+    }
+
+    totalKeyCount += 1
+
+    for (const languageCode of supportedLanguages) {
+      const columnIndex = languageColumnIndexByCode[languageCode]
+      const rawTranslationValue = String(rowValues[columnIndex] ?? '')
+      const translationValue = rawTranslationValue.trim()
+      const hasTranslation = translationValue.length > 0
+
+      localeRecordByLanguage[languageCode][translationKey] = hasTranslation ? translationValue : translationKey
+
+      if (hasTranslation) {
+        languageReports[languageCode].translatedCount += 1
+      } else {
+        languageReports[languageCode].missingCount += 1
+        languageReports[languageCode].missingKeys.push(translationKey)
+      }
+    }
+  }
+
+  return {
+    totalKeyCount,
+    localeRecordByLanguage,
+    languageReports,
+  }
 }
 
-function printReport({ totalKeyCount, languageColumnMetadata, translatedCountByLanguage, missingKeyRecordByLanguage }) {
-  console.log(`[locale:pull] Total keys: ${totalKeyCount}`);
+async function writeSheetLocaleFiles(outputRootPath, sheetName, localeRecordByLanguage) {
+  const sheetDirectoryPath = path.join(outputRootPath, sheetName)
+  await mkdir(sheetDirectoryPath, { recursive: true })
 
-  for (const { languageCode } of languageColumnMetadata) {
-    const translatedCount = translatedCountByLanguage[languageCode];
-    const missingKeys = missingKeyRecordByLanguage[languageCode];
-    const missingCount = missingKeys.length;
+  const writeTasks = Object.entries(localeRecordByLanguage).map(([languageCode, localeRecord]) => {
+    const languageFilePath = path.join(sheetDirectoryPath, `${languageCode}.json`)
+    const jsonText = `${JSON.stringify(localeRecord, null, 2)}\n`
+    return writeFile(languageFilePath, jsonText, 'utf8')
+  })
 
-    console.log(`[locale:pull] ${languageCode}: ${translatedCount} translated / ${missingCount} missing`);
+  await Promise.all(writeTasks)
+}
 
-    if (missingCount > 0) {
-      console.log(`[locale:pull] ${languageCode} missing keys:`);
-      for (const missingKey of missingKeys) {
-        console.log(`  - ${missingKey}`);
+function printFinalReport(sheetReports) {
+  for (const sheetReport of sheetReports) {
+    if (sheetReport.status === 'error') {
+      console.log(`[locales] ${sheetReport.sheetName}: skipped (${sheetReport.errorMessage})`)
+      continue
+    }
+
+    console.log(`[locales] ${sheetReport.sheetName}: ${sheetReport.totalKeyCount} keys`)
+
+    for (const [languageCode, languageReport] of Object.entries(sheetReport.languageReports)) {
+      console.log(
+        `[locales] ${sheetReport.sheetName}/${languageCode}: ${languageReport.translatedCount} translated / ${languageReport.missingCount} missing`,
+      )
+
+      if (languageReport.missingKeys.length > 0) {
+        console.log(`[locales] ${sheetReport.sheetName}/${languageCode} missing keys:`)
+        for (const missingKey of languageReport.missingKeys) {
+          console.log(`  - ${missingKey}`)
+        }
       }
     }
   }
 }
 
-main();
+main().catch((error) => {
+  console.error(`[locales] ${error.message}`)
+  process.exitCode = 1
+})

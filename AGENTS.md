@@ -436,6 +436,16 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `src/components/Map/Map.jsx`에서 ADD_MARKER 모드의 `pendingMarkerPoint` 확인 배너("선택 위치에 핀을 추가할까요?")를 제거함.
 - 지도 `onMouseUp`에서 좌표 클릭 즉시 `addMarker`를 호출하도록 변경해 추가 확인 단계 없이 핀이 바로 생성되도록 맞춤.
 - 확인 UI 제거에 맞춰 `pendingMarkerPoint` 관련 로컬 상태/리셋 코드를 함께 정리함.
+[codex] 2026-02-27 로컬라이제이션 멀티시트 전환 메모
+- `locales.config.js`를 추가해 spreadsheetId/sheets/languages/defaultLanguage/outputDir 설정을 코드로 관리하도록 전환함.
+- `scripts/pull-locales.js`를 멀티시트 CLI(`pnpm locales`)로 개편해 `--list`, `all`, 시트명 필터 인자, 시트별 에러 스킵/리포트 출력 흐름을 지원하도록 변경함.
+- `src/utils/L.js`를 `import.meta.glob('../locales/*/*.json')` 기반 카테고리 병합 로더로 바꿔 `category.key` 네임스페이스 조회를 지원하도록 맞춤.
+- 기존 단일 파일(`src/locales/{ko,ja,en}.json`)은 제거하고 `src/locales/{common,toolbar,sidebar,pin,chat}/{ko,ja,en}.json` 구조로 정리함.
+- `.env.local`에서 `LOCALE_SHEET_CSV_URL`를 제거하고 로케일 소스 설정을 `locales.config.js` 단일 경로로 통합함.
+[codex] 2026-02-27 PinMarker 단일 상호작용 구조 정리 메모
+- `src/components/Map/PinMarker.jsx`에서 기존 `Marker(드래그)` + `OverlayView(렌더링)` 이중 구조를 제거하고 단일 `Marker`로 렌더링/클릭/드래그를 모두 처리하도록 통합함.
+- 마커 원형 스타일은 `icon(Symbol path)`로 유지하고, 아이콘/경로 인덱스 표시는 `label`로 처리해 좌표 소스를 단일화함.
+- 드래그 중에는 `fillOpacity`를 낮추고 Overlay 기반 transition/scale 자체를 제거해 재투영 시 튐 체감을 줄이도록 반영함.
 [codex] 2026-02-27 거리재기→선그리기 전환 메모
 - `src/components/Map/Map.jsx`에서 선 그리기(`DRAW_LINE`) 입력 경로를 기존 `linePath`/`addLine` 기반이 아니라 `measurePath`/`addMeasurement` 기반으로 전환해, 선 그리기 도구에서 거리 라벨/꼭짓점 편집/완료(더블클릭·우클릭·ESC) 동작이 실행되도록 정리함.
 - 같은 파일에서 `MEASURE_DISTANCE` 모드의 지도 클릭/마우스 이동/완료 트리거를 제거해 거리재기 도구는 동작이 비어 있는 상태가 되도록 맞춤.
@@ -447,3 +457,6 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `src/components/Sidebar/LayerRow.jsx`에서 핀 아이콘(이모지) 클릭 시 `TRAVEL_PIN_ICON_PRESETS` 기반 아이콘 피커 팝업이 열리도록 상태(`iconPickerPinId`)와 UI를 추가함.
 - 아이콘 피커에서 아이콘 선택 시 `updatePin(pinItem.id, { icon })`를 호출해 사이드바에서도 PinPopup과 동일하게 핀 아이콘을 즉시 변경할 수 있도록 연결함.
 - 레이어/핀 행의 바깥 영역 클릭 시 핀 옵션 메뉴와 아이콘 피커가 함께 닫히도록 정리해 패널 내 상호작용 충돌을 줄임.
+[codex] 2026-02-27 핀 추가 드래그 임계값 메모
+- `src/components/Map/Map.jsx`에서 ADD_MARKER 모드일 때 마우스 다운/업의 화면 좌표 이동량(px)을 계산하고, 임계값(6px) 이상 드래그한 경우 mouse up 시 `addMarker`를 호출하지 않도록 조정함.
+- 지도 패닝 후 mouse up으로 핀이 의도치 않게 생성되던 문제를 완화함.
