@@ -347,3 +347,9 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 [codex] 2026-02-27 핀 추가 입력 타이밍 변경 메모
 - `src/components/Map/Map.jsx`에서 핀 추가(`addMarker`) 트리거를 지도 `onClick`에서 `onMouseDown`으로 이동해, 클릭 업이 아닌 클릭 다운 시점에 핀이 생성되도록 변경함.
 - 기존 지도 클릭 핸들러는 Select/Line/Route/Measure 흐름만 유지하도록 정리함.
+
+[codex] 2026-02-27 route 캐시/id 충돌 방어 작업 메모
+- `src/components/Map/Map.jsx`의 `requestRoute`에서 캐시 조회 결과를 직접 `addRoute`하지 않고, 추가 시점마다 새 route id를 생성해 route 엔티티를 만든 뒤 저장하도록 변경함.
+- route id 생성 규칙 일관성을 위해 `src/stores/useProjectStore.js`에 `createRouteId(routeCount)`를 추가하고 기존 `commitRoutePath`도 동일 유틸을 사용하도록 맞춤.
+- `src/utils/DirectionsCache.js`는 route 전체 대신 `path/distanceMeters/durationSeconds/summary/lineName`만 저장하도록 조정해 id/layerId/start/end는 add 시점에 결정되도록 분리함.
+- route 추가 직전에 현재 `routes` id 집합 기반 충돌 검사(`createUniqueRouteId`)를 거쳐 중복 id 생성을 방어하도록 연결함.
