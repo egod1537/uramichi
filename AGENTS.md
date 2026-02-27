@@ -348,6 +348,10 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `src/components/Map/Map.jsx`에서 핀 추가(`addMarker`) 트리거를 지도 `onClick`에서 `onMouseDown`으로 이동해, 클릭 업이 아닌 클릭 다운 시점에 핀이 생성되도록 변경함.
 - 기존 지도 클릭 핸들러는 Select/Line/Route/Measure 흐름만 유지하도록 정리함.
 
+[codex] 2026-02-27 removeRoute 히스토리 커밋 정합성 메모
+- `src/stores/useProjectStore.js`의 `removeRoute(routeId)`를 `HistoryManager.commit` 경로로 전환해 삭제 시 Undo/Redo가 가능하도록 맞춤.
+- 삭제 스냅샷은 `createSnapshotFromState(state)` 기반으로 `routes`와 `routePaths`를 함께 갱신해 경로 목록/폴리라인 인덱스 불일치를 방지함.
+- 반환 state는 `routeDraft` 초기화 + `history`/`historyIndex`/`lastEditedAt` 갱신 패턴을 `addRoute`/`removeLine`/`removePin`과 동일하게 정렬함.
 [codex] 2026-02-27 route 캐시/id 충돌 방어 작업 메모
 - `src/components/Map/Map.jsx`의 `requestRoute`에서 캐시 조회 결과를 직접 `addRoute`하지 않고, 추가 시점마다 새 route id를 생성해 route 엔티티를 만든 뒤 저장하도록 변경함.
 - route id 생성 규칙 일관성을 위해 `src/stores/useProjectStore.js`에 `createRouteId(routeCount)`를 추가하고 기존 `commitRoutePath`도 동일 유틸을 사용하도록 맞춤.
