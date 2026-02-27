@@ -431,3 +431,8 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 [codex] 2026-02-27 지도 줌 컨트롤 숨김 메모
 - `src/components/Map/Map.jsx`의 Google Map 옵션에서 `zoomControl`을 `false`로 변경해 우측의 `+ / -` 확대·축소 버튼이 표시되지 않도록 조정함.
+[codex] 2026-02-27 로컬라이제이션 멀티시트 전환 메모
+- `locales.config.js`를 루트에 추가하고 `spreadsheetId/sheets/languages/defaultLanguage/outputDir` 설정으로 시트별 CSV 소스를 관리하도록 구성함.
+- `scripts/pull-locales.js`를 멀티시트 CLI(`pnpm locales [all|sheet...]`, `--list`) 기반으로 교체하고, 시트별 fetch/파싱 실패 시 해당 시트만 스킵하며 전체 리포트를 출력하도록 변경함.
+- locale 출력 구조를 `src/locales/{category}/{lang}.json`으로 전환하고, 기존 단일 파일(`src/locales/ko.json`, `ja.json`, `en.json`)은 제거함.
+- `src/utils/L.js`를 `import.meta.glob('../locales/*/*.json')` 기반 카테고리 병합 로더로 변경해 `L('category.key')` 형식 조회를 지원함.

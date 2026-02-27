@@ -1,167 +1,195 @@
-import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
+import localeConfig from '../locales.config.js';
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const projectRootDirectory = path.resolve(scriptDirectory, '..');
-const localeOutputDirectory = path.join(projectRootDirectory, 'src', 'locales');
-const localeSheetUrlKey = 'LOCALE_SHEET_CSV_URL';
 
 async function main() {
-  try {
-    const localeSheetUrl = await resolveLocaleSheetUrl();
+  const selectedSheets = resolveSelectedSheets(process.argv.slice(2));
 
-    if (!localeSheetUrl) {
-      printMissingUrlGuide();
-      process.exitCode = 1;
-      return;
-    }
+  if (selectedSheets === null) {
+    printSheetList();
+    return;
+  }
 
-    const csvText = await fetchCsvText(localeSheetUrl);
-    const parsedRows = parseCsv(csvText);
+  if (selectedSheets.length === 0) {
+    console.warn('[locales] No valid sheets selected.');
+    return;
+  }
 
-    if (parsedRows.length === 0) {
-      throw new Error('CSV parsing failed: no rows found.');
-    }
+  const sheetReports = [];
 
-    const headerRow = parsedRows[0].map((columnValue) => columnValue.trim());
-    if (headerRow.length < 2) {
-      throw new Error('CSV parsing failed: header must include key and at least one language column.');
-    }
+  for (const selectedSheet of selectedSheets) {
+    const resultBySheet = await pullSheet(selectedSheet);
+    sheetReports.push(resultBySheet);
+  }
 
-    const keyColumnIndex = headerRow.findIndex((headerValue) => headerValue === 'key');
-    if (keyColumnIndex === -1) {
-      throw new Error('CSV parsing failed: header must include "key" column.');
-    }
+  printSummary(sheetReports);
 
-    const languageColumnMetadata = headerRow
-      .map((headerValue, columnIndex) => ({ languageCode: headerValue, columnIndex }))
-      .filter(({ columnIndex, languageCode }) => columnIndex !== keyColumnIndex && languageCode);
-
-    if (languageColumnMetadata.length === 0) {
-      throw new Error('CSV parsing failed: no language columns found in header.');
-    }
-
-    const localeRecordByLanguage = {};
-    const missingKeyRecordByLanguage = {};
-    const translatedCountByLanguage = {};
-
-    for (const { languageCode } of languageColumnMetadata) {
-      localeRecordByLanguage[languageCode] = {};
-      missingKeyRecordByLanguage[languageCode] = [];
-      translatedCountByLanguage[languageCode] = 0;
-    }
-
-    let totalKeyCount = 0;
-
-    for (let rowIndex = 1; rowIndex < parsedRows.length; rowIndex += 1) {
-      const rowValues = parsedRows[rowIndex];
-      const translationKey = (rowValues[keyColumnIndex] ?? '').trim();
-
-      if (!translationKey) {
-        continue;
-      }
-
-      totalKeyCount += 1;
-
-      for (const { languageCode, columnIndex } of languageColumnMetadata) {
-        const rawValue = rowValues[columnIndex] ?? '';
-        const trimmedValue = rawValue.trim();
-        const hasTranslation = trimmedValue.length > 0;
-
-        localeRecordByLanguage[languageCode][translationKey] = hasTranslation ? trimmedValue : translationKey;
-
-        if (hasTranslation) {
-          translatedCountByLanguage[languageCode] += 1;
-        } else {
-          missingKeyRecordByLanguage[languageCode].push(translationKey);
-        }
-      }
-    }
-
-    await mkdir(localeOutputDirectory, { recursive: true });
-
-    for (const { languageCode } of languageColumnMetadata) {
-      const localeJsonPath = path.join(localeOutputDirectory, `${languageCode}.json`);
-      const localeJsonContent = `${JSON.stringify(localeRecordByLanguage[languageCode], null, 2)}\n`;
-      await writeFile(localeJsonPath, localeJsonContent, 'utf8');
-    }
-
-    printReport({ totalKeyCount, languageColumnMetadata, translatedCountByLanguage, missingKeyRecordByLanguage });
-  } catch (error) {
-    console.error(`[locale:pull] ${error.message}`);
+  const hasFailure = sheetReports.some((sheetReport) => sheetReport.status === 'failed');
+  if (hasFailure) {
     process.exitCode = 1;
   }
 }
 
-async function resolveLocaleSheetUrl() {
-  if (process.env[localeSheetUrlKey]) {
-    return process.env[localeSheetUrlKey].trim();
+function resolveSelectedSheets(commandArgs) {
+  const availableSheets = Array.isArray(localeConfig.sheets) ? localeConfig.sheets : [];
+
+  if (commandArgs.includes('--list')) {
+    return null;
   }
 
-  const envLocalFilePath = path.join(projectRootDirectory, '.env.local');
+  const candidateNames = commandArgs.filter((commandArg) => !commandArg.startsWith('--'));
 
+  if (candidateNames.length === 0 || candidateNames.includes('all')) {
+    return availableSheets;
+  }
+
+  const selectedSheets = [];
+
+  for (const candidateName of candidateNames) {
+    const matchedSheet = availableSheets.find((sheet) => sheet.name === candidateName);
+
+    if (!matchedSheet) {
+      console.warn(`[locales] Unknown sheet "${candidateName}". Skipped.`);
+      continue;
+    }
+
+    if (!selectedSheets.some((sheet) => sheet.name === matchedSheet.name)) {
+      selectedSheets.push(matchedSheet);
+    }
+  }
+
+  return selectedSheets;
+}
+
+function printSheetList() {
+  console.log('[locales] Registered sheets:');
+
+  for (const configuredSheet of localeConfig.sheets) {
+    console.log(`- ${configuredSheet.name} (gid: ${configuredSheet.gid})`);
+  }
+}
+
+async function pullSheet(sheetConfig) {
   try {
-    const envLocalContent = await readFile(envLocalFilePath, 'utf8');
-    const envLocalRecord = parseEnvFile(envLocalContent);
-    return (envLocalRecord[localeSheetUrlKey] ?? '').trim();
+    const csvUrl = createCsvUrl(sheetConfig.gid);
+    const csvText = await fetchCsvText(csvUrl);
+    const parsedRows = parseCsv(csvText);
+    const parsedSheet = buildLocaleRows(parsedRows, localeConfig.languages);
+
+    await writeLocaleFiles(sheetConfig.name, parsedSheet.localeByLanguage, localeConfig.outputDir);
+
+    return {
+      status: 'ok',
+      sheetName: sheetConfig.name,
+      totalKeyCount: parsedSheet.totalKeyCount,
+      translatedCountByLanguage: parsedSheet.translatedCountByLanguage,
+      missingKeysByLanguage: parsedSheet.missingKeysByLanguage,
+    };
   } catch (error) {
-    return '';
+    console.error(`[locales] ${sheetConfig.name} failed: ${error.message}`);
+    return {
+      status: 'failed',
+      sheetName: sheetConfig.name,
+      errorMessage: error.message,
+    };
   }
 }
 
-function parseEnvFile(envContent) {
-  const envRecord = {};
-  const envLines = envContent.split(/\r?\n/);
-
-  for (const envLine of envLines) {
-    const trimmedLine = envLine.trim();
-    if (!trimmedLine || trimmedLine.startsWith('#')) {
-      continue;
-    }
-
-    const equalSignIndex = trimmedLine.indexOf('=');
-    if (equalSignIndex === -1) {
-      continue;
-    }
-
-    const rawEnvKey = trimmedLine.slice(0, equalSignIndex).trim();
-    const rawEnvValue = trimmedLine.slice(equalSignIndex + 1).trim();
-    if (!rawEnvKey) {
-      continue;
-    }
-
-    envRecord[rawEnvKey] = normalizeEnvValue(rawEnvValue);
-  }
-
-  return envRecord;
+function createCsvUrl(sheetGid) {
+  return `https://docs.google.com/spreadsheets/d/${localeConfig.spreadsheetId}/export?format=csv&gid=${sheetGid}`;
 }
 
-function normalizeEnvValue(rawEnvValue) {
-  if (
-    (rawEnvValue.startsWith('"') && rawEnvValue.endsWith('"')) ||
-    (rawEnvValue.startsWith("'") && rawEnvValue.endsWith("'"))
-  ) {
-    return rawEnvValue.slice(1, -1);
-  }
-  return rawEnvValue;
-}
-
-async function fetchCsvText(localeSheetUrl) {
-  let response;
-
-  try {
-    response = await fetch(localeSheetUrl);
-  } catch (error) {
-    throw new Error(`fetch failed for LOCALE_SHEET_CSV_URL: ${error.message}`);
-  }
+async function fetchCsvText(csvUrl) {
+  const response = await fetch(csvUrl);
 
   if (!response.ok) {
-    throw new Error(`fetch failed for LOCALE_SHEET_CSV_URL: ${response.status} ${response.statusText}`);
+    throw new Error(`fetch failed (${response.status} ${response.statusText})`);
   }
 
   return response.text();
+}
+
+function buildLocaleRows(parsedRows, languageList) {
+  if (parsedRows.length === 0) {
+    throw new Error('CSV parsing failed: no rows found.');
+  }
+
+  const headerRow = parsedRows[0].map((headerValue) => headerValue.trim());
+  const keyColumnIndex = headerRow.findIndex((headerValue) => headerValue === 'key');
+
+  if (keyColumnIndex === -1) {
+    throw new Error('CSV parsing failed: header must include "key" column.');
+  }
+
+  const languageColumnByLanguage = {};
+
+  for (const languageCode of languageList) {
+    const languageColumnIndex = headerRow.findIndex((headerValue) => headerValue === languageCode);
+    if (languageColumnIndex === -1) {
+      throw new Error(`CSV parsing failed: header missing language column "${languageCode}".`);
+    }
+    languageColumnByLanguage[languageCode] = languageColumnIndex;
+  }
+
+  const localeByLanguage = {};
+  const translatedCountByLanguage = {};
+  const missingKeysByLanguage = {};
+
+  for (const languageCode of languageList) {
+    localeByLanguage[languageCode] = {};
+    translatedCountByLanguage[languageCode] = 0;
+    missingKeysByLanguage[languageCode] = [];
+  }
+
+  let totalKeyCount = 0;
+
+  for (let rowIndex = 1; rowIndex < parsedRows.length; rowIndex += 1) {
+    const rowValues = parsedRows[rowIndex];
+    const messageKey = (rowValues[keyColumnIndex] ?? '').trim();
+
+    if (!messageKey) {
+      continue;
+    }
+
+    totalKeyCount += 1;
+
+    for (const languageCode of languageList) {
+      const languageColumnIndex = languageColumnByLanguage[languageCode];
+      const translationText = (rowValues[languageColumnIndex] ?? '').trim();
+      const hasTranslation = translationText.length > 0;
+
+      localeByLanguage[languageCode][messageKey] = hasTranslation ? translationText : messageKey;
+
+      if (hasTranslation) {
+        translatedCountByLanguage[languageCode] += 1;
+      } else {
+        missingKeysByLanguage[languageCode].push(messageKey);
+      }
+    }
+  }
+
+  return {
+    totalKeyCount,
+    localeByLanguage,
+    translatedCountByLanguage,
+    missingKeysByLanguage,
+  };
+}
+
+async function writeLocaleFiles(sheetName, localeByLanguage, outputDirectory) {
+  const sheetOutputDirectory = path.join(projectRootDirectory, outputDirectory, sheetName);
+  await mkdir(sheetOutputDirectory, { recursive: true });
+
+  for (const languageCode of Object.keys(localeByLanguage)) {
+    const filePath = path.join(sheetOutputDirectory, `${languageCode}.json`);
+    const fileContent = `${JSON.stringify(localeByLanguage[languageCode], null, 2)}\n`;
+    await writeFile(filePath, fileContent, 'utf8');
+  }
 }
 
 function parseCsv(csvText) {
@@ -203,8 +231,9 @@ function parseCsv(csvText) {
       }
 
       currentRowValues.push(currentColumnValue);
-      const isRowNotCompletelyEmpty = currentRowValues.some((value) => value.length > 0);
-      if (isRowNotCompletelyEmpty) {
+      const isNotEmptyRow = currentRowValues.some((columnValue) => columnValue.length > 0);
+
+      if (isNotEmptyRow) {
         parsedRows.push(currentRowValues);
       }
 
@@ -221,36 +250,36 @@ function parseCsv(csvText) {
   }
 
   currentRowValues.push(currentColumnValue);
-  const hasLastRowContent = currentRowValues.some((value) => value.length > 0);
-  if (hasLastRowContent) {
+  const hasLastRowValue = currentRowValues.some((columnValue) => columnValue.length > 0);
+
+  if (hasLastRowValue) {
     parsedRows.push(currentRowValues);
   }
 
   return parsedRows;
 }
 
-function printMissingUrlGuide() {
-  console.error(`[locale:pull] Missing ${localeSheetUrlKey}.`);
-  console.error('[locale:pull] Usage:');
-  console.error('  1) Publish Google Sheet to web as CSV.');
-  console.error(`  2) Set ${localeSheetUrlKey} in .env.local or shell environment.`);
-  console.error(`  3) Run: pnpm run locale:pull`);
-}
+function printSummary(sheetReports) {
+  console.log('[locales] Pull summary');
 
-function printReport({ totalKeyCount, languageColumnMetadata, translatedCountByLanguage, missingKeyRecordByLanguage }) {
-  console.log(`[locale:pull] Total keys: ${totalKeyCount}`);
+  for (const sheetReport of sheetReports) {
+    if (sheetReport.status === 'failed') {
+      console.log(`- ${sheetReport.sheetName}: failed (${sheetReport.errorMessage})`);
+      continue;
+    }
 
-  for (const { languageCode } of languageColumnMetadata) {
-    const translatedCount = translatedCountByLanguage[languageCode];
-    const missingKeys = missingKeyRecordByLanguage[languageCode];
-    const missingCount = missingKeys.length;
+    console.log(`- ${sheetReport.sheetName}: ${sheetReport.totalKeyCount} keys`);
 
-    console.log(`[locale:pull] ${languageCode}: ${translatedCount} translated / ${missingCount} missing`);
+    for (const languageCode of localeConfig.languages) {
+      const translatedCount = sheetReport.translatedCountByLanguage[languageCode] ?? 0;
+      const missingKeys = sheetReport.missingKeysByLanguage[languageCode] ?? [];
+      console.log(`  - ${languageCode}: ${translatedCount} translated / ${missingKeys.length} missing`);
 
-    if (missingCount > 0) {
-      console.log(`[locale:pull] ${languageCode} missing keys:`);
-      for (const missingKey of missingKeys) {
-        console.log(`  - ${missingKey}`);
+      if (missingKeys.length > 0) {
+        console.log(`    missing keys (${languageCode}):`);
+        for (const missingKey of missingKeys) {
+          console.log(`      - ${missingKey}`);
+        }
       }
     }
   }

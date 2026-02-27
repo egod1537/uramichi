@@ -1,19 +1,32 @@
 import useEditorStore from '../stores/useEditorStore'
 
-const localeLoaders = {
-  ko: () => import('../locales/ko.json'),
-  ja: () => import('../locales/ja.json'),
-  en: () => import('../locales/en.json'),
-}
-
+const localeModules = import.meta.glob('../locales/*/*.json')
 const DEFAULT_LANGUAGE = 'ko'
 
 let activeLanguage = DEFAULT_LANGUAGE
 let activeMessages = {}
 let isLocalizationInitialized = false
 
+function extractLocaleMetadata(modulePath) {
+  const matchedPath = modulePath.match(/^\.\.\/locales\/([^/]+)\/([^/]+)\.json$/)
+
+  if (!matchedPath) {
+    return null
+  }
+
+  return {
+    categoryName: matchedPath[1],
+    languageCode: matchedPath[2],
+  }
+}
+
 function resolveLanguage(languageValue) {
-  if (localeLoaders[languageValue]) {
+  const hasLanguageInModules = Object.keys(localeModules).some((modulePath) => {
+    const localeMetadata = extractLocaleMetadata(modulePath)
+    return localeMetadata?.languageCode === languageValue
+  })
+
+  if (hasLanguageInModules) {
     return languageValue
   }
 
@@ -22,16 +35,26 @@ function resolveLanguage(languageValue) {
 
 async function loadLanguageMessages(languageValue) {
   const nextLanguage = resolveLanguage(languageValue)
+  const mergedMessages = {}
+  const loaderEntries = Object.entries(localeModules)
 
-  try {
-    const localeModule = await localeLoaders[nextLanguage]()
-    activeLanguage = nextLanguage
-    activeMessages = localeModule.default ?? localeModule
-  } catch {
-    if (nextLanguage !== DEFAULT_LANGUAGE) {
-      await loadLanguageMessages(DEFAULT_LANGUAGE)
+  for (const [modulePath, loadModule] of loaderEntries) {
+    const localeMetadata = extractLocaleMetadata(modulePath)
+
+    if (!localeMetadata || localeMetadata.languageCode !== nextLanguage) {
+      continue
+    }
+
+    const localeModule = await loadModule()
+    const localeMessages = localeModule.default ?? localeModule
+
+    for (const [messageKey, messageValue] of Object.entries(localeMessages)) {
+      mergedMessages[`${localeMetadata.categoryName}.${messageKey}`] = messageValue
     }
   }
+
+  activeLanguage = nextLanguage
+  activeMessages = mergedMessages
 }
 
 function formatMessage(templateText, formatArgs) {
