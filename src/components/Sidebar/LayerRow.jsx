@@ -4,6 +4,8 @@ import useProjectStore from '../../stores/useProjectStore'
 
 function LayerRow({ layer }) {
   const pins = useProjectStore((state) => state.pins)
+  const activeLayerId = useProjectStore((state) => state.activeLayerId)
+  const setActiveLayer = useProjectStore((state) => state.setActiveLayer)
   const toggleLayerVisibility = useProjectStore((state) => state.toggleLayerVisibility)
   const toggleLayerCollapse = useProjectStore((state) => state.toggleLayerCollapse)
   const renameLayer = useProjectStore((state) => state.renameLayer)
@@ -12,6 +14,7 @@ function LayerRow({ layer }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   const layerPins = useMemo(() => pins.filter((pinItem) => pinItem.layerId === layer.id), [layer.id, pins])
+  const isActiveLayer = activeLayerId === layer.id
 
   const pinNameMap = useMemo(
     () =>
@@ -31,7 +34,7 @@ function LayerRow({ layer }) {
   }
 
   return (
-    <div className="border-b border-gray-200 py-2 last:border-b-0">
+    <div className={`border-b py-2 last:border-b-0 ${isActiveLayer ? 'border-blue-200 bg-blue-50/70' : 'border-gray-200'}`}>
       <div className="flex items-center gap-2 px-2">
         <input
           type="checkbox"
@@ -39,9 +42,21 @@ function LayerRow({ layer }) {
           onChange={() => toggleLayerVisibility(layer.id)}
           className="h-4 w-4 rounded border-gray-300"
         />
-        <button type="button" onClick={() => toggleLayerCollapse(layer.id)} className="flex min-w-0 flex-1 items-center gap-2">
-          <span className="text-gray-500">{layer.collapsed ? '▸' : '▾'}</span>
-          <span className="truncate text-left text-base text-gray-800">{layer.name}</span>
+        <button
+          type="button"
+          onClick={() => setActiveLayer(layer.id)}
+          className="flex min-w-0 flex-1 items-center gap-2"
+        >
+          <span
+            className="text-gray-500"
+            onClick={(event) => {
+              event.stopPropagation()
+              toggleLayerCollapse(layer.id)
+            }}
+          >
+            {layer.collapsed ? '▸' : '▾'}
+          </span>
+          <span className={`truncate text-left text-base ${isActiveLayer ? 'font-semibold text-blue-700' : 'text-gray-800'}`}>{layer.name}</span>
         </button>
 
         <div className="relative">
