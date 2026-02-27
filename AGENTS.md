@@ -254,3 +254,9 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - Delete/Backspace 키 삭제 처리는 `Map.jsx`의 단일 keydown 바인딩으로 고정했고, Select 모드 + 선택 핀이 있을 때만 `removePins(selectedPinIds)`가 실행되도록 제한함.
 - 핀 드래그는 Select 모드에서만 활성화되도록 `PinMarker`에 `draggable` 제어를 추가했고, 드래그 중에는 반투명 스타일(`opacity-60`)을 적용함.
 - 드래그 중 좌표 반영은 `updatePin(id, { position })`로 처리하고, 드래그 완료 시점에만 `commitMarkerDrag(...)`를 호출하도록 분리해 히스토리 커밋 타이밍을 고정함.
+
+[codex] 2026-02-27 거리 측정 분리 구현 메모
+- `src/utils/geo.js`를 추가해 Haversine 기반 점간 거리/경로 총거리/중간점/단위 포맷(m, km) 유틸을 분리함.
+- `src/components/Map/Map.jsx`에서 measure 모드 클릭 시 `draftMeasurePoints` 경로를 누적하고, 각 구간 중간점 Overlay 라벨 + 마지막 지점 총거리 Overlay 라벨을 렌더링하도록 연결함.
+- 측정 종료는 더블클릭과 ESC 키로 처리하고, 측정 모드를 벗어나면 드래프트 측정 경로가 즉시 제거되도록 동기화함.
+- 측정 드래프트는 스토어 영구 데이터/히스토리 커밋 대상이 아니며 화면용 상태로만 유지되도록 기존 구조를 유지함.

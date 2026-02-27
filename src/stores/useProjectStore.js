@@ -34,8 +34,16 @@ const useProjectStore = create((set) => ({
     set((state) => ({
       currentMode: nextMode,
       routeDraft: nextMode === TOOL_MODES.ADD_ROUTE ? state.routeDraft : { start: null },
+      draftMeasurePoints: nextMode === TOOL_MODES.MEASURE_DISTANCE ? state.draftMeasurePoints : [],
+      measurePath: nextMode === TOOL_MODES.MEASURE_DISTANCE ? state.measurePath : [],
     })),
-  resetToSelectMode: () => set({ currentMode: TOOL_MODES.SELECT, routeDraft: { start: null } }),
+  resetToSelectMode: () =>
+    set({
+      currentMode: TOOL_MODES.SELECT,
+      routeDraft: { start: null },
+      draftMeasurePoints: [],
+      measurePath: [],
+    }),
   commitSnapshot: (nextSnapshot) =>
     set((state) => {
       const committedHistory = HistoryManager.commit(state.history, state.historyIndex, nextSnapshot)
