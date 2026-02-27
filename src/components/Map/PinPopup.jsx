@@ -29,7 +29,6 @@ function PinPopup({ pin }) {
   const selectPin = useProjectStore((state) => state.selectPin)
   const [isEditMode, setIsEditMode] = useState(false)
   const [isNameEditing, setIsNameEditing] = useState(false)
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [tagDraftInput, setTagDraftInput] = useState('')
   const [editDraft, setEditDraft] = useState(() => ({
     name: pin.name || '',
@@ -53,10 +52,6 @@ function PinPopup({ pin }) {
 
     const handleEscapeKeyDown = (event) => {
       if (event.key === 'Escape') {
-        if (isDeleteModalOpen) {
-          setIsDeleteModalOpen(false)
-          return
-        }
         selectPin(null)
       }
     }
@@ -67,7 +62,7 @@ function PinPopup({ pin }) {
       document.removeEventListener('mousedown', handleOutsideClick)
       document.removeEventListener('keydown', handleEscapeKeyDown)
     }
-  }, [isDeleteModalOpen, selectPin])
+  }, [selectPin])
 
   if (!selectedPinId || selectedPinId !== pin.id) {
     return null
@@ -85,17 +80,8 @@ function PinPopup({ pin }) {
     setIsNameEditing(false)
   }
 
-  const handleOpenDeleteModal = () => {
-    setIsDeleteModalOpen(true)
-  }
-
-  const handleCancelDelete = () => {
-    setIsDeleteModalOpen(false)
-  }
-
-  const handleConfirmDelete = () => {
+  const handleDeletePin = () => {
     removePin(pin.id)
-    setIsDeleteModalOpen(false)
   }
 
   const handleAddTag = () => {
@@ -185,7 +171,7 @@ function PinPopup({ pin }) {
                 ✏️
               </button>
               <button type="button" onClick={handleImageButtonClick} className="rounded p-1 hover:bg-gray-100" aria-label="사진 추가">📷</button>
-              <button type="button" onClick={handleOpenDeleteModal} className="rounded p-1 hover:bg-gray-100" aria-label="삭제">🗑️</button>
+              <button type="button" onClick={handleDeletePin} className="rounded p-1 hover:bg-gray-100" aria-label="삭제">🗑️</button>
             </div>
           </div>
 
@@ -365,22 +351,6 @@ function PinPopup({ pin }) {
             </div>
           ) : null}
         </div>
-
-        {isDeleteModalOpen ? (
-          <div className="absolute inset-0 z-20 flex items-center justify-center rounded-2xl bg-black/35">
-            <div className="w-[250px] rounded-xl bg-white p-3 shadow-xl">
-              <p className="text-sm font-medium text-gray-800">이 핀을 삭제할까요?</p>
-              <div className="mt-3 flex justify-end gap-2">
-                <button type="button" onClick={handleCancelDelete} className="rounded border border-gray-200 px-3 py-1 text-sm text-gray-600 hover:bg-gray-50">
-                  취소
-                </button>
-                <button type="button" onClick={handleConfirmDelete} className="rounded bg-red-500 px-3 py-1 text-sm text-white hover:bg-red-600">
-                  삭제
-                </button>
-              </div>
-            </div>
-          </div>
-        ) : null}
 
         <div className="absolute left-1/2 top-full h-0 w-0 -translate-x-1/2 border-l-[12px] border-r-[12px] border-t-[14px] border-l-transparent border-r-transparent border-t-white" />
       </div>

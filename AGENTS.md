@@ -330,6 +330,10 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - 같은 파일에서 핀 드래그 가능 조건을 `selectedPinId === pin.id`로 제한해 지도 이동 중 핀이 튀는 것처럼 보이는 오조작 가능성을 줄임.
 - `src/components/Map/PinPopup.jsx` 루트 컨테이너에 `onMouseDown/onClick stopPropagation`을 추가해 팝업 내부 버튼 클릭이 지도 클릭으로 전파되어 편집/삭제 액션이 끊기던 문제를 방지함.
 
+[codex] 2026-02-27 PinPopup 삭제 즉시 실행 변경 메모
+- `src/components/Map/PinPopup.jsx`에서 삭제 확인 모달 상태(`isDeleteModalOpen`)와 관련 핸들러를 제거함.
+- 휴지통 버튼 클릭 시 `handleDeletePin`이 바로 `removePin(pin.id)`를 호출하도록 변경해 재확인 없이 즉시 삭제되도록 맞춤.
+- ESC 키 처리도 모달 분기 없이 기존처럼 핀 팝업 닫기 동작만 유지되도록 정리함.
 [codex] 2026-02-27 거리툴 UX 보강 작업 메모
 - `src/components/Map/Map.jsx`에서 거리 측정 라벨의 y 오프셋/line-height/padding을 조정해 텍스트가 말풍선 밖으로 삐져나오는 현상을 완화함.
 - 같은 파일에서 측정 경로 각 꼭짓점에 드래그 가능한 점(`Circle`)을 렌더링해 점 단위 위치 수정이 가능하도록 연결함.
