@@ -9,9 +9,13 @@ const routeTravelModeList = [
 
 function MapOverlays({
   currentMode,
+  isTimeFilterExpanded,
   isPinFilterExpanded,
   pinIconFilters,
   routeDraft,
+  timeFilterRange,
+  onSetTimeFilterExpanded,
+  onSetTimeFilterRange,
   onClearPinIconFilter,
   onTogglePinIconFilter,
   onSetPinFilterExpanded,
@@ -19,6 +23,59 @@ function MapOverlays({
 }) {
   return (
     <>
+      <div
+        className={`absolute bottom-20 left-1/2 z-20 -translate-x-1/2 rounded-xl border border-gray-200 bg-white/95 px-3 py-2 shadow-lg transition-all duration-200 ${
+          isTimeFilterExpanded ? 'inline-flex max-w-[92vw] items-center gap-3' : 'inline-flex w-auto items-center gap-2'
+        }`}
+      >
+        <p className="shrink-0 text-xs font-semibold text-gray-600">지도 시간 필터</p>
+
+        {isTimeFilterExpanded ? (
+          <>
+            <div className="flex items-center gap-2 text-xs text-gray-700">
+              <label className="flex items-center gap-1">
+                <span>시작</span>
+                <input
+                  type="time"
+                  value={timeFilterRange.start}
+                  onChange={(event) => onSetTimeFilterRange('start', event.target.value)}
+                  className="rounded border border-gray-300 px-1.5 py-1 text-xs"
+                />
+              </label>
+              <span className="text-gray-400">~</span>
+              <label className="flex items-center gap-1">
+                <span>종료</span>
+                <input
+                  type="time"
+                  value={timeFilterRange.end}
+                  onChange={(event) => onSetTimeFilterRange('end', event.target.value)}
+                  className="rounded border border-gray-300 px-1.5 py-1 text-xs"
+                />
+              </label>
+            </div>
+            <button
+              type="button"
+              onClick={() => onSetTimeFilterExpanded(false)}
+              className="shrink-0 rounded-full border border-gray-200 px-2 py-0.5 text-lg font-semibold leading-none text-gray-700 transition hover:bg-gray-100"
+              aria-label="시간 필터 접기"
+              title="시간 필터 접기"
+            >
+              −
+            </button>
+          </>
+        ) : (
+          <button
+            type="button"
+            onClick={() => onSetTimeFilterExpanded(true)}
+            className="shrink-0 rounded-full border border-gray-200 px-2 py-0.5 text-lg font-semibold leading-none text-gray-700 transition hover:bg-gray-100"
+            aria-label="시간 필터 펼치기"
+            title="시간 필터 펼치기"
+          >
+            +
+          </button>
+        )}
+      </div>
+
       <div
         className={`absolute bottom-4 left-1/2 z-20 -translate-x-1/2 rounded-xl border border-gray-200 bg-white/95 px-3 py-2 shadow-lg transition-all duration-200 ${
           isPinFilterExpanded ? 'inline-flex max-w-[92vw] items-center gap-3' : 'inline-flex w-auto items-center gap-2'
