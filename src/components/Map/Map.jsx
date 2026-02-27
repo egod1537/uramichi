@@ -176,7 +176,6 @@ function Map() {
   const [draggingPinId, setDraggingPinId] = useState(null)
   const [hoverMeasurePoint, setHoverMeasurePoint] = useState(null)
   const [draggingMeasurePointIndex, setDraggingMeasurePointIndex] = useState(null)
-  const [pendingMarkerPoint, setPendingMarkerPoint] = useState(null)
   const [selectedPoiDetail, setSelectedPoiDetail] = useState(null)
 
   const visibleLayerIdSet = useMemo(
@@ -407,7 +406,6 @@ function Map() {
       setRouteStart,
       isPinClickInProgress,
       setHoverMeasurePoint,
-      setPendingMarkerPoint,
       setSelectedPoiDetail,
     ],
   )
@@ -425,9 +423,9 @@ function Map() {
       const longitude = event.latLng?.lng()
       if (latitude === undefined || longitude === undefined) return
 
-      setPendingMarkerPoint({ lat: latitude, lng: longitude })
+      addMarker({ lat: latitude, lng: longitude })
     },
-    [currentMode, isPinClickInProgress, setPendingMarkerPoint],
+    [addMarker, currentMode, isPinClickInProgress],
   )
 
   const handleMapMouseMove = useCallback(
@@ -595,7 +593,6 @@ function Map() {
     if (currentMode === TOOL_MODES.MEASURE_DISTANCE) return
     setHoverMeasurePoint(null)
     setDraggingMeasurePointIndex(null)
-    setPendingMarkerPoint(null)
   }, [currentMode])
 
   return (
@@ -837,28 +834,6 @@ function Map() {
         </div>
       </div>
 
-      {currentMode === TOOL_MODES.ADD_MARKER && pendingMarkerPoint && (
-        <div className="absolute bottom-24 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm shadow">
-          <span className="text-gray-700">선택 위치에 핀을 추가할까요?</span>
-          <button
-            type="button"
-            onClick={() => {
-              addMarker(pendingMarkerPoint)
-              setPendingMarkerPoint(null)
-            }}
-            className="rounded bg-blue-600 px-2 py-1 text-white hover:bg-blue-700"
-          >
-            핀 추가
-          </button>
-          <button
-            type="button"
-            onClick={() => setPendingMarkerPoint(null)}
-            className="rounded border border-gray-300 px-2 py-1 text-gray-700 hover:bg-gray-50"
-          >
-            취소
-          </button>
-        </div>
-      )}
       {currentMode === TOOL_MODES.ADD_ROUTE && (
         <div className="absolute left-1/2 top-4 z-20 flex -translate-x-1/2 items-center gap-2 rounded-md bg-white px-3 py-2 text-sm shadow">
           <select

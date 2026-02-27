@@ -431,3 +431,8 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 [codex] 2026-02-27 지도 줌 컨트롤 숨김 메모
 - `src/components/Map/Map.jsx`의 Google Map 옵션에서 `zoomControl`을 `false`로 변경해 우측의 `+ / -` 확대·축소 버튼이 표시되지 않도록 조정함.
+
+[codex] 2026-02-27 핀 추가 확인 UI 제거 메모
+- `src/components/Map/Map.jsx`에서 ADD_MARKER 모드의 `pendingMarkerPoint` 확인 배너("선택 위치에 핀을 추가할까요?")를 제거함.
+- 지도 `onMouseUp`에서 좌표 클릭 즉시 `addMarker`를 호출하도록 변경해 추가 확인 단계 없이 핀이 바로 생성되도록 맞춤.
+- 확인 UI 제거에 맞춰 `pendingMarkerPoint` 관련 로컬 상태/리셋 코드를 함께 정리함.
