@@ -1,9 +1,9 @@
 import { useMemo } from 'react'
-import { Marker, OverlayView } from '@react-google-maps/api'
+import { Marker } from '@react-google-maps/api'
 import useProjectStore from '../../stores/useProjectStore'
 import { CATEGORY_PRESETS, PIN_ICON_STYLE_PRESETS, PIN_MARKER_COLOR_PRESETS, TRAVEL_PIN_ICON_PRESETS } from '../../utils/constants'
 
-const overlayPane = OverlayView.OVERLAY_MOUSE_TARGET
+const MARKER_CIRCLE_PATH = 'M 0,0 m -1,0 a 1,1 0 1,0 2,0 a 1,1 0 1,0 -2,0'
 
 function PinMarker({
   pin,
@@ -34,9 +34,29 @@ function PinMarker({
   }, [pin.category, pin.color, pin.icon])
 
   const isSelected = selectedPinId === pin.id
-  const scaleClassName = isSelected ? 'scale-110' : 'scale-100 group-hover:scale-105'
-  const shadowClassName = isSelected ? 'shadow-xl ring-2 ring-offset-2' : 'shadow-md'
-  const dragOpacityClassName = isDragging ? 'opacity-60' : 'opacity-100'
+  const markerLabelText = indexLabel || markerPreset.icon
+
+  const markerSymbol = useMemo(
+    () => ({
+      path: MARKER_CIRCLE_PATH,
+      fillColor: markerPreset.backgroundColor,
+      fillOpacity: isDragging ? 0.6 : 1,
+      strokeColor: markerPreset.ringColor,
+      strokeOpacity: 1,
+      strokeWeight: isSelected ? 0.24 : 0.16,
+      scale: isSelected ? 24 : 22,
+    }),
+    [isDragging, isSelected, markerPreset.backgroundColor, markerPreset.ringColor],
+  )
+
+  const markerLabel = useMemo(
+    () => ({
+      text: markerLabelText,
+      className: 'text-base font-semibold',
+      color: '#ffffff',
+    }),
+    [markerLabelText],
+  )
 
   const handlePinClick = (event) => {
     event?.domEvent?.stopPropagation?.()
@@ -44,47 +64,24 @@ function PinMarker({
   }
 
   const handlePinMouseDown = (event) => {
-    event.stopPropagation()
+    event?.domEvent?.stopPropagation?.()
     onMouseDown?.()
   }
 
   return (
-    <>
-      <Marker
-        position={pin.position}
-        clickable={false}
-        draggable={draggable}
-        opacity={0.01}
-        onDragStart={onDragStart}
-        onDrag={onDrag}
-        onDragEnd={onDragEnd}
-      />
-
-      <OverlayView position={pin.position} mapPaneName={overlayPane}>
-        <button
-          type="button"
-          onMouseDown={handlePinMouseDown}
-          onClick={handlePinClick}
-          className="group relative -translate-x-1/2 -translate-y-full transition-transform duration-150 ease-out"
-        >
-          <span
-            className={`flex h-11 w-11 items-center justify-center rounded-full text-xl text-white transition-transform duration-150 ease-out ${scaleClassName} ${shadowClassName} ${dragOpacityClassName}`}
-            style={{
-              backgroundColor: markerPreset.backgroundColor,
-              '--tw-ring-color': markerPreset.ringColor,
-            }}
-          >
-            {markerPreset.icon}
-          </span>
-
-          {indexLabel ? (
-            <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-white px-1 text-xs font-semibold text-gray-700 shadow">
-              {indexLabel}
-            </span>
-          ) : null}
-        </button>
-      </OverlayView>
-    </>
+    <Marker
+      position={pin.position}
+      icon={markerSymbol}
+      label={markerLabel}
+      draggable={draggable}
+      clickable
+      zIndex={isSelected ? 100 : 10}
+      onMouseDown={handlePinMouseDown}
+      onClick={handlePinClick}
+      onDragStart={onDragStart}
+      onDrag={onDrag}
+      onDragEnd={onDragEnd}
+    />
   )
 }
 
