@@ -40,8 +40,9 @@ function MeasureLayer({
         />
       ) : null}
 
-      {measurePath.map((measurePointItem, measurePointIndex) => (
-        <Marker
+      {currentMode === TOOL_MODES.MEASURE_DISTANCE
+        ? measurePath.map((measurePointItem, measurePointIndex) => (
+            <Marker
           key={`measure-point-${measurePointIndex}`}
           position={measurePointItem}
           icon={{
@@ -55,9 +56,10 @@ function MeasureLayer({
           draggable={currentMode === TOOL_MODES.MEASURE_DISTANCE}
           onDragStart={() => onMeasurePointDragStart(measurePointIndex)}
           onDrag={(event) => onMeasurePointDrag(measurePointIndex, event)}
-          onDragEnd={(event) => onMeasurePointDragEnd(measurePointIndex, event)}
-        />
-      ))}
+              onDragEnd={(event) => onMeasurePointDragEnd(measurePointIndex, event)}
+            />
+          ))
+        : null}
     </>
   )
 }

@@ -29,6 +29,7 @@ const createLineEntity = (linePointPath, activeLayerId, lineCount) => {
     color: LINE_DEFAULT_COLOR,
     width: LINE_DEFAULT_WIDTH,
     shapeType,
+    sourceType: 'line',
   }
 }
 

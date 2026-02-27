@@ -557,3 +557,8 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `src/components/Toolbar/Search.jsx`에서 Autocomplete `place_changed` 결과를 스토어 요청(`poiSearchRequest`)으로 넘기고, `src/components/Map/Map.jsx`가 이를 소비해 POI 상세 오버레이를 여는 흐름으로 연결함.
 - `src/components/Map/hooks/usePoiDetail.js`는 `placeId`가 없는 검색 결과도 fallback 데이터로 상세 오버레이를 생성하도록 확장해, 엔터 검색 케이스에서 빈 반응 문제를 방지함.
 - `src/stores/useProjectStore.js`에 `poiSearchRequest`, `requestPoiFromSearch`, `consumePoiSearchRequest`를 추가해 Toolbar→Map 단발성 이벤트 브리지를 구성함.
+
+[codex] 2026-02-27 선/측정 분리 정합성 메모
+- DRAW_LINE 종료 시 생성되는 엔티티를 `lines`에 일관 저장하도록 `addLine`에서 layerId 보정/기본값 보강을 추가함.
+- 저장 선(`sourceType: line`)과 레거시 측정 선(`sourceType: measurement`)을 데이터 레벨에서 구분해 Sidebar 표기 분리에 사용함.
+- Select 모드 선 선택 시 하이라이트와 꼭짓점 노출이 함께 보이도록 선 꼭짓점 렌더 조건을 선택 상태 기준으로 조정함.
