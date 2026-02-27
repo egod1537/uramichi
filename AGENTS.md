@@ -464,6 +464,9 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 [codex] 2026-02-27 핀 추가 드래그 임계값 메모
 - `src/components/Map/Map.jsx`에서 ADD_MARKER 모드일 때 마우스 다운/업의 화면 좌표 이동량(px)을 계산하고, 임계값(6px) 이상 드래그한 경우 mouse up 시 `addMarker`를 호출하지 않도록 조정함.
 - 지도 패닝 후 mouse up으로 핀이 의도치 않게 생성되던 문제를 완화함.
+[codex] 2026-02-27 RouteService 분리 메모
+- `src/utils/RouteService.js`를 추가해 경로 요청 빌드(`getRouteRequest`), 응답 정규화(`createRouteCacheData`), route id 충돌 방지(`createUniqueRouteId`/`hasRouteIdConflict`), 최종 route 엔티티 생성(`createRouteEntityOrNull`)을 한 곳으로 모음.
+- `src/components/Map/Map.jsx`의 `requestRoute`는 서비스 호출 결과를 받아 성공 시 `addRoute`만 호출하고, 실패(null) 시 `setRouteStart(null)`로 종료하도록 단순화함.
 [codex] 2026-02-27 클래스 전환 우선순위 기준 메모
 - 클래스 컴포넌트 전환 우선순위는 "훅 사용량이 많거나(특히 `useState`/`useEffect`/`useCallback` 다수), 상태 구독 지점이 많은 컴포넌트"를 먼저 대상으로 잡음.
 - 현재 우선 검토 대상은 `src/components/Map/Map.jsx`, `src/components/Map/PinPopup.jsx`, `src/components/Sidebar/LayerRow.jsx`, `src/components/Sidebar/LayerPanel.jsx`로 정리함.
