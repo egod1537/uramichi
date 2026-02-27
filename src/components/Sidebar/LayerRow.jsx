@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { CATEGORY_PRESETS, TRANSPORT_PRESETS } from '../../utils/constants'
+import { CATEGORY_PRESETS, TRANSPORT_PRESETS, TRAVEL_PIN_ICON_PRESETS } from '../../utils/constants'
 import useProjectStore from '../../stores/useProjectStore'
 
 function LayerRow({ layer, filteredPins, measurements, isDraggingLayer, layerDropPreview, onLayerDragStart, onLayerDragEnd, onLayerDragOver, onLayerDrop }) {
@@ -15,6 +15,7 @@ function LayerRow({ layer, filteredPins, measurements, isDraggingLayer, layerDro
   const reorderPinsInLayer = useProjectStore((state) => state.reorderPinsInLayer)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [pinOptionsPinId, setPinOptionsPinId] = useState(null)
+  const [iconPickerPinId, setIconPickerPinId] = useState(null)
   const [dragPinId, setDragPinId] = useState(null)
   const [pinDropPreview, setPinDropPreview] = useState(null)
 
@@ -69,6 +70,9 @@ function LayerRow({ layer, filteredPins, measurements, isDraggingLayer, layerDro
       onClick={() => {
         if (pinOptionsPinId) {
           setPinOptionsPinId(null)
+        }
+        if (iconPickerPinId) {
+          setIconPickerPinId(null)
         }
       }}
     >
@@ -154,12 +158,50 @@ function LayerRow({ layer, filteredPins, measurements, isDraggingLayer, layerDro
                   <div className="mx-2 h-1 rounded bg-blue-500" />
                 )}
                 <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() => selectPin(pinItem.id)}
-                    className="flex min-w-0 flex-1 items-center gap-2 rounded px-2 py-1 text-sm text-gray-700 hover:bg-gray-100"
-                  >
-                    <span>{pinItem.icon || CATEGORY_PRESETS[pinItem.category]?.icon || CATEGORY_PRESETS.default.icon}</span>
+                  <button type="button" onClick={() => selectPin(pinItem.id)} className="flex min-w-0 flex-1 items-center gap-2 rounded px-2 py-1 text-sm text-gray-700 hover:bg-gray-100">
+                    <span
+                      className="relative"
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        setIconPickerPinId((previousPinId) => (previousPinId === pinItem.id ? null : pinItem.id))
+                      }}
+                    >
+                      <button
+                        type="button"
+                        className="rounded px-1 text-base hover:bg-gray-200"
+                        title="아이콘 변경"
+                        aria-label="아이콘 변경"
+                      >
+                        {pinItem.icon || CATEGORY_PRESETS[pinItem.category]?.icon || CATEGORY_PRESETS.default.icon}
+                      </button>
+                      {iconPickerPinId === pinItem.id ? (
+                        <div
+                          className="absolute left-0 top-7 z-30 w-40 rounded-xl border border-gray-200 bg-white p-2 shadow-xl"
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          <div className="grid grid-cols-5 gap-1">
+                            {TRAVEL_PIN_ICON_PRESETS.map((iconPreset) => {
+                              const isSelectedIcon = (pinItem.icon || CATEGORY_PRESETS[pinItem.category]?.icon || CATEGORY_PRESETS.default.icon) === iconPreset.icon
+                              return (
+                                <button
+                                  key={iconPreset.key}
+                                  type="button"
+                                  onClick={() => {
+                                    updatePin(pinItem.id, { icon: iconPreset.icon })
+                                    setIconPickerPinId(null)
+                                  }}
+                                  className={`rounded-md px-1 py-1 text-lg hover:bg-gray-100 ${isSelectedIcon ? 'bg-blue-50 ring-1 ring-blue-300' : ''}`}
+                                  title={iconPreset.label}
+                                  aria-label={iconPreset.label}
+                                >
+                                  {iconPreset.icon}
+                                </button>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      ) : null}
+                    </span>
                     <span className="truncate">{pinItem.name}</span>
                   </button>
                   <div className="relative">
