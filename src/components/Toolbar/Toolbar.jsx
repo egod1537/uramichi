@@ -6,14 +6,14 @@ import useEditorStore from '../../stores/useEditorStore'
 import useProjectStore from '../../stores/useProjectStore'
 
 const toolbarButtons = [
-  { key: 'undo', label: 'Undo', icon: '↩' },
-  { key: 'redo', label: 'Redo', icon: '↪' },
-  { key: TOOL_MODES.SELECT, label: 'Select/Pan', icon: '🖐️' },
-  { key: TOOL_MODES.ADD_MARKER, label: 'Add Marker', icon: '📍' },
-  { key: TOOL_MODES.DRAW_LINE, label: 'Draw Line', icon: '✏️' },
-  { key: TOOL_MODES.ADD_ROUTE, label: 'Add Route', icon: '🛤️' },
-  { key: TOOL_MODES.MEASURE_DISTANCE, label: 'Measure Distance', icon: '📐' },
-  { key: 'shortcuts', label: 'Keyboard Shortcuts', icon: '⌨️' },
+  { key: 'undo', label: 'Undo', icon: '↩', tooltip: 'Undo (U)' },
+  { key: 'redo', label: 'Redo', icon: '↪', tooltip: 'Redo (R)' },
+  { key: TOOL_MODES.SELECT, label: 'Select/Pan', icon: '🖐️', tooltip: 'Select/Pan (Esc)' },
+  { key: TOOL_MODES.ADD_MARKER, label: 'Add Marker', icon: '📍', tooltip: 'Add Marker (M)' },
+  { key: TOOL_MODES.DRAW_LINE, label: 'Draw Line', icon: '✏️', tooltip: 'Draw Line (L)' },
+  { key: TOOL_MODES.ADD_ROUTE, label: 'Add Route', icon: '🛤️', tooltip: 'Add Route (T)' },
+  { key: TOOL_MODES.MEASURE_DISTANCE, label: 'Measure Distance', icon: '📐', tooltip: 'Measure Distance (D)' },
+  { key: 'shortcuts', label: 'Keyboard Shortcuts', icon: '⌨️', tooltip: 'Keyboard Shortcuts' },
 ]
 
 function Toolbar({ currentMode, historyIndex, historyLength }) {
@@ -65,6 +65,7 @@ function Toolbar({ currentMode, historyIndex, historyLength }) {
               type="button"
               className="flex h-9 w-10 items-center justify-center rounded-sm bg-[#4285f4] text-white hover:bg-[#3367d6]"
               aria-label="검색"
+              title="장소 검색"
             >
               🔍
             </button>
@@ -81,6 +82,7 @@ function Toolbar({ currentMode, historyIndex, historyLength }) {
                   icon={buttonItem.icon}
                   isActive={isActive}
                   isDisabled={buttonDisabledState[buttonItem.key]}
+                  tooltip={buttonItem.tooltip}
                   onClick={handleToolbarButtonClick}
                 />
               )

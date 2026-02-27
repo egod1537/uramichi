@@ -289,6 +289,13 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `src/stores/useProjectStore.js`에 `routeDraft.travelMode`와 `setRouteTravelMode()`를 추가하고, `addRoute()` 저장 경로와 routeDraft 초기화 로직이 이동수단 상태를 유지하도록 조정함.
 - `src/components/Sidebar/LayerPanel.jsx`에 routes 목록을 추가해 `"A → B"` 형식의 경로 요약을 표시하도록 구현함.
 
+[codex] 2026-02-27 Toolbar 툴팁 작업 메모
+- `src/components/Toolbar/ToolButton.jsx`의 버튼에 `title` 속성을 추가해 마우스 호버 시 각 툴의 라벨 툴팁이 브라우저 기본 UI로 표시되도록 반영함.
+
+[codex] 2026-02-27 Toolbar 버튼별 툴팁 보강 메모
+- `src/components/Toolbar/Toolbar.jsx`의 `toolbarButtons`에 버튼별 `tooltip` 문구를 추가해 각 도구에 단축키 포함 툴팁이 뜨도록 연결함.
+- 툴바 검색 버튼에도 `title="장소 검색"`을 추가해 상단 검색 액션 버튼 호버 시 툴팁이 표시되도록 맞춤.
+- `src/components/Toolbar/ToolButton.jsx`는 `tooltip` prop을 받아 `title`로 우선 적용하고, 값이 없으면 기존 `label`을 fallback으로 사용하도록 조정함.
 [codex] 2026-02-27 PinPopup 삭제 핸들러 버그 수정 메모
 - `src/components/Map/PinPopup.jsx`에서 휴지통 버튼 `onClick`이 정의되지 않은 `handleDelete`를 참조해 런타임 `ReferenceError`가 발생하던 문제를 확인함.
 - 삭제 확인 모달 오픈 핸들러인 `handleOpenDeleteModal`로 연결을 수정해 핀 팝업에서 삭제 버튼 클릭 시 에러 없이 기존 확인 플로우가 동작하도록 복구함.
@@ -297,3 +304,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `src/components/common/UserButton.jsx`를 추가해 지도 우측 상단 고정 프로필 버튼(UI 전용)과 로그인 상태별 렌더링(로그인 버튼/아바타+9점 메뉴), 드롭다운, 바깥 클릭 닫기, 비로그인 토스트("로그인 기능 준비 중")를 구현함.
 - `src/stores/useUserStore.js`에 `displayName`, `email`, `avatarUrl` 상태를 추가하고 `login/logout`에서 관련 필드를 동기화하도록 확장함.
 - `src/App.jsx`에 `UserButton`을 주입해 Toolbar/Sidebar와 분리된 우측 상단 오버레이로 표시되도록 연결함.
+[codex] 2026-02-27 로컬라이제이션 시스템 작업 메모
+- `src/utils/L.js`를 추가해 현재 언어(`useEditorStore.language`) 기반 동적 import 로케일 로딩, `{index}` 포맷 치환, 키 누락 시 key 반환 동작을 구현함.
+- `src/locales/ko.json`, `src/locales/ja.json`, `src/locales/en.json` 플랫 키 번역 리소스를 추가함.
+- 앱 시작 시 `src/App.jsx`에서 `initializeLocalization()`을 호출하도록 연결했고, `src/stores/useEditorStore.js`에 `language`/`setLanguage` 상태를 추가함.
