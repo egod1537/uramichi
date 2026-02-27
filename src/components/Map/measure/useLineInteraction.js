@@ -4,25 +4,25 @@ import { getHaversineDistance } from '../../../utils/geo'
 import { handleLineDraftComplete, handleLineMeasurePointDrag } from '../controllers/lineController'
 import { MEASURE_LINE_WIDTH, POLYGON_CLOSE_DISTANCE_METERS } from './constants'
 
-const resolveMeasurementShapeType = (measurePointPath) => {
-  if (measurePointPath.length < 3) return 'line'
-  const firstPoint = measurePointPath[0]
-  const lastPoint = measurePointPath[measurePointPath.length - 1]
+const resolveLineShapeType = (linePointPath) => {
+  if (linePointPath.length < 3) return 'line'
+  const firstPoint = linePointPath[0]
+  const lastPoint = linePointPath[linePointPath.length - 1]
   const isLoopClosed = getHaversineDistance(firstPoint, lastPoint) <= POLYGON_CLOSE_DISTANCE_METERS
   return isLoopClosed ? 'polygon' : 'line'
 }
 
-const createLineMeasurementEntity = (measurePointPath, activeLayerId, measurementCount) => {
-  const shapeType = resolveMeasurementShapeType(measurePointPath)
-  const firstPoint = measurePointPath[0]
-  const lastPoint = measurePointPath[measurePointPath.length - 1]
+const createLineEntity = (linePointPath, activeLayerId, lineCount) => {
+  const shapeType = resolveLineShapeType(linePointPath)
+  const firstPoint = linePointPath[0]
+  const lastPoint = linePointPath[linePointPath.length - 1]
   const pointsForPolygon =
     shapeType === 'polygon' && firstPoint && lastPoint && (firstPoint.lat !== lastPoint.lat || firstPoint.lng !== lastPoint.lng)
-      ? [...measurePointPath, firstPoint]
-      : measurePointPath
+      ? [...linePointPath, firstPoint]
+      : linePointPath
 
   return {
-    id: `measure-${Date.now()}-${measurementCount + 1}`,
+    id: `line-${Date.now()}-${lineCount + 1}`,
     layerId: activeLayerId,
     points: pointsForPolygon,
     color: '#111111',
@@ -37,10 +37,10 @@ function useLineInteraction({
   draggingMeasurePointIndex,
   activeLayerId,
   layers,
-  measurements,
+  lines,
   setHoverMeasurePoint,
   cancelDraftLine,
-  addMeasurement,
+  addLine,
   setLinePath,
   setDraggingMeasurePointIndex,
   setMode,
@@ -53,10 +53,10 @@ function useLineInteraction({
   const completeLineInteraction = useCallback(() => {
     handleLineDraftComplete({
       currentMode: TOOL_MODES.DRAW_LINE,
-      state: { linePath, activeLayerId, layers, measurements, createMeasurementEntity: createLineMeasurementEntity },
-      actions: { setHoverMeasurePoint, cancelDraftLine, addMeasurement, setMode },
+      state: { linePath, activeLayerId, layers, lines, createLineEntity },
+      actions: { setHoverMeasurePoint, cancelDraftLine, addLine, setMode },
     })
-  }, [activeLayerId, addMeasurement, cancelDraftLine, layers, linePath, measurements, setHoverMeasurePoint, setMode])
+  }, [activeLayerId, addLine, cancelDraftLine, layers, linePath, lines, setHoverMeasurePoint, setMode])
 
   const handleLineDraftPointDrag = useCallback(
     (pointIndex, event) => {
@@ -68,10 +68,10 @@ function useLineInteraction({
         pointIndex,
         clickedPoint,
         state: { linePath },
-        actions: { setLinePath, lineSnapPointList: [...linePath, ...measurements.flatMap((measurementItem) => measurementItem.points)] },
+        actions: { setLinePath, lineSnapPointList: [...linePath, ...lines.flatMap((lineItem) => lineItem.points)] },
       })
     },
-    [linePath, measurements, setLinePath],
+    [linePath, lines, setLinePath],
   )
 
   const handleLineDraftPointDragStart = useCallback((pointIndex) => {

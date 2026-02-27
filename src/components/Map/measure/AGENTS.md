@@ -21,3 +21,7 @@
 [codex] 2026-02-27 거리 라벨 박스 레이아웃/우클릭 종료 모드 유지 메모
 - `MeasureLabels`의 구간/총거리 라벨 패딩·라운드·오프셋을 키워 배경 박스보다 텍스트가 튀어나오던 레이아웃 문제를 보정함.
 - `useDistanceMeasureInteraction`에서 우클릭 종료(`contextmenu`)는 드래프트 취소 후 측정 모드를 유지하도록 `setMode(MEASURE_DISTANCE)`를 명시함.
+[codex] 2026-02-27 useLineInteraction addLine 전환 메모
+- `useLineInteraction` 훅 인자에서 `measurements`, `addMeasurement` 의존을 `lines`, `addLine`으로 교체함.
+- 선 종료 시 생성 엔티티 팩토리를 `createLineEntity`로 정리하고, `line-*` id로 라인 엔티티가 저장되도록 맞춤.
+- 드래프트 포인트 드래그 스냅 참조도 `lines` 기반으로 동작하도록 조정함.
