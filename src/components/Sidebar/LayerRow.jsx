@@ -11,7 +11,9 @@ function LayerRow({ layer }) {
   const renameLayer = useProjectStore((state) => state.renameLayer)
   const removeLayer = useProjectStore((state) => state.removeLayer)
   const selectPin = useProjectStore((state) => state.selectPin)
+  const removePin = useProjectStore((state) => state.removePin)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [pinContextMenuPinId, setPinContextMenuPinId] = useState(null)
 
   const layerPins = useMemo(() => pins.filter((pinItem) => pinItem.layerId === layer.id), [layer.id, pins])
   const isActiveLayer = activeLayerId === layer.id
@@ -34,7 +36,14 @@ function LayerRow({ layer }) {
   }
 
   return (
-    <div className={`border-b py-2 last:border-b-0 ${isActiveLayer ? 'border-blue-200 bg-blue-50/70' : 'border-gray-200'}`}>
+    <div
+      className={`border-b py-2 last:border-b-0 ${isActiveLayer ? 'border-blue-200 bg-blue-50/70' : 'border-gray-200'}`}
+      onClick={() => {
+        if (pinContextMenuPinId) {
+          setPinContextMenuPinId(null)
+        }
+      }}
+    >
       <div className="flex items-center gap-2 px-2">
         <input
           type="checkbox"
@@ -77,7 +86,7 @@ function LayerRow({ layer }) {
       </div>
 
       {!layer.collapsed && (
-        <div className="mt-2 space-y-1 pl-8 pr-2">
+        <div className="relative mt-2 space-y-1 pl-8 pr-2">
           {layerPins.map((pinItem, pinIndex) => {
             const nextPin = layerPins[pinIndex + 1]
             const routeItem = layer.routes.find((routeData) => routeData.fromPinId === pinItem.id && routeData.toPinId === nextPin?.id)
@@ -86,6 +95,10 @@ function LayerRow({ layer }) {
                 <button
                   type="button"
                   onClick={() => selectPin(pinItem.id)}
+                  onContextMenu={(event) => {
+                    event.preventDefault()
+                    setPinContextMenuPinId(pinItem.id)
+                  }}
                   className="flex w-full items-center gap-2 rounded px-2 py-1 text-sm text-gray-700 hover:bg-gray-100"
                 >
                   <span>{CATEGORY_PRESETS[pinItem.category]?.icon ?? CATEGORY_PRESETS.default.icon}</span>
@@ -103,6 +116,21 @@ function LayerRow({ layer }) {
               </div>
             )
           })}
+
+          {pinContextMenuPinId && (
+            <div className="absolute right-2 top-0 z-30 min-w-28 rounded border border-gray-200 bg-white py-1 shadow">
+              <button
+                type="button"
+                onClick={() => {
+                  removePin(pinContextMenuPinId)
+                  setPinContextMenuPinId(null)
+                }}
+                className="block w-full px-3 py-1 text-left text-sm text-red-500 hover:bg-gray-100"
+              >
+                핀 삭제
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
