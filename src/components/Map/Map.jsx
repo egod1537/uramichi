@@ -6,6 +6,7 @@ import useProjectStore from '../../stores/useProjectStore'
 import PinMarker from './PinMarker'
 import PinPopup from './PinPopup'
 import { formatDistanceLabel, getMidpoint, getPathDistanceInMeters } from '../../utils/geo'
+import directionsCache from '../../utils/DirectionsCache'
 
 const containerStyle = { width: '100%', height: '100%' }
 const defaultCenter = { lat: 35.6812, lng: 139.7671 }
@@ -39,11 +40,25 @@ const createTotalLabelData = (measurePointPath) => {
   return { id: 'measure-total', position: terminalPoint, label: `총 ${formatDistanceLabel(totalDistanceInMeters)}` }
 }
 
-const getRouteRequest = (startPoint, endPoint) => ({
+const ROUTE_TRAVEL_MODE_OPTIONS = [
+  { key: 'WALKING', label: '도보' },
+  { key: 'TRANSIT', label: '대중교통' },
+  { key: 'DRIVING', label: '차량' },
+]
+
+const getRouteRequest = (startPoint, endPoint, travelMode) => ({
   origin: startPoint,
   destination: endPoint,
-  travelMode: window.google.maps.TravelMode.WALKING,
+  travelMode: window.google.maps.TravelMode[travelMode],
 })
+
+const getRouteLineName = (routeResult) => {
+  const transitLineName = routeResult?.legs?.[0]?.steps
+    ?.find((stepItem) => stepItem.travel_mode === 'TRANSIT')
+    ?.transit?.line?.short_name
+
+  return transitLineName || routeResult?.summary || ''
+}
 
 function Map() {
   const mapInstanceRef = useRef(null)
@@ -62,7 +77,8 @@ function Map() {
   const appendMeasurePoint = useProjectStore((state) => state.appendMeasurePoint)
   const cancelDraftMeasure = useProjectStore((state) => state.cancelDraftMeasure)
   const setRouteStart = useProjectStore((state) => state.setRouteStart)
-  const commitRoutePath = useProjectStore((state) => state.commitRoutePath)
+  const setRouteTravelMode = useProjectStore((state) => state.setRouteTravelMode)
+  const addRoute = useProjectStore((state) => state.addRoute)
   const selectPin = useProjectStore((state) => state.selectPin)
   const togglePinInSelection = useProjectStore((state) => state.togglePinInSelection)
   const clearPinSelection = useProjectStore((state) => state.clearPinSelection)
@@ -98,17 +114,40 @@ function Map() {
   const measureTotalLabelData = useMemo(() => createTotalLabelData(measurePath), [measurePath])
 
   const createRoutePath = useCallback(
-    (startPoint, endPoint) => {
+    (startPoint, endPoint, travelMode) => {
+      const cachedRouteData = directionsCache.get(startPoint, endPoint, travelMode)
+      if (cachedRouteData) {
+        addRoute(cachedRouteData)
+        return
+      }
+
       const directionsService = new window.google.maps.DirectionsService()
-      directionsService.route(getRouteRequest(startPoint, endPoint), (result, status) => {
+      directionsService.route(getRouteRequest(startPoint, endPoint, travelMode), (result, status) => {
         if (status !== window.google.maps.DirectionsStatus.OK || !result) return
-        const overviewPath = result.routes[0]?.overview_path ?? []
+        const firstRoute = result.routes[0]
+        const firstLeg = firstRoute?.legs?.[0]
+        const overviewPath = firstRoute?.overview_path ?? []
         if (!overviewPath.length) return
         const normalizedPath = overviewPath.map((locationPoint) => ({ lat: locationPoint.lat(), lng: locationPoint.lng() }))
-        commitRoutePath(normalizedPath)
+        const routeData = {
+          id: `route-${Date.now()}-${useProjectStore.getState().routes.length + 1}`,
+          layerId: useProjectStore.getState().activeLayerId,
+          start: normalizedPath[0] || startPoint,
+          end: normalizedPath[normalizedPath.length - 1] || endPoint,
+          travelMode,
+          summary: firstLeg?.start_address && firstLeg?.end_address ? `${firstLeg.start_address} → ${firstLeg.end_address}` : 'A → B',
+          lineName: getRouteLineName(firstRoute),
+          distanceText: firstLeg?.distance?.text || '',
+          distanceMeters: firstLeg?.distance?.value || 0,
+          durationText: firstLeg?.duration?.text || '',
+          durationSeconds: firstLeg?.duration?.value || 0,
+          path: normalizedPath,
+        }
+        directionsCache.set(startPoint, endPoint, travelMode, routeData)
+        addRoute(routeData)
       })
     },
-    [commitRoutePath],
+    [addRoute],
   )
 
   const handleMapClick = useCallback(
@@ -123,8 +162,9 @@ function Map() {
       if (currentMode === TOOL_MODES.MEASURE_DISTANCE) return appendMeasurePoint(clickedPoint)
       if (currentMode === TOOL_MODES.ADD_ROUTE) {
         if (!routeDraft.start) return setRouteStart(clickedPoint)
-        createRoutePath(routeDraft.start, clickedPoint)
+        createRoutePath(routeDraft.start, clickedPoint, routeDraft.travelMode || 'WALKING')
         setRouteStart(null)
+        return
       }
 
       if (currentMode === TOOL_MODES.SELECT) {
@@ -132,7 +172,7 @@ function Map() {
         clearPinSelection()
       }
     },
-    [addMarker, appendLinePoint, appendMeasurePoint, clearPinSelection, createRoutePath, currentMode, routeDraft.start, selectPin, setRouteStart],
+    [addMarker, appendLinePoint, appendMeasurePoint, clearPinSelection, createRoutePath, currentMode, routeDraft.start, routeDraft.travelMode, selectPin, setRouteStart],
   )
 
   const handlePinClick = useCallback(
@@ -282,9 +322,25 @@ function Map() {
         ) : null}
       </GoogleMap>
 
-      {routeDraft.start && (
-        <div className="absolute bottom-4 left-1/2 z-20 -translate-x-1/2 rounded-md bg-white px-3 py-2 text-sm shadow">
-          도착점을 클릭해 경로를 완성하세요
+      {currentMode === TOOL_MODES.ADD_ROUTE && (
+        <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-md bg-white px-3 py-2 text-sm shadow">
+          <span>{routeDraft.start ? '도착점을 클릭해 경로를 완성하세요' : '출발점을 클릭해 경로를 시작하세요'}</span>
+          <div className="flex items-center gap-1">
+            {ROUTE_TRAVEL_MODE_OPTIONS.map((modeOption) => (
+              <button
+                key={modeOption.key}
+                type="button"
+                onClick={() => setRouteTravelMode(modeOption.key)}
+                className={`rounded border px-2 py-0.5 text-xs ${
+                  (routeDraft.travelMode || 'WALKING') === modeOption.key
+                    ? 'border-blue-400 bg-blue-50 text-blue-700'
+                    : 'border-gray-300 text-gray-600'
+                }`}
+              >
+                {modeOption.label}
+              </button>
+            ))}
+          </div>
         </div>
       )}
     </>

@@ -33,14 +33,15 @@ const useProjectStore = create((set) => ({
   setMode: (nextMode) =>
     set((state) => ({
       currentMode: nextMode,
-      routeDraft: nextMode === TOOL_MODES.ADD_ROUTE ? state.routeDraft : { start: null },
+      routeDraft:
+        nextMode === TOOL_MODES.ADD_ROUTE ? state.routeDraft : { start: null, travelMode: 'WALKING' },
       draftMeasurePoints: nextMode === TOOL_MODES.MEASURE_DISTANCE ? state.draftMeasurePoints : [],
       measurePath: nextMode === TOOL_MODES.MEASURE_DISTANCE ? state.measurePath : [],
     })),
   resetToSelectMode: () =>
     set({
       currentMode: TOOL_MODES.SELECT,
-      routeDraft: { start: null },
+      routeDraft: { start: null, travelMode: 'WALKING' },
       draftMeasurePoints: [],
       measurePath: [],
     }),
@@ -54,7 +55,7 @@ const useProjectStore = create((set) => ({
         linePath: committedHistory.snapshot.linePath,
         routePaths: committedHistory.snapshot.routePaths,
         measurePath: committedHistory.snapshot.measurePath,
-        routeDraft: { start: null },
+        routeDraft: { start: null, travelMode: state.routeDraft.travelMode ?? 'WALKING' },
         history: committedHistory.history,
         historyIndex: committedHistory.historyIndex,
       }
@@ -82,7 +83,7 @@ const useProjectStore = create((set) => ({
         layers: nextLayers,
         pins: nextPins,
         activeLayerId: nextActiveLayerId,
-        routeDraft: { start: null },
+        routeDraft: { start: null, travelMode: state.routeDraft.travelMode ?? 'WALKING' },
         history: committedHistory.history,
         historyIndex: committedHistory.historyIndex,
         lastEditedAt: new Date().toISOString(),
@@ -188,7 +189,7 @@ const useProjectStore = create((set) => ({
       })
       return {
         ...committedHistory.snapshot,
-        routeDraft: { start: null },
+        routeDraft: { start: null, travelMode: state.routeDraft.travelMode ?? 'WALKING' },
         history: committedHistory.history,
         historyIndex: committedHistory.historyIndex,
         lastEditedAt: new Date().toISOString(),
@@ -245,7 +246,10 @@ const useProjectStore = create((set) => ({
         historyIndex: committedHistory.historyIndex,
       }
     }),
-  setRouteStart: (point) => set({ routeDraft: { start: point } }),
+  setRouteStart: (point) =>
+    set((state) => ({ routeDraft: { ...state.routeDraft, start: point } })),
+  setRouteTravelMode: (travelMode) =>
+    set((state) => ({ routeDraft: { ...state.routeDraft, travelMode } })),
   commitRoutePath: (path) =>
     set((state) => {
       const nextRouteData = {
@@ -265,7 +269,7 @@ const useProjectStore = create((set) => ({
       })
       return {
         ...committedHistory.snapshot,
-        routeDraft: { start: null },
+        routeDraft: { start: null, travelMode: state.routeDraft.travelMode ?? 'WALKING' },
         history: committedHistory.history,
         historyIndex: committedHistory.historyIndex,
       }
@@ -276,7 +280,7 @@ const useProjectStore = create((set) => ({
       if (!undoResult) return state
       return {
         ...undoResult.snapshot,
-        routeDraft: { start: null },
+        routeDraft: { start: null, travelMode: state.routeDraft.travelMode ?? 'WALKING' },
         draftLinePoints: [],
         draftMeasurePoints: [],
         historyIndex: undoResult.historyIndex,
@@ -288,7 +292,7 @@ const useProjectStore = create((set) => ({
       if (!redoResult) return state
       return {
         ...redoResult.snapshot,
-        routeDraft: { start: null },
+        routeDraft: { start: null, travelMode: state.routeDraft.travelMode ?? 'WALKING' },
         draftLinePoints: [],
         draftMeasurePoints: [],
         historyIndex: redoResult.historyIndex,

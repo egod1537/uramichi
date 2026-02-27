@@ -6,11 +6,23 @@ function LayerPanel() {
   const layers = useProjectStore((state) => state.layers)
   const pins = useProjectStore((state) => state.pins)
   const selectedPinIds = useProjectStore((state) => state.selectedPinIds)
+  const routes = useProjectStore((state) => state.routes)
   const removePins = useProjectStore((state) => state.removePins)
   const movePinsToLayer = useProjectStore((state) => state.movePinsToLayer)
   const [targetLayerId, setTargetLayerId] = useState('')
 
   const selectedPinCount = selectedPinIds.length
+
+
+
+  const routeSummaryList = useMemo(
+    () =>
+      routes.map((routeItem, routeIndex) => ({
+        id: routeItem.id || `route-${routeIndex + 1}`,
+        label: routeItem.summary || 'A → B',
+      })),
+    [routes],
+  )
 
   const movableLayerOptions = useMemo(() => {
     if (!selectedPinIds.length) return layers
@@ -60,6 +72,21 @@ function LayerPanel() {
             일괄 이동
           </button>
         </div>
+      </div>
+
+      <div className="mb-2 rounded-md border border-gray-200 bg-white p-2">
+        <p className="mb-1 text-xs font-medium text-gray-500">경로 목록</p>
+        {routeSummaryList.length ? (
+          <ul className="space-y-1 text-sm text-gray-700">
+            {routeSummaryList.map((routeSummaryItem) => (
+              <li key={routeSummaryItem.id} className="truncate">
+                {routeSummaryItem.label}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-xs text-gray-400">경로가 없습니다.</p>
+        )}
       </div>
 
       {layers.map((layerItem) => (

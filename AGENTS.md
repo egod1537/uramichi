@@ -274,3 +274,10 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `src/components/Map/PinPopup.jsx` 편집 UI를 로컬 draft 상태(`editDraft`)와 스토어 저장 상태(`updatePin`)로 분리해 입력 중 값과 저장 반영 경계를 명확히 정리함.
 - 편집 항목(이름 인라인, 메모, 카테고리, 태그 추가/삭제, 체류시간, 예상비용)을 모두 `updatePin(id, patch)` 호출로 즉시 반영하도록 연결함.
 - 삭제 버튼 클릭 시 `window.confirm` 대신 팝업 내부 확인 모달을 표시하고, 확인 시 `removePin(id)`, 취소 시 기존 상태 유지 흐름으로 변경함.
+
+[codex] 2026-02-27 경로 기능 구현 메모
+- `src/components/Map/Map.jsx`에 addRoute 2클릭(출발/도착) 플로우를 유지한 상태에서 이동수단 선택 UI(도보/대중교통/차량)를 추가함.
+- `DirectionsService` 응답에서 `overview_path`, 거리/시간 텍스트·값, 노선명(대중교통 step 우선)을 추출해 route 데이터로 저장하도록 연결함.
+- `src/utils/DirectionsCache.js`를 추가해 동일 start/end/travelMode 조합은 캐시를 재사용해 재요청을 방지함.
+- `src/stores/useProjectStore.js`의 `routeDraft`를 `{ start, travelMode }` 구조로 확장하고 `setRouteTravelMode` 액션을 추가함.
+- `src/components/Sidebar/LayerPanel.jsx`에 경로 목록 섹션을 추가해 기본 라벨을 `A → B` 형식으로 노출함.
