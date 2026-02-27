@@ -28,6 +28,10 @@
 - `src/components/Map/layers/`에 `PinLayer.jsx`, `LineLayer.jsx`, `RouteLayer.jsx`, `MeasureLayer.jsx`를 추가해 지도 오브젝트 렌더 블록을 레이어 단위로 분리함.
 - `src/components/Map/MapOverlays.jsx`를 추가해 하단 핀 아이콘 필터 바와 상단 경로 이동수단 바 렌더 책임을 분리함.
 - `src/components/Map/Map.jsx`는 `GoogleMap` 컨테이너와 공통 이벤트 연결 유지 + 레이어/오버레이 조합만 담당하도록 정리함.
+[codex] 2026-02-27 POI 상세/핀 팝업 단일 표시 보장 메모
+- `src/components/Map/Map.jsx`에서 POI(`event.placeId`) 클릭 시 기존 선택 핀이 있으면 `selectPin(null)` + `clearPinSelection()`을 먼저 실행해 PinPopup을 닫고 POI 상세만 열리도록 정리함.
+- 핀 클릭 핸들러에서 `selectedPoiDetail`이 열려 있으면 `clearPoiDetail()`을 먼저 호출하도록 추가해 핀 팝업 오픈 시 POI 상세가 함께 남지 않도록 수정함.
+- `PinLayer` 전달 props에서 `selectedPoiDetail` 존재 시 `selectedPin`을 `null`로 전달해 렌더 단계에서도 두 오버레이가 동시에 나타나지 않게 한 번 더 방어함.
 [codex] 2026-02-27 선 도구 우클릭 종료 보강 메모
 - `src/components/Map/Map.jsx`에 지도 DOM(`map.getDiv()`)의 `contextmenu` 이벤트 리스너를 추가해, 우클릭 시 GoogleMap `onRightClick`이 누락되는 경우에도 `triggerMeasureComplete()`가 항상 호출되도록 보강함.
 - 같은 핸들러에서 기본 컨텍스트 메뉴를 막고 `shouldIgnoreNextMapClickRef`를 함께 설정해, 우클릭 직후 후속 클릭 이벤트로 드래프트 점이 다시 찍히는 부작용을 방지함.

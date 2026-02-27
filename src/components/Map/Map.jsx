@@ -256,6 +256,10 @@ function Map() {
         const latitudeFromPoi = event.latLng?.lat()
         const longitudeFromPoi = event.latLng?.lng()
         if (latitudeFromPoi === undefined || longitudeFromPoi === undefined) return
+        if (selectedPinId) {
+          selectPin(null)
+          clearPinSelection()
+        }
         requestPoiDetail(event.placeId, { lat: latitudeFromPoi, lng: longitudeFromPoi })
         return
       }
@@ -270,11 +274,14 @@ function Map() {
       modeHandler(modeEventContext)
     },
     [
+      clearPinSelection,
       createModeEventContext,
       currentMode,
       mapClickModeHandlerMap,
       requestPoiDetail,
+      selectPin,
       selectedPoiDetail,
+      selectedPinId,
       isPinClickInProgress,
       clearPoiDetail,
     ],
@@ -323,6 +330,9 @@ function Map() {
   const handlePinClick = useCallback(
     (pinId, event) => {
       setIsPinClickInProgress(true)
+      if (selectedPoiDetail) {
+        clearPoiDetail()
+      }
 
       if (currentMode !== TOOL_MODES.SELECT) {
         selectPin(pinId)
@@ -336,7 +346,7 @@ function Map() {
       }
       selectPin(pinId)
     },
-    [currentMode, selectLine, selectPin, togglePinInSelection, setIsPinClickInProgress],
+    [clearPoiDetail, currentMode, selectLine, selectPin, selectedPoiDetail, togglePinInSelection, setIsPinClickInProgress],
   )
 
   const handleLineClick = useCallback(
@@ -460,7 +470,7 @@ function Map() {
       >
         <PinLayer
           pins={visiblePins}
-          selectedPin={selectedPin}
+          selectedPin={selectedPoiDetail ? null : selectedPin}
           selectedPinId={selectedPinId}
           currentMode={currentMode}
           draggingPinId={draggingPinId}
