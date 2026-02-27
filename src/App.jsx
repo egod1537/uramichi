@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { LoadScript } from '@react-google-maps/api'
 import Map from './components/Map/Map'
 import Sidebar from './components/Sidebar/Sidebar'
@@ -8,6 +8,7 @@ import ChatPanel from './components/Chat/ChatPanel'
 import Testbed from './pages/Testbed'
 import { getRoute } from './route'
 import useProjectStore from './stores/useProjectStore'
+import { initializeLocalization } from './utils/L'
 
 const libraries = ['places', 'geometry']
 
@@ -17,6 +18,10 @@ function App() {
   const historyIndex = useProjectStore((state) => state.historyIndex)
   const historyLength = useProjectStore((state) => state.history.length)
   const [chatPanelOpen, setChatPanelOpen] = useState(false)
+
+  useEffect(() => {
+    initializeLocalization()
+  }, [])
 
   if (currentRoute === 'testbed') {
     return (
