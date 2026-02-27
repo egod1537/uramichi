@@ -91,3 +91,6 @@
 [codex] 2026-02-27 지도 시간 필터 슬라이더 버그 수정 메모
 - `src/components/Map/MapOverlays.jsx`의 양방향 슬라이더 입력 레이어에 z-index/clipPath를 분리 적용해, 좌측 핸들이 우측 핸들 레이어에 가려져 드래그되지 않던 문제를 수정함.
 - 좌측 입력은 왼쪽 절반, 우측 입력은 오른쪽 절반 상호작용 영역만 받도록 제한해 각 핸들 조작 충돌을 줄임.
+[codex] 2026-02-27 선그리기 우클릭 종료 중복 호출 잠금 메모
+- `Map.jsx`에 `rightClickCompleteLockRef`를 추가해 `onRightClick`와 DOM `contextmenu`가 같은 우클릭에서 동시에 들어와도 완료 로직이 1회만 실행되도록 잠금 처리함.
+- 우클릭 직후 클릭 무시 플래그(`shouldIgnoreNextMapClickRef`)와 함께 동작해 종료 직후 드래프트가 다시 남는 잔상 케이스를 줄이는 목적임.
