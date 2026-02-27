@@ -1,19 +1,21 @@
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { GoogleMap, Marker, OverlayView, Polyline } from '@react-google-maps/api'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { GoogleMap, OverlayView, Polyline } from '@react-google-maps/api'
 import TOOL_MODES from '../../utils/toolModes'
 import { COLOR_PRESETS } from '../../utils/constants'
 import useProjectStore from '../../stores/useProjectStore'
 import PinMarker from './PinMarker'
 import PinPopup from './PinPopup'
-import { handleLineDraftComplete, handleLineMapClick, handleLineMapMouseMove, handleLineMeasurePointDrag } from './controllers/lineController'
+import { handleLineMapClick, handleLineMapMouseMove } from './controllers/lineController'
 import { handleMarkerMouseDown, handleMarkerMouseUp } from './controllers/markerController'
 import { handleMeasureMapClick } from './controllers/measureController'
 import { handleRouteMapClick } from './controllers/routeController'
 import { handleSelectMapClick } from './controllers/selectController'
 import { syncDraftByMode } from './controllers/syncDraftByMode'
-import { formatDistanceLabel, getMidpoint, getPathDistanceInMeters } from '../../utils/geo'
 import { ICON_FILTER_OPTIONS } from '../../utils/constants'
 import RouteService from '../../utils/RouteService'
+import MeasureLayer from './measure/MeasureLayer'
+import MeasureLabels from './measure/MeasureLabels'
+import useMeasureInteraction from './measure/useMeasureInteraction'
 
 const containerStyle = { width: '100%', height: '100%' }
 const defaultCenter = { lat: 35.6812, lng: 139.7671 }
@@ -29,7 +31,6 @@ const mapOptions = {
   clickableIcons: true,
 }
 
-const measureOverlayPane = OverlayView.OVERLAY_MOUSE_TARGET
 const lineColorSequence = [COLOR_PRESETS.primaryBlue, COLOR_PRESETS.routeGreen, COLOR_PRESETS.measureOrange, '#8b5cf6']
 const routeTravelModeList = [
   { value: 'WALKING', label: '도보' },
@@ -38,35 +39,7 @@ const routeTravelModeList = [
 ]
 
 const createGoogleMapsPlaceUrl = (placeId) => `https://www.google.com/maps/search/?api=1&query=Google&query_place_id=${placeId}`
-const MEASURE_LINE_WIDTH = 6
-const MEASURE_VERTEX_PIXEL_SIZE = 12
 const ADD_MARKER_DRAG_THRESHOLD_PX = 6
-
-const createSegmentLabelDataList = (measurePointPath) =>
-  measurePointPath.slice(1).map((currentPoint, pointIndex) => {
-    const previousPoint = measurePointPath[pointIndex]
-    const segmentDistanceInMeters = getPathDistanceInMeters([previousPoint, currentPoint])
-    return {
-      id: `measure-segment-${pointIndex + 1}`,
-      position: getMidpoint(previousPoint, currentPoint),
-      label: formatDistanceLabel(segmentDistanceInMeters),
-    }
-  })
-
-const createTotalLabelData = (measurePointPath) => {
-  const totalDistanceInMeters = getPathDistanceInMeters(measurePointPath)
-  if (!totalDistanceInMeters) return null
-  const terminalPoint = measurePointPath[measurePointPath.length - 1]
-  return { id: 'measure-total', position: terminalPoint, label: `총 ${formatDistanceLabel(totalDistanceInMeters)}` }
-}
-
-const createMeasurementEntity = (measurePointPath, activeLayerId, measurementCount) => ({
-  id: `measure-${Date.now()}-${measurementCount + 1}`,
-  layerId: activeLayerId,
-  points: measurePointPath,
-  color: COLOR_PRESETS.measureOrange,
-  width: MEASURE_LINE_WIDTH,
-})
 
 const getNextLineColor = (currentColor) => {
   const currentColorIndex = lineColorSequence.indexOf(currentColor)
@@ -199,23 +172,34 @@ function Map() {
     syncDraftByMode({ currentMode, actions: { cancelDraftMeasure, cancelDraftLine } })
   }, [cancelDraftLine, cancelDraftMeasure, currentMode])
 
-  const measureSegmentLabelDataList = useMemo(() => createSegmentLabelDataList(measurePath), [measurePath])
-  const measureTotalLabelData = useMemo(() => createTotalLabelData(measurePath), [measurePath])
-  const previewMeasurePath = useMemo(() => {
-    if (currentMode !== TOOL_MODES.DRAW_LINE) return []
-    if (!measurePath.length || !hoverMeasurePoint) return []
-    return [...measurePath, hoverMeasurePoint]
-  }, [currentMode, hoverMeasurePoint, measurePath])
+  const {
+    measureSegmentLabelDataList,
+    measureTotalLabelData,
+    previewMeasurePath,
+    completeMeasureInteraction,
+    handleMeasurePointDrag,
+    handleMeasurePointDragStart,
+    handleMeasurePointDragEnd,
+    isDraggingMeasurePoint,
+  } = useMeasureInteraction({
+    currentMode,
+    measurePath,
+    hoverMeasurePoint,
+    draggingMeasurePointIndex,
+    activeLayerId,
+    layers,
+    measurements,
+    setHoverMeasurePoint,
+    cancelDraftMeasure,
+    addMeasurement,
+    setMeasurePath,
+    setDraggingMeasurePointIndex,
+  })
 
-  const completeDraftMeasure = useCallback(
-    () =>
-      handleLineDraftComplete({
-        currentMode,
-        state: { measurePath, activeLayerId, layers, measurements, createMeasurementEntity },
-        actions: { setHoverMeasurePoint, cancelDraftMeasure, addMeasurement },
-      }),
-    [activeLayerId, addMeasurement, cancelDraftMeasure, currentMode, layers, measurePath, measurements, setHoverMeasurePoint],
-  )
+  const triggerMeasureComplete = useCallback(() => {
+    if (currentMode !== TOOL_MODES.DRAW_LINE) return
+    completeMeasureInteraction()
+  }, [completeMeasureInteraction, currentMode])
 
   const requestRoute = useCallback(
     async (startPoint, endPoint, travelMode) => {
@@ -253,12 +237,8 @@ function Map() {
           isPinClickInProgress,
           routeDraft,
           measurePath,
-          draggingMeasurePointIndex,
-          activeLayerId,
-          layers,
-          measurements,
+          draggingMeasurePointIndex: isDraggingMeasurePoint ? 0 : null,
           addMarkerDragThresholdPx: ADD_MARKER_DRAG_THRESHOLD_PX,
-          createMeasurementEntity,
         },
         actions: {
           setHoverMeasurePoint,
@@ -270,8 +250,6 @@ function Map() {
           clearPinSelection,
           setIsPinClickInProgress,
           addMarker,
-          cancelDraftMeasure,
-          addMeasurement,
         },
         refs: {
           addMarkerMouseDownPositionRef,
@@ -279,18 +257,13 @@ function Map() {
       }
     },
     [
-      activeLayerId,
       addMarker,
-      addMeasurement,
       appendMeasurePoint,
-      cancelDraftMeasure,
       clearPinSelection,
       currentMode,
-      draggingMeasurePointIndex,
+      isDraggingMeasurePoint,
       isPinClickInProgress,
-      layers,
       measurePath,
-      measurements,
       requestRoute,
       routeDraft,
       selectLine,
@@ -361,17 +334,6 @@ function Map() {
     [createModeEventContext],
   )
 
-  const handleMeasurePointDrag = useCallback(
-    (pointIndex, event) => {
-      handleLineMeasurePointDrag({
-        ...createModeEventContext(event),
-        pointIndex,
-        actions: { setMeasurePath },
-      })
-    },
-    [createModeEventContext, setMeasurePath],
-  )
-
   const handlePinClick = useCallback(
     (pinId, event) => {
       setIsPinClickInProgress(true)
@@ -438,11 +400,8 @@ function Map() {
   )
 
   const handleMapDoubleClick = useCallback(() => {
-    if (currentMode === TOOL_MODES.DRAW_LINE) {
-      setHoverMeasurePoint(null)
-      completeDraftMeasure()
-    }
-  }, [completeDraftMeasure, currentMode])
+    triggerMeasureComplete()
+  }, [triggerMeasureComplete])
 
   useEffect(() => {
     const handleDeleteKeyDown = (event) => {
@@ -456,11 +415,8 @@ function Map() {
       if (isInputControlTarget && event.key !== 'Escape') return
 
       if (event.key === 'Escape') {
-        if (currentMode === TOOL_MODES.DRAW_LINE) {
-          setHoverMeasurePoint(null)
-          completeDraftMeasure()
-          return
-        }
+        triggerMeasureComplete()
+        return
       }
 
       if (currentMode !== TOOL_MODES.SELECT) return
@@ -486,7 +442,7 @@ function Map() {
     window.addEventListener('keydown', handleDeleteKeyDown)
     return () => window.removeEventListener('keydown', handleDeleteKeyDown)
   }, [
-    completeDraftMeasure,
+    triggerMeasureComplete,
     currentMode,
     removeLine,
     removePins,
@@ -514,12 +470,7 @@ function Map() {
         onMouseMove={handleMapMouseMove}
         onMouseDown={handleMapMouseDown}
         onDblClick={handleMapDoubleClick}
-        onRightClick={() => {
-          if (currentMode === TOOL_MODES.DRAW_LINE) {
-            setHoverMeasurePoint(null)
-            completeDraftMeasure()
-          }
-        }}
+        onRightClick={triggerMeasureComplete}
         options={{ ...mapOptions, disableDoubleClickZoom: currentMode === TOOL_MODES.DRAW_LINE }}
       >
         {visiblePins.map((pinItem, pinIndex) => (
@@ -607,97 +558,20 @@ function Map() {
           <Polyline key={`route-${routeIndex}`} path={routePath} options={{ strokeColor: COLOR_PRESETS.routeGreen, strokeWeight: 4, clickable: false }} />
         ))}
 
-        {visibleMeasurements.map((measurementItem) => (
-          <Fragment key={measurementItem.id}>
-            <Polyline
-              path={measurementItem.points}
-              options={{
-                strokeColor: measurementItem.color || COLOR_PRESETS.measureOrange,
-                strokeWeight: measurementItem.width || MEASURE_LINE_WIDTH,
-                clickable: false,
-                strokeOpacity: 0.95,
-                icons: [{ icon: { path: 'M 0,-1 0,1', strokeOpacity: 1, scale: 5 }, offset: '0', repeat: '20px' }],
-              }}
-            />
-            {measurementItem.points.map((measurementPoint, measurementPointIndex) => (
-              <Marker
-                key={`${measurementItem.id}-point-${measurementPointIndex}`}
-                position={measurementPoint}
-                icon={{
-                  path: window.google.maps.SymbolPath.CIRCLE,
-                  scale: MEASURE_VERTEX_PIXEL_SIZE / 2,
-                  fillColor: '#ffffff',
-                  fillOpacity: 1,
-                  strokeColor: '#ea580c',
-                  strokeWeight: Math.max(2, MEASURE_LINE_WIDTH - 2),
-                }}
-                clickable={false}
-              />
-            ))}
-          </Fragment>
-        ))}
+        <MeasureLayer
+          currentMode={currentMode}
+          visibleMeasurements={visibleMeasurements}
+          measurePath={measurePath}
+          previewMeasurePath={previewMeasurePath}
+          onMeasurePointDragStart={handleMeasurePointDragStart}
+          onMeasurePointDrag={handleMeasurePointDrag}
+          onMeasurePointDragEnd={handleMeasurePointDragEnd}
+        />
 
-        {measurePath.length > 1 && (
-          <Polyline
-            path={measurePath}
-            options={{
-              strokeColor: COLOR_PRESETS.measureOrange,
-              strokeWeight: MEASURE_LINE_WIDTH,
-              clickable: false,
-              icons: [{ icon: { path: 'M 0,-1 0,1', strokeOpacity: 1, scale: 4 }, offset: '0', repeat: '20px' }],
-            }}
-          />
-        )}
-
-        {previewMeasurePath.length > 1 && (
-          <Polyline
-            path={previewMeasurePath}
-            options={{
-              strokeColor: COLOR_PRESETS.measureOrange,
-              strokeWeight: Math.max(2, MEASURE_LINE_WIDTH - 2),
-              clickable: false,
-              strokeOpacity: 0.45,
-            }}
-          />
-        )}
-
-        {measurePath.map((measurePointItem, measurePointIndex) => (
-          <Marker
-            key={`measure-point-${measurePointIndex}`}
-            position={measurePointItem}
-            icon={{
-              path: window.google.maps.SymbolPath.CIRCLE,
-              scale: MEASURE_VERTEX_PIXEL_SIZE / 2,
-              fillColor: '#ffffff',
-              fillOpacity: 1,
-              strokeColor: '#ea580c',
-              strokeWeight: Math.max(2, MEASURE_LINE_WIDTH - 2),
-            }}
-            draggable={currentMode === TOOL_MODES.DRAW_LINE}
-            onDragStart={() => setDraggingMeasurePointIndex(measurePointIndex)}
-            onDrag={(event) => handleMeasurePointDrag(measurePointIndex, event)}
-            onDragEnd={(event) => {
-              handleMeasurePointDrag(measurePointIndex, event)
-              setDraggingMeasurePointIndex(null)
-            }}
-          />
-        ))}
-
-        {measureSegmentLabelDataList.map((segmentLabelData) => (
-          <OverlayView key={segmentLabelData.id} position={segmentLabelData.position} mapPaneName={measureOverlayPane}>
-            <div className="-translate-x-1/2 -translate-y-[calc(100%+8px)] whitespace-nowrap rounded bg-white/95 px-2 py-1 text-xs font-medium leading-none text-gray-700 shadow">
-              {segmentLabelData.label}
-            </div>
-          </OverlayView>
-        ))}
-
-        {measureTotalLabelData ? (
-          <OverlayView key={measureTotalLabelData.id} position={measureTotalLabelData.position} mapPaneName={measureOverlayPane}>
-            <div className="-translate-x-1/2 -translate-y-[calc(100%+16px)] whitespace-nowrap rounded bg-[#f97316] px-2 py-1 text-xs font-semibold leading-none text-white shadow">
-              {measureTotalLabelData.label}
-            </div>
-          </OverlayView>
-        ) : null}
+        <MeasureLabels
+          measureSegmentLabelDataList={measureSegmentLabelDataList}
+          measureTotalLabelData={measureTotalLabelData}
+        />
       </GoogleMap>
 
 
