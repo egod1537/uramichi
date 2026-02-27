@@ -108,3 +108,7 @@
 - `controllers/lineController.js`의 선 종료 커밋을 `addMeasurement`에서 `addLine`으로 교체해 draw_line 결과가 `lines` 엔티티로 저장되도록 정리함.
 - `Map.jsx`에서 `useLineInteraction` 전달 액션도 `addLine`으로 연결해 컨트롤러-훅-스토어 액션 경로를 일치시킴.
 - Select 모드 선 선택/삭제/색상변경 경로(`selectedLineId`, `removeLine`, `updateLine`)는 그대로 유지되어 신규 선에도 동일하게 적용됨을 빌드/코드 경로로 확인함.
+[codex] 2026-02-27 경로 추가 완료 팝업 레이아웃 메모
+- `RouteSummaryPopup.jsx`를 추가해 경로 추가 도구에서 두 점 클릭 후 경로가 생성되면, 좌측 상단에 소형 요약 팝업(이동수단/소요시간/거리/요약)을 표시하도록 구성함.
+- `Map.jsx`에서 최근 생성 경로를 `recentRouteInfo` 로컬 상태로 보관하고, 경로 생성 성공 시 팝업 데이터를 갱신하며 경로 모드 진입 시 초기화하도록 연결함.
+- `MapOverlays.jsx`에 경로 요약 팝업 렌더 슬롯을 추가해 기존 경로 이동수단 UI와 함께 오버레이 레이어로 표시하고, 닫기 버튼으로 즉시 숨길 수 있게 함.
