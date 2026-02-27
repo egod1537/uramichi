@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from 'react'
-import { TOOL_MODES, useToolbarStore } from '../../stores/toolbarStore'
 import Search from './Search'
 import ToolButton from './ToolButton'
+import useMapStore, { TOOL_MODES } from '../../stores/useMapStore'
 
 const toolbarButtons = [
   { key: 'undo', label: 'Undo', icon: '↩' },
@@ -15,15 +15,15 @@ const toolbarButtons = [
 ]
 
 export default function Toolbar() {
-  const mode = useToolbarStore((state) => state.mode)
-  const historyIndex = useToolbarStore((state) => state.historyIndex)
-  const historyLength = useToolbarStore((state) => state.history.length)
-  const isShortcutModalOpen = useToolbarStore((state) => state.isShortcutModalOpen)
-  const setMode = useToolbarStore((state) => state.setMode)
-  const resetToSelectMode = useToolbarStore((state) => state.resetToSelectMode)
-  const undo = useToolbarStore((state) => state.undo)
-  const redo = useToolbarStore((state) => state.redo)
-  const setShortcutModalOpen = useToolbarStore((state) => state.setShortcutModalOpen)
+  const currentMode = useMapStore((state) => state.currentMode)
+  const historyIndex = useMapStore((state) => state.historyIndex)
+  const historyLength = useMapStore((state) => state.history.length)
+  const isShortcutModalOpen = useMapStore((state) => state.isShortcutModalOpen)
+  const setMode = useMapStore((state) => state.setMode)
+  const resetToSelectMode = useMapStore((state) => state.resetToSelectMode)
+  const undo = useMapStore((state) => state.undo)
+  const redo = useMapStore((state) => state.redo)
+  const setShortcutModalOpen = useMapStore((state) => state.setShortcutModalOpen)
 
   const buttonDisabledState = useMemo(
     () => ({
@@ -89,22 +89,22 @@ export default function Toolbar() {
 
   return (
     <>
-      <div className="absolute top-3 left-1/2 z-20 w-[min(96vw,580px)] -translate-x-1/2">
+      <div className="absolute top-3 left-1/2 z-20 w-[min(95vw,580px)] -translate-x-1/2">
         <div className="rounded-md bg-white shadow-[0_2px_8px_rgba(60,64,67,0.3)]">
-          <div className="flex items-center gap-2 border-b border-gray-200 p-2">
+          <div className="flex items-center gap-2 border-b border-gray-200 p-1.5">
             <Search />
             <button
               type="button"
-              className="flex h-9 w-9 items-center justify-center rounded-sm bg-blue-500 text-white hover:bg-blue-600"
+              className="flex h-9 w-10 items-center justify-center rounded-sm bg-[#4285f4] text-white hover:bg-[#3367d6]"
               aria-label="검색"
             >
               🔍
             </button>
           </div>
-          <div className="flex items-center gap-1 p-1.5">
+          <div className="flex items-center gap-1 p-1">
             {toolbarButtons.map((button) => {
               const isModeButton = Object.values(TOOL_MODES).includes(button.key)
-              const isActive = isModeButton && mode === button.key
+              const isActive = isModeButton && currentMode === button.key
               const isDisabled = buttonDisabledState[button.key]
 
               return (
