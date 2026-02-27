@@ -41,3 +41,7 @@
 [codex] 2026-02-27 Map 상수 config 분리 메모
 - `src/components/Map/config.js`를 추가해 지도 컨테이너 스타일, 기본 중심 좌표, 지도 옵션, 핀 추가 드래그 임계값 상수를 모아 관리하도록 정리함.
 - `src/components/Map/Map.jsx`는 기존 파일 내부 상수 선언을 제거하고 `config.js`에서 import해 동일 값을 사용하도록 연결함.
+[codex] 2026-02-27 선 도구 종료/도형 저장 규칙 메모
+- `Map.jsx`에서 선 그리기 완료 트리거를 우클릭(`onRightClick` + DOM `contextmenu`)으로만 유지하고, ESC/더블클릭으로 종료되지 않도록 정리함.
+- `measure/useMeasureInteraction.js`에서 드래프트 종료 시 시작점-끝점 거리가 임계값 이하인 경우 `shapeType: "polygon"`으로 판정하고, 폐곡선이 닫히도록 첫 점을 마지막에 추가해 저장함.
+- `measure/MeasureLayer.jsx`는 `shapeType === "polygon"`일 때 `Polygon`으로 렌더링해 반투명 내부 채움(`fillOpacity`)이 보이도록 처리함.

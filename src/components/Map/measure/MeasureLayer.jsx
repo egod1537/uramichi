@@ -1,5 +1,5 @@
 import { Fragment } from 'react'
-import { Marker, Polyline } from '@react-google-maps/api'
+import { Marker, Polygon, Polyline } from '@react-google-maps/api'
 import TOOL_MODES from '../../../utils/toolModes'
 import { COLOR_PRESETS } from '../../../utils/constants'
 import { MEASURE_LINE_WIDTH } from './useMeasureInteraction'
@@ -19,16 +19,30 @@ function MeasureLayer({
     <>
       {visibleMeasurements.map((measurementItem) => (
         <Fragment key={measurementItem.id}>
-          <Polyline
-            path={measurementItem.points}
-            options={{
-              strokeColor: measurementItem.color || COLOR_PRESETS.measureOrange,
-              strokeWeight: measurementItem.width || MEASURE_LINE_WIDTH,
-              clickable: false,
-              strokeOpacity: 0.95,
-              icons: [{ icon: { path: 'M 0,-1 0,1', strokeOpacity: 1, scale: 5 }, offset: '0', repeat: '20px' }],
-            }}
-          />
+          {measurementItem.shapeType === 'polygon' ? (
+            <Polygon
+              paths={measurementItem.points}
+              options={{
+                strokeColor: measurementItem.color || COLOR_PRESETS.measureOrange,
+                strokeWeight: measurementItem.width || MEASURE_LINE_WIDTH,
+                strokeOpacity: 0.95,
+                fillColor: measurementItem.color || COLOR_PRESETS.measureOrange,
+                fillOpacity: 0.28,
+                clickable: false,
+              }}
+            />
+          ) : (
+            <Polyline
+              path={measurementItem.points}
+              options={{
+                strokeColor: measurementItem.color || COLOR_PRESETS.measureOrange,
+                strokeWeight: measurementItem.width || MEASURE_LINE_WIDTH,
+                clickable: false,
+                strokeOpacity: 0.95,
+                icons: [{ icon: { path: 'M 0,-1 0,1', strokeOpacity: 1, scale: 5 }, offset: '0', repeat: '20px' }],
+              }}
+            />
+          )}
           {measurementItem.points.map((measurementPoint, measurementPointIndex) => (
             <Marker
               key={`${measurementItem.id}-point-${measurementPointIndex}`}
