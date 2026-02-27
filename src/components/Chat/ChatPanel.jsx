@@ -1,4 +1,5 @@
 import React from 'react'
+import { createPortal } from 'react-dom'
 import ChatMessage from './ChatMessage'
 
 class ChatPanel extends React.Component {
@@ -41,7 +42,7 @@ class ChatPanel extends React.Component {
   }
 
   getPanelClassName() {
-    return `absolute right-0 top-0 z-50 flex h-full w-[380px] flex-col border-l border-gray-200 bg-white shadow-2xl transition-transform duration-300 ${
+    return `fixed right-0 top-0 z-[70] flex h-screen w-[380px] flex-col border-l border-gray-200 bg-white shadow-2xl transition-transform duration-300 ${
       this.props.isOpen ? 'translate-x-0' : 'translate-x-full'
     }`
   }
@@ -130,8 +131,7 @@ class ChatPanel extends React.Component {
 
   render() {
     const { isOpen, onClose } = this.props
-
-    return (
+    const panelElement = (
       <section className={this.getPanelClassName()} aria-hidden={!isOpen}>
         <header className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
           <h2 className="text-lg font-semibold text-gray-900">裏道 AI</h2>
@@ -173,6 +173,8 @@ class ChatPanel extends React.Component {
         </div>
       </section>
     )
+
+    return createPortal(panelElement, document.body)
   }
 }
 
