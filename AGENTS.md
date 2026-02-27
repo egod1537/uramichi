@@ -391,6 +391,9 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `src/components/Sidebar/LayerPanel.jsx`에 레이어 패널 핀 아이콘 필터 UI를 추가하고, `LayerRow`에는 필터링된 핀 목록만 내려주도록 연결함.
 - `src/components/Map/Map.jsx` 우측 하단에 지도용 핀 아이콘 필터 UI를 추가해 지도에서도 동일한 필터를 즉시 토글 가능하게 함.
 - `src/components/Map/PinMarker.jsx`에서 핀 아이콘 프리셋(`TRAVEL_PIN_ICON_PRESETS`)을 기준으로 배경/링 색상을 달리 적용하고, `src/utils/constants.js`에 아이콘별 스타일 프리셋을 추가함.
+[codex] 2026-02-27 핀 아이콘 필터 축소 메모
+- `src/utils/constants.js`의 `TRAVEL_PIN_ICON_PRESETS`를 사용자 요청 기준 5개(대중교통/식당/관광지/숙소/포토스팟)만 남기고 나머지 옵션을 제거함.
+- 같은 파일의 `PIN_ICON_STYLE_PRESETS`도 동일한 5개 키만 유지해 필터/아이콘 선택 목록과 스타일 프리셋 집합이 일치하도록 정리함.
 
 [codex] 2026-02-27 .env.local 키 복구 메모
 - `.env.local`에 `VITE_GOOGLE_MAPS_API_KEY`를 다시 추가해 `src/App.jsx`에서 참조하는 Google Maps 키가 로컬 환경에서 복구되도록 반영함.
