@@ -205,6 +205,10 @@ function LayerRow({
               tabIndex={0}
               onFocus={() => onFocusRenameTarget({ type: 'layer', id: layerRenameTargetId, layerId: layer.id })}
               onClick={() => onFocusRenameTarget({ type: 'layer', id: layerRenameTargetId, layerId: layer.id })}
+              onDoubleClick={(event) => {
+                event.stopPropagation()
+                onStartRename({ type: 'layer', id: layerRenameTargetId, layerId: layer.id })
+              }}
             >
               {layer.name}
             </span>
@@ -357,6 +361,10 @@ function LayerRow({
                         onClick={(event) => {
                           event.stopPropagation()
                           onFocusRenameTarget({ type: 'pin', id: `pin:${pinItem.id}`, layerId: layer.id, pinId: pinItem.id })
+                        }}
+                        onDoubleClick={(event) => {
+                          event.stopPropagation()
+                          onStartRename({ type: 'pin', id: `pin:${pinItem.id}`, layerId: layer.id, pinId: pinItem.id })
                         }}
                       >
                         {pinItem.name}
