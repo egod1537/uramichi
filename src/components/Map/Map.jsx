@@ -5,6 +5,12 @@ import { COLOR_PRESETS } from '../../utils/constants'
 import useProjectStore, { createRouteId } from '../../stores/useProjectStore'
 import PinMarker from './PinMarker'
 import PinPopup from './PinPopup'
+import { handleLineDraftComplete, handleLineMapClick, handleLineMapMouseMove, handleLineMeasurePointDrag } from './controllers/lineController'
+import { handleMarkerMouseDown, handleMarkerMouseUp } from './controllers/markerController'
+import { handleMeasureMapClick } from './controllers/measureController'
+import { handleRouteMapClick } from './controllers/routeController'
+import { handleSelectMapClick } from './controllers/selectController'
+import { syncDraftByMode } from './controllers/syncDraftByMode'
 import { formatDistanceLabel, getMidpoint, getPathDistanceInMeters } from '../../utils/geo'
 import directionsCache from '../../utils/DirectionsCache'
 import { ICON_FILTER_OPTIONS } from '../../utils/constants'
@@ -247,12 +253,7 @@ function Map() {
   )
 
   useEffect(() => {
-    if (currentMode !== TOOL_MODES.DRAW_LINE) {
-      cancelDraftMeasure()
-    }
-    if (currentMode !== TOOL_MODES.DRAW_LINE) {
-      cancelDraftLine()
-    }
+    syncDraftByMode({ currentMode, actions: { cancelDraftMeasure, cancelDraftLine } })
   }, [cancelDraftLine, cancelDraftMeasure, currentMode])
 
   const measureSegmentLabelDataList = useMemo(() => createSegmentLabelDataList(measurePath), [measurePath])
@@ -263,20 +264,15 @@ function Map() {
     return [...measurePath, hoverMeasurePoint]
   }, [currentMode, hoverMeasurePoint, measurePath])
 
-  const completeDraftMeasure = useCallback(() => {
-    if (currentMode !== TOOL_MODES.DRAW_LINE) return
-    if (measurePath.length < 2) {
-      cancelDraftMeasure()
-      return
-    }
-    const targetLayerId = activeLayerId || layers[0]?.id || null
-    if (!targetLayerId) {
-      cancelDraftMeasure()
-      return
-    }
-    addMeasurement(createMeasurementEntity(measurePath, targetLayerId, measurements.length))
-    cancelDraftMeasure()
-  }, [activeLayerId, addMeasurement, cancelDraftMeasure, currentMode, layers, measurePath, measurements.length])
+  const completeDraftMeasure = useCallback(
+    () =>
+      handleLineDraftComplete({
+        currentMode,
+        state: { measurePath, activeLayerId, layers, measurements, createMeasurementEntity },
+        actions: { setHoverMeasurePoint, cancelDraftMeasure, addMeasurement },
+      }),
+    [activeLayerId, addMeasurement, cancelDraftMeasure, currentMode, layers, measurePath, measurements, setHoverMeasurePoint],
+  )
 
   const requestRoute = useCallback(
     (startPoint, endPoint, travelMode) => {
@@ -316,6 +312,78 @@ function Map() {
     [activeLayerId, addRoute, layers, routes, setRouteStart],
   )
 
+  const createModeEventContext = useCallback(
+    (event) => {
+      const latitude = event?.latLng?.lat()
+      const longitude = event?.latLng?.lng()
+      const clickedPoint = latitude === undefined || longitude === undefined ? null : { lat: latitude, lng: longitude }
+
+      return {
+        event,
+        clickedPoint,
+        currentMode,
+        state: {
+          clickedPoint,
+          isPinClickInProgress,
+          routeDraft,
+          measurePath,
+          draggingMeasurePointIndex,
+          activeLayerId,
+          layers,
+          measurements,
+          addMarkerDragThresholdPx: ADD_MARKER_DRAG_THRESHOLD_PX,
+          createMeasurementEntity,
+        },
+        actions: {
+          setHoverMeasurePoint,
+          appendMeasurePoint,
+          setRouteStart,
+          requestRoute,
+          selectPin,
+          selectLine,
+          clearPinSelection,
+          setIsPinClickInProgress,
+          addMarker,
+          cancelDraftMeasure,
+          addMeasurement,
+        },
+        refs: {
+          addMarkerMouseDownPositionRef,
+        },
+      }
+    },
+    [
+      activeLayerId,
+      addMarker,
+      addMeasurement,
+      appendMeasurePoint,
+      cancelDraftMeasure,
+      clearPinSelection,
+      currentMode,
+      draggingMeasurePointIndex,
+      isPinClickInProgress,
+      layers,
+      measurePath,
+      measurements,
+      requestRoute,
+      routeDraft,
+      selectLine,
+      selectPin,
+      setHoverMeasurePoint,
+      setRouteStart,
+    ],
+  )
+
+  const mapClickModeHandlerMap = useMemo(
+    () => ({
+      [TOOL_MODES.DRAW_LINE]: handleLineMapClick,
+      [TOOL_MODES.ADD_ROUTE]: handleRouteMapClick,
+      [TOOL_MODES.SELECT]: handleSelectMapClick,
+      [TOOL_MODES.MEASURE_DISTANCE]: handleMeasureMapClick,
+    }),
+    [],
+  )
+
   const handleMapClick = useCallback(
     (event) => {
       if (isPinClickInProgress) {
@@ -336,115 +404,46 @@ function Map() {
         setSelectedPoiDetail(null)
       }
 
-      const latitude = event.latLng?.lat()
-      const longitude = event.latLng?.lng()
-      if (latitude === undefined || longitude === undefined) return
-      const clickedPoint = { lat: latitude, lng: longitude }
-
-      if (currentMode === TOOL_MODES.DRAW_LINE) {
-        setHoverMeasurePoint(null)
-        appendMeasurePoint(clickedPoint)
-        return
-      }
-
-      if (currentMode === TOOL_MODES.ADD_ROUTE) {
-        if (!routeDraft.start) {
-          setRouteStart(clickedPoint)
-          return
-        }
-        requestRoute(routeDraft.start, clickedPoint, routeDraft.travelMode || 'WALKING')
-        setRouteStart(null)
-        return
-      }
-
-      if (currentMode === TOOL_MODES.SELECT) {
-        selectPin(null)
-        selectLine(null)
-        clearPinSelection()
-      }
+      const modeEventContext = createModeEventContext(event)
+      const modeHandler = mapClickModeHandlerMap[currentMode]
+      if (!modeHandler) return
+      modeHandler(modeEventContext)
     },
     [
-      appendMeasurePoint,
-      clearPinSelection,
+      createModeEventContext,
       currentMode,
-      requestRoute,
-      routeDraft.start,
-      routeDraft.travelMode,
+      mapClickModeHandlerMap,
       requestPoiDetail,
       selectedPoiDetail,
-      selectLine,
-      selectPin,
-      setRouteStart,
       isPinClickInProgress,
-      setHoverMeasurePoint,
       setSelectedPoiDetail,
     ],
   )
 
   const handleMapMouseDown = useCallback((event) => {
-    if (currentMode !== TOOL_MODES.ADD_MARKER) return
-    const clientX = event?.domEvent?.clientX
-    const clientY = event?.domEvent?.clientY
-    if (clientX === undefined || clientY === undefined) {
-      addMarkerMouseDownPositionRef.current = null
-      return
-    }
-    addMarkerMouseDownPositionRef.current = { clientX, clientY }
-  }, [currentMode])
+    handleMarkerMouseDown(createModeEventContext(event))
+  }, [createModeEventContext])
 
-  const handleMapMouseUp = useCallback(
-    (event) => {
-      if (currentMode !== TOOL_MODES.ADD_MARKER) return
-      const mouseDownPosition = addMarkerMouseDownPositionRef.current
-      addMarkerMouseDownPositionRef.current = null
-      const mouseUpClientX = event?.domEvent?.clientX
-      const mouseUpClientY = event?.domEvent?.clientY
-      if (mouseDownPosition && mouseUpClientX !== undefined && mouseUpClientY !== undefined) {
-        const deltaX = mouseUpClientX - mouseDownPosition.clientX
-        const deltaY = mouseUpClientY - mouseDownPosition.clientY
-        const dragDistance = Math.hypot(deltaX, deltaY)
-        if (dragDistance >= ADD_MARKER_DRAG_THRESHOLD_PX) return
-      }
-      if (isPinClickInProgress) {
-        setIsPinClickInProgress(false)
-        return
-      }
-      if (event.placeId) return
-
-      const latitude = event.latLng?.lat()
-      const longitude = event.latLng?.lng()
-      if (latitude === undefined || longitude === undefined) return
-
-      addMarker({ lat: latitude, lng: longitude })
-    },
-    [addMarker, currentMode, isPinClickInProgress],
-  )
+  const handleMapMouseUp = useCallback((event) => {
+    handleMarkerMouseUp(createModeEventContext(event))
+  }, [createModeEventContext])
 
   const handleMapMouseMove = useCallback(
     (event) => {
-      if (currentMode !== TOOL_MODES.DRAW_LINE) return
-      if (!measurePath.length) return
-      if (draggingMeasurePointIndex !== null) return
-      const latitude = event.latLng?.lat()
-      const longitude = event.latLng?.lng()
-      if (latitude === undefined || longitude === undefined) return
-      setHoverMeasurePoint({ lat: latitude, lng: longitude })
+      handleLineMapMouseMove(createModeEventContext(event))
     },
-    [currentMode, draggingMeasurePointIndex, measurePath.length],
+    [createModeEventContext],
   )
 
   const handleMeasurePointDrag = useCallback(
     (pointIndex, event) => {
-      if (currentMode !== TOOL_MODES.DRAW_LINE) return
-      const latitude = event.latLng?.lat()
-      const longitude = event.latLng?.lng()
-      if (latitude === undefined || longitude === undefined) return
-      const nextMeasurePointList = measurePath.map((measurePointItem, measurePointIndex) =>
-        measurePointIndex === pointIndex ? { lat: latitude, lng: longitude } : measurePointItem,
-      )
-      setMeasurePath(nextMeasurePointList)
+      handleLineMeasurePointDrag({
+        ...createModeEventContext(event),
+        pointIndex,
+        actions: { setMeasurePath },
+      })
     },
-    [currentMode, measurePath, setMeasurePath],
+    [createModeEventContext, setMeasurePath],
   )
 
   const handlePinClick = useCallback(
@@ -571,12 +570,6 @@ function Map() {
     setHoverMeasurePoint,
     updateLine,
   ])
-
-  useEffect(() => {
-    if (currentMode === TOOL_MODES.DRAW_LINE) return
-    setHoverMeasurePoint(null)
-    setDraggingMeasurePointIndex(null)
-  }, [currentMode])
 
   return (
     <>
