@@ -426,3 +426,8 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `src/components/Map/Map.jsx`에서 핀 추가 모드의 `pendingMarkerPoint` 설정 시점을 지도 `onClick`에서 `onMouseUp`으로 이동해, 마우스 버튼을 뗄 때(ClickUp) 핀 추가 확인 바가 열리도록 조정함.
 - 같은 파일에서 `ADD_MARKER` 분기를 `handleMapClick`에서 제거해 Select/Line/Route/Measure 흐름과 충돌하지 않도록 정리함.
 - `onMouseUp`에서도 `isPinClickInProgress` 가드를 유지해 핀 요소 클릭이 지도 핀 추가로 오동작하지 않게 맞춤.
+[codex] 2026-02-27 지도 페이지 스크롤바 제거 메모
+- `src/index.css`에 `html/body/#root`의 `width/height: 100%`와 `body { overflow: hidden; }`를 추가해 구글 맵 화면에서 브라우저 수직/수평 스크롤바가 나타나지 않도록 고정함.
+
+[codex] 2026-02-27 지도 줌 컨트롤 숨김 메모
+- `src/components/Map/Map.jsx`의 Google Map 옵션에서 `zoomControl`을 `false`로 변경해 우측의 `+ / -` 확대·축소 버튼이 표시되지 않도록 조정함.
