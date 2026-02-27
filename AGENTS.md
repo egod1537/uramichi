@@ -309,6 +309,11 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `src/locales/ko.json`, `src/locales/ja.json`, `src/locales/en.json` 플랫 키 번역 리소스를 추가함.
 - 앱 시작 시 `src/App.jsx`에서 `initializeLocalization()`을 호출하도록 연결했고, `src/stores/useEditorStore.js`에 `language`/`setLanguage` 상태를 추가함.
 
+[codex] 2026-02-27 핀/거리/히스토리 버그 수정 메모
+- `src/components/Map/Map.jsx`에서 핀 클릭 직후 지도 클릭 핸들러가 선택을 즉시 해제하던 충돌을 `isPinClickInProgress` 플래그로 분리해, 지도에서 핀 클릭 시 `PinPopup`이 정상적으로 유지되도록 수정함.
+- 같은 파일에서 거리 측정 라벨 Overlay에 `whitespace-nowrap`와 상단 오프셋 정렬을 적용해 라벨 텍스트와 말풍선 레이아웃이 어긋나던 문제를 보정함.
+- `src/stores/useProjectStore.js`에서 핀 삭제(`removePin`, `removePins`)와 선 삭제(`removeLine`)를 히스토리 커밋 경로로 통일해 Undo/Redo가 삭제 액션을 되돌릴 수 있도록 수정함.
+- 스토어의 `markers` 스냅샷이 `pins` 좌표와 항상 일치하도록 `createMarkersFromPins` 동기화를 추가해, 드래그/삭제 이후 Undo/Redo 시 좌표 복원이 불안정하던 문제를 수정함.
 [codex] 2026-02-27 locale pull 스크립트 작업 메모
 - `scripts/pull-locales.js`를 추가해 `.env.local`/환경변수의 `LOCALE_SHEET_CSV_URL`에서 CSV를 가져오고, 직접 구현한 CSV 파서(따옴표/쉼표/줄바꿈 이스케이프 지원)로 파싱 후 `src/locales/{lang}.json`을 생성하도록 구현함.
 - 헤더에서 `key`를 제외한 언어 코드를 자동 감지하고, 번역 빈 값은 key 문자열로 대체해 누락 표시가 되도록 처리함.
