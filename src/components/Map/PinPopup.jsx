@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { OverlayView } from '@react-google-maps/api'
 import useProjectStore from '../../stores/useProjectStore'
-import { CATEGORY_PRESETS, PIN_MARKER_COLOR_PRESETS } from '../../utils/constants'
+import { CATEGORY_PRESETS, PIN_MARKER_COLOR_PRESETS, TRAVEL_PIN_ICON_PRESETS } from '../../utils/constants'
 import { convertFileToDataUrl } from '../../utils/file'
 
 const overlayPane = OverlayView.OVERLAY_MOUSE_TARGET
@@ -28,6 +28,7 @@ function PinPopup({ pin }) {
   const removePin = useProjectStore((state) => state.removePin)
   const selectPin = useProjectStore((state) => state.selectPin)
   const [isEditMode, setIsEditMode] = useState(false)
+  const [isIconPickerOpen, setIsIconPickerOpen] = useState(false)
   const [isNameEditing, setIsNameEditing] = useState(false)
   const [tagDraftInput, setTagDraftInput] = useState('')
   const [editDraft, setEditDraft] = useState(() => ({
@@ -42,6 +43,7 @@ function PinPopup({ pin }) {
   }))
 
   const categoryPreset = useMemo(() => CATEGORY_PRESETS[pin.category] || CATEGORY_PRESETS.default, [pin.category])
+  const currentPinIcon = pin.icon || categoryPreset.icon
 
   useEffect(() => {
     const handleOutsideClick = (event) => {
@@ -136,7 +138,41 @@ function PinPopup({ pin }) {
       >
         <div className="w-[300px] max-w-[300px] rounded-2xl bg-white p-4 shadow-2xl">
           <div className="mb-3 flex items-start gap-2">
-            <span className="mt-0.5 text-xl">{categoryPreset.icon}</span>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsIconPickerOpen((previousOpenState) => !previousOpenState)}
+                className="mt-0.5 rounded-md px-1 text-xl hover:bg-gray-100"
+                aria-label="아이콘 선택"
+                title="아이콘 선택"
+              >
+                {currentPinIcon}
+              </button>
+              {isIconPickerOpen ? (
+                <div className="absolute left-0 top-9 z-30 w-56 rounded-xl border border-gray-200 bg-white p-2 shadow-xl">
+                  <div className="grid grid-cols-6 gap-1">
+                    {TRAVEL_PIN_ICON_PRESETS.map((iconPreset) => {
+                      const isSelectedIcon = currentPinIcon === iconPreset.icon
+                      return (
+                        <button
+                          key={iconPreset.key}
+                          type="button"
+                          onClick={() => {
+                            updatePin(pin.id, { icon: iconPreset.icon })
+                            setIsIconPickerOpen(false)
+                          }}
+                          className={`rounded-md px-1 py-1 text-xl hover:bg-gray-100 ${isSelectedIcon ? 'bg-blue-50 ring-1 ring-blue-300' : ''}`}
+                          title={iconPreset.label}
+                          aria-label={iconPreset.label}
+                        >
+                          {iconPreset.icon}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              ) : null}
+            </div>
             <div className="min-w-0 flex-1">
               {isNameEditing ? (
                 <input

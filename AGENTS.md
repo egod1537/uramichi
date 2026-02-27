@@ -364,3 +364,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - route id 생성 규칙 일관성을 위해 `src/stores/useProjectStore.js`에 `createRouteId(routeCount)`를 추가하고 기존 `commitRoutePath`도 동일 유틸을 사용하도록 맞춤.
 - `src/utils/DirectionsCache.js`는 route 전체 대신 `path/distanceMeters/durationSeconds/summary/lineName`만 저장하도록 조정해 id/layerId/start/end는 add 시점에 결정되도록 분리함.
 - route 추가 직전에 현재 `routes` id 집합 기반 충돌 검사(`createUniqueRouteId`)를 거쳐 중복 id 생성을 방어하도록 연결함.
+[codex] 2026-02-27 PinPopup 아이콘 선택 작업 메모
+- `src/components/Map/PinPopup.jsx`에 아이콘 버튼/아이콘 피커 드롭다운을 추가해 핀 팝업에서 여행용 아이콘(대중교통/식당/관광지/숙소 등)을 즉시 선택할 수 있게 구현함.
+- 선택한 아이콘은 `updatePin(pin.id, { icon })`으로 핀 데이터에 저장되며, 동일 세션에서 PinPopup/지도 마커/사이드바 핀 목록 아이콘이 함께 동기화되도록 연결함.
+- 아이콘 프리셋은 `src/utils/constants.js`의 `TRAVEL_PIN_ICON_PRESETS`로 분리해 재사용 가능하게 관리함.
