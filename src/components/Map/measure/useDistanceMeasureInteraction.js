@@ -41,20 +41,23 @@ function useDistanceMeasureInteraction({
 
   const completeDistanceMeasureInteraction = useCallback(() => {
     setHoverMeasurePoint(null)
+    setDraggingMeasurePointIndex(null)
     cancelDraftMeasure()
-  }, [cancelDraftMeasure, setHoverMeasurePoint])
+  }, [cancelDraftMeasure, setDraggingMeasurePointIndex, setHoverMeasurePoint])
 
   const completeDistanceMeasureInteractionByContextMenu = useCallback(() => {
     setHoverMeasurePoint(null)
+    setDraggingMeasurePointIndex(null)
     cancelDraftMeasure()
     setMode?.(TOOL_MODES.MEASURE_DISTANCE)
-  }, [cancelDraftMeasure, setHoverMeasurePoint, setMode])
+  }, [cancelDraftMeasure, setDraggingMeasurePointIndex, setHoverMeasurePoint, setMode])
 
   const completeDistanceMeasureInteractionByEscape = useCallback(() => {
     setHoverMeasurePoint(null)
+    setDraggingMeasurePointIndex(null)
     cancelDraftMeasure()
     setMode?.(TOOL_MODES.SELECT)
-  }, [cancelDraftMeasure, setHoverMeasurePoint, setMode])
+  }, [cancelDraftMeasure, setDraggingMeasurePointIndex, setHoverMeasurePoint, setMode])
 
   const handleMeasurePointDrag = useCallback(
     (pointIndex, event) => {

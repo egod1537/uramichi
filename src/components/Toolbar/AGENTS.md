@@ -8,3 +8,5 @@
 [codex] 2026-02-27 Toolbar 검색 엔터-POI 연동 메모
 - `Search.jsx`의 `place_changed` 리스너에서 선택된 장소의 `placeId/좌표/이름/주소/평점`을 읽어 `useProjectStore.requestPoiFromSearch(...)`로 전달하도록 연결함.
 - 검색 입력에서 엔터로 장소를 확정하면 Map 쪽에서 소비 가능한 단일 요청 객체를 스토어에 적재하도록 경로를 추가함.
+[codex] 2026-02-27 거리 측정 저장 정책 안내 문구 메모
+- `Toolbar.jsx`의 거리 측정 버튼 툴팁과 단축키 모달 문구에 "우클릭 종료, 저장 안 됨" 안내를 추가해 제품 정책을 UI 레벨에서 명시함.
