@@ -515,5 +515,9 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 [codex] 2026-02-27 핀 SVG 가독성 보강 메모
 - `public/svg/pin-*.svg` 아이콘 6종(default/transit/restaurant/tour/hotel/photo)을 채움형(filled) 실루엣으로 재작성해 작은 렌더링 크기에서도 식별이 잘 되도록 조정함.
 - 기존 선(stroke) 중심 아이콘 대비 내부 여백을 줄이고 도형 점유율을 키워 지도/사이드바의 `h-4~h-6` 썸네일에서도 선명하게 보이도록 맞춤.
+[codex] 2026-02-27 선 그리기 종료 입력/도형 저장 반영 메모
+- 선 그리기(`draw_line`)는 ESC/더블클릭 종료를 제거하고, 우클릭으로만 종료되도록 맵 입력 흐름을 고정함.
+- 우클릭 종료 시 드래프트 경로를 레이어 데이터(`measurements`)로 커밋하고, 폐곡선 판정 시 `shapeType: polygon` + 닫힌 좌표로 저장함.
+- 저장된 폐곡선은 지도에서 반투명 채움 Polygon으로 렌더링하고, Sidebar 라벨도 `도형`/`선분`으로 구분해 표시함.
 [codex] 2026-02-27 핀 SVG 검정 테두리 보강 메모
 - `public/svg/pin-default.svg`, `pin-hotel.svg`, `pin-photo.svg`, `pin-restaurant.svg`, `pin-tour.svg`, `pin-transit.svg`의 메인 컬러 도형에 진한 검정(`stroke #111111`) 테두리를 추가해 지도/사이드바 썸네일에서 아이콘 윤곽이 더 선명하게 보이도록 조정함.

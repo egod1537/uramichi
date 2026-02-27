@@ -424,7 +424,7 @@ function LayerRow({
               {layerMeasurements.map((measurementItem, measurementIndex) => (
                 <div key={measurementItem.id} className="flex items-center gap-2 rounded bg-orange-50 px-2 py-1 text-xs text-orange-700">
                   <span>📏</span>
-                  <span className="truncate">거리 측정 {measurementIndex + 1}</span>
+                  <span className="truncate">{measurementItem.shapeType === 'polygon' ? `도형 ${measurementIndex + 1}` : `선분 ${measurementIndex + 1}`}</span>
                   <span className="ml-auto text-[11px] text-orange-500">{measurementItem.points.length}점</span>
                 </div>
               ))}

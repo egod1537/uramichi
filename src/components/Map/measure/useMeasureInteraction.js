@@ -1,18 +1,38 @@
 import { useCallback, useMemo } from 'react'
 import TOOL_MODES from '../../../utils/toolModes'
 import { COLOR_PRESETS } from '../../../utils/constants'
-import { formatDistanceLabel, getMidpoint, getPathDistanceInMeters } from '../../../utils/geo'
+import { formatDistanceLabel, getHaversineDistance, getMidpoint, getPathDistanceInMeters } from '../../../utils/geo'
 import { handleLineDraftComplete, handleLineMeasurePointDrag } from '../controllers/lineController'
 
 export const MEASURE_LINE_WIDTH = 6
+const POLYGON_CLOSE_DISTANCE_METERS = 30
 
-const createMeasurementEntity = (measurePointPath, activeLayerId, measurementCount) => ({
-  id: `measure-${Date.now()}-${measurementCount + 1}`,
-  layerId: activeLayerId,
-  points: measurePointPath,
-  color: COLOR_PRESETS.measureOrange,
-  width: MEASURE_LINE_WIDTH,
-})
+const resolveMeasurementShapeType = (measurePointPath) => {
+  if (measurePointPath.length < 3) return 'line'
+  const firstPoint = measurePointPath[0]
+  const lastPoint = measurePointPath[measurePointPath.length - 1]
+  const isLoopClosed = getHaversineDistance(firstPoint, lastPoint) <= POLYGON_CLOSE_DISTANCE_METERS
+  return isLoopClosed ? 'polygon' : 'line'
+}
+
+const createMeasurementEntity = (measurePointPath, activeLayerId, measurementCount) => {
+  const shapeType = resolveMeasurementShapeType(measurePointPath)
+  const firstPoint = measurePointPath[0]
+  const lastPoint = measurePointPath[measurePointPath.length - 1]
+  const pointsForPolygon =
+    shapeType === 'polygon' && firstPoint && lastPoint && (firstPoint.lat !== lastPoint.lat || firstPoint.lng !== lastPoint.lng)
+      ? [...measurePointPath, firstPoint]
+      : measurePointPath
+
+  return {
+    id: `measure-${Date.now()}-${measurementCount + 1}`,
+    layerId: activeLayerId,
+    points: pointsForPolygon,
+    color: COLOR_PRESETS.measureOrange,
+    width: MEASURE_LINE_WIDTH,
+    shapeType,
+  }
+}
 
 const createSegmentLabelDataList = (measurePointPath) =>
   measurePointPath.slice(1).map((currentPoint, pointIndex) => {

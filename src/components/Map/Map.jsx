@@ -386,10 +386,6 @@ function Map() {
     [commitMarkerDrag, currentMode, updatePin],
   )
 
-  const handleMapDoubleClick = useCallback(() => {
-    triggerMeasureComplete()
-  }, [triggerMeasureComplete])
-
   useEffect(() => {
     const handleDeleteKeyDown = (event) => {
       const eventTarget = event.target
@@ -400,11 +396,6 @@ function Map() {
           || eventTarget.tagName === 'SELECT'
           || eventTarget.isContentEditable)
       if (isInputControlTarget && event.key !== 'Escape') return
-
-      if (event.key === 'Escape') {
-        triggerMeasureComplete()
-        return
-      }
 
       if (currentMode !== TOOL_MODES.SELECT) return
 
@@ -429,7 +420,6 @@ function Map() {
     window.addEventListener('keydown', handleDeleteKeyDown)
     return () => window.removeEventListener('keydown', handleDeleteKeyDown)
   }, [
-    triggerMeasureComplete,
     currentMode,
     removeLine,
     removePins,
@@ -455,7 +445,6 @@ function Map() {
         onMouseUp={handleMapMouseUp}
         onMouseMove={handleMapMouseMove}
         onMouseDown={handleMapMouseDown}
-        onDblClick={handleMapDoubleClick}
         onRightClick={handleMapRightClick}
         options={{ ...MAP_OPTIONS, disableDoubleClickZoom: currentMode === TOOL_MODES.DRAW_LINE }}
       >
