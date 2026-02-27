@@ -236,3 +236,8 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `ChatPanel` 로컬 상태로 메시지 목록/입력값을 관리하며 Enter 전송, Shift+Enter 줄바꿈, 사용자 메시지 추가 후 "AI 응답 준비 중..." 임시 응답 추가 흐름을 연결함.
 - `src/components/Chat/ChatMessage.jsx`에서 AI/사용자 메시지 정렬과 배경색(회색/파란색) 스타일을 분기함.
 - `src/App.jsx`에서 채팅 패널 열림 상태를 로컬 `useState`로 관리하고, 패널이 열려 있을 때 FAB를 숨기도록 통합함.
+[codex] 2026-02-27 활성 레이어 기반 핀 추가 작업 메모
+- `src/stores/useProjectStore.js`에 `activeLayerId` 상태와 `setActiveLayer` 액션을 추가하고, 핀 추가(`addMarker`) 시 활성 레이어가 없으면 기본 레이어를 자동 생성한 뒤 `layerId`를 자동 할당하도록 변경함.
+- `src/utils/ProjectManager.js`의 초기 더미 데이터를 제거해 `pins`, `layers`, `routes`를 모두 빈 배열로 시작하도록 정리함.
+- `src/components/Sidebar/LayerRow.jsx`에서 레이어 클릭 시 active layer를 설정하고, 현재 active layer에 하이라이트 스타일이 적용되도록 UI를 업데이트함.
+- `src/stores/useProjectStore.js`의 `addLayer`, `removeLayer`에서 active layer 갱신 로직을 연결해 레이어 추가/삭제 후에도 활성 상태가 일관되게 유지되도록 조정함.

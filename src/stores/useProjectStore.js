@@ -12,6 +12,14 @@ const createSnapshotFromState = (state) => ({
   measurePath: state.measurePath,
 })
 
+const createDefaultPinData = (point, layerId, pinIndex) => ({
+  id: `pin-${Date.now()}-${pinIndex + 1}`,
+  layerId,
+  name: `Pin ${pinIndex + 1}`,
+  category: 'default',
+  position: point,
+})
+
 const useProjectStore = create((set) => ({
   ...initialProjectState,
   setMode: (nextMode) =>
@@ -35,15 +43,32 @@ const useProjectStore = create((set) => ({
     }),
   addMarker: (point) =>
     set((state) => {
+      const currentIsoDateTime = new Date().toISOString()
+      const nextLayers = [...state.layers]
+      let nextActiveLayerId = state.activeLayerId
+
+      if (!nextActiveLayerId || !nextLayers.some((layerItem) => layerItem.id === nextActiveLayerId)) {
+        const createdLayer = ProjectManager.createDefaultLayer(nextLayers.length)
+        nextLayers.push(createdLayer)
+        nextActiveLayerId = createdLayer.id
+      }
+
+      const createdPin = createDefaultPinData(point, nextActiveLayerId, state.pins.length)
+      const nextPins = [...state.pins, createdPin]
       const committedHistory = HistoryManager.commit(state.history, state.historyIndex, {
         ...createSnapshotFromState(state),
         markers: [...state.markers, point],
       })
+
       return {
         ...committedHistory.snapshot,
+        layers: nextLayers,
+        pins: nextPins,
+        activeLayerId: nextActiveLayerId,
         routeDraft: { start: null },
         history: committedHistory.history,
         historyIndex: committedHistory.historyIndex,
+        lastEditedAt: currentIsoDateTime,
       }
     }),
   appendLinePoint: (point) =>
@@ -107,17 +132,30 @@ const useProjectStore = create((set) => ({
       }
     }),
   addLayer: () =>
-    set((state) => ({
-      layers: [...state.layers, ProjectManager.createDefaultLayer(state.layers.length)],
-      lastEditedAt: new Date().toISOString(),
-    })),
+    set((state) => {
+      const createdLayer = ProjectManager.createDefaultLayer(state.layers.length)
+      return {
+        layers: [...state.layers, createdLayer],
+        activeLayerId: createdLayer.id,
+        lastEditedAt: new Date().toISOString(),
+      }
+    }),
+  setActiveLayer: (layerId) => set({ activeLayerId: layerId }),
   removeLayer: (layerId) =>
-    set((state) => ({
-      layers: state.layers.filter((layerItem) => layerItem.id !== layerId),
-      pins: state.pins.filter((pinItem) => pinItem.layerId !== layerId),
-      selectedPinId: state.pins.find((pinItem) => pinItem.id === state.selectedPinId)?.layerId === layerId ? null : state.selectedPinId,
-      lastEditedAt: new Date().toISOString(),
-    })),
+    set((state) => {
+      const nextLayers = state.layers.filter((layerItem) => layerItem.id !== layerId)
+      const nextPins = state.pins.filter((pinItem) => pinItem.layerId !== layerId)
+      const isSelectedPinRemoved = state.pins.find((pinItem) => pinItem.id === state.selectedPinId)?.layerId === layerId
+      const nextActiveLayerId = state.activeLayerId === layerId ? nextLayers[0]?.id ?? null : state.activeLayerId
+
+      return {
+        layers: nextLayers,
+        pins: nextPins,
+        selectedPinId: isSelectedPinRemoved ? null : state.selectedPinId,
+        activeLayerId: nextActiveLayerId,
+        lastEditedAt: new Date().toISOString(),
+      }
+    }),
   renameLayer: (layerId, layerName) =>
     set((state) => ({
       layers: state.layers.map((layerItem) => (layerItem.id === layerId ? { ...layerItem, name: layerName } : layerItem)),
