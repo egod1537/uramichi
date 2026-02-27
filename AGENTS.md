@@ -364,3 +364,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - route id 생성 규칙 일관성을 위해 `src/stores/useProjectStore.js`에 `createRouteId(routeCount)`를 추가하고 기존 `commitRoutePath`도 동일 유틸을 사용하도록 맞춤.
 - `src/utils/DirectionsCache.js`는 route 전체 대신 `path/distanceMeters/durationSeconds/summary/lineName`만 저장하도록 조정해 id/layerId/start/end는 add 시점에 결정되도록 분리함.
 - route 추가 직전에 현재 `routes` id 집합 기반 충돌 검사(`createUniqueRouteId`)를 거쳐 중복 id 생성을 방어하도록 연결함.
+[codex] 2026-02-27 Sidebar 레이어/핀 순서 재배치 메모
+- `src/stores/useProjectStore.js`에 `reorderLayers(sourceLayerId, targetLayerId)`와 `reorderPinsInLayer(layerId, sourcePinId, targetPinId)` 액션을 추가해 레이어 목록/레이어 내부 핀 목록의 순서를 드래그 앤 드롭으로 재정렬할 수 있게 함.
+- `src/components/Sidebar/LayerPanel.jsx`에서 레이어 행 드래그 상태(`dragLayerId`)를 관리하고, 레이어 행 드롭 시 스토어 `reorderLayers`를 호출하도록 연결함.
+- `src/components/Sidebar/LayerRow.jsx`에서 레이어 행과 핀 행 모두 `draggable` 처리하고, 핀 드롭 시 `reorderPinsInLayer`를 호출해 같은 레이어 내 핀 순서를 reorderable list처럼 바꿀 수 있게 함.
