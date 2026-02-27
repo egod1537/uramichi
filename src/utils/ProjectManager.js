@@ -43,6 +43,7 @@ class ProjectManager {
       selectedPinId: null,
       selectedPinIds: [],
       activeLayerId: null,
+      pinIconFilters: [],
     }
   }
 

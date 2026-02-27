@@ -48,3 +48,21 @@ export const PIN_MARKER_COLOR_PRESETS = {
   shopping: { backgroundColor: '#0d9488', ringColor: '#5eead4' },
   spot: { backgroundColor: '#dc2626', ringColor: '#fca5a5' },
 }
+
+
+export const PIN_ICON_STYLE_PRESETS = {
+  transit: { backgroundColor: '#2563eb', ringColor: '#93c5fd' },
+  restaurant: { backgroundColor: '#dc2626', ringColor: '#fca5a5' },
+  tour: { backgroundColor: '#7c3aed', ringColor: '#c4b5fd' },
+  hotel: { backgroundColor: '#0f766e', ringColor: '#5eead4' },
+  cafe: { backgroundColor: '#8b5e34', ringColor: '#d6b998' },
+  shopping: { backgroundColor: '#0d9488', ringColor: '#5eead4' },
+  museum: { backgroundColor: '#1d4ed8', ringColor: '#93c5fd' },
+  park: { backgroundColor: '#15803d', ringColor: '#86efac' },
+  onsen: { backgroundColor: '#ea580c', ringColor: '#fdba74' },
+  bar: { backgroundColor: '#7c2d12', ringColor: '#fdba74' },
+  night: { backgroundColor: '#4338ca', ringColor: '#a5b4fc' },
+  photo: { backgroundColor: '#db2777', ringColor: '#f9a8d4' },
+}
+
+export const ICON_FILTER_OPTIONS = TRAVEL_PIN_ICON_PRESETS

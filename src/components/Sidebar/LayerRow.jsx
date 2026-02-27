@@ -2,8 +2,7 @@ import { useMemo, useState } from 'react'
 import { CATEGORY_PRESETS, TRANSPORT_PRESETS } from '../../utils/constants'
 import useProjectStore from '../../stores/useProjectStore'
 
-function LayerRow({ layer, isDraggingLayer, layerDropPreview, onLayerDragStart, onLayerDragEnd, onLayerDragOver, onLayerDrop }) {
-  const pins = useProjectStore((state) => state.pins)
+function LayerRow({ layer, filteredPins, isDraggingLayer, layerDropPreview, onLayerDragStart, onLayerDragEnd, onLayerDragOver, onLayerDrop }) {
   const activeLayerId = useProjectStore((state) => state.activeLayerId)
   const setActiveLayer = useProjectStore((state) => state.setActiveLayer)
   const toggleLayerVisibility = useProjectStore((state) => state.toggleLayerVisibility)
@@ -19,7 +18,7 @@ function LayerRow({ layer, isDraggingLayer, layerDropPreview, onLayerDragStart, 
   const [dragPinId, setDragPinId] = useState(null)
   const [pinDropPreview, setPinDropPreview] = useState(null)
 
-  const layerPins = useMemo(() => pins.filter((pinItem) => pinItem.layerId === layer.id), [layer.id, pins])
+  const layerPins = useMemo(() => filteredPins.filter((pinItem) => pinItem.layerId === layer.id), [filteredPins, layer.id])
   const isActiveLayer = activeLayerId === layer.id
   const isLayerDropPreviewBefore = layerDropPreview?.targetLayerId === layer.id && layerDropPreview.dropPosition === 'before'
   const isLayerDropPreviewAfter = layerDropPreview?.targetLayerId === layer.id && layerDropPreview.dropPosition === 'after'

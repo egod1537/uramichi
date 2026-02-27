@@ -7,6 +7,7 @@ import PinMarker from './PinMarker'
 import PinPopup from './PinPopup'
 import { formatDistanceLabel, getMidpoint, getPathDistanceInMeters } from '../../utils/geo'
 import directionsCache from '../../utils/DirectionsCache'
+import { ICON_FILTER_OPTIONS } from '../../utils/constants'
 
 const containerStyle = { width: '100%', height: '100%' }
 const defaultCenter = { lat: 35.6812, lng: 139.7671 }
@@ -151,18 +152,27 @@ function Map() {
   const removeLine = useProjectStore((state) => state.removeLine)
   const updatePin = useProjectStore((state) => state.updatePin)
   const commitMarkerDrag = useProjectStore((state) => state.commitMarkerDrag)
+  const pinIconFilters = useProjectStore((state) => state.pinIconFilters)
+  const togglePinIconFilter = useProjectStore((state) => state.togglePinIconFilter)
+  const clearPinIconFilter = useProjectStore((state) => state.clearPinIconFilter)
   const [isPinClickInProgress, setIsPinClickInProgress] = useState(false)
   const removePins = useProjectStore((state) => state.removePins)
   const [draggingPinId, setDraggingPinId] = useState(null)
   const [hoverMeasurePoint, setHoverMeasurePoint] = useState(null)
   const [draggingMeasurePointIndex, setDraggingMeasurePointIndex] = useState(null)
+  const [pendingMarkerPoint, setPendingMarkerPoint] = useState(null)
 
   const visibleLayerIdSet = useMemo(
     () => new Set(layers.filter((layerItem) => layerItem.visible).map((layerItem) => layerItem.id)),
     [layers],
   )
 
-  const visiblePins = useMemo(() => pins.filter((pinItem) => visibleLayerIdSet.has(pinItem.layerId)), [pins, visibleLayerIdSet])
+  const visiblePins = useMemo(() => {
+    const layerVisiblePins = pins.filter((pinItem) => visibleLayerIdSet.has(pinItem.layerId))
+    if (!pinIconFilters.length) return layerVisiblePins
+    const activeIconSet = new Set(ICON_FILTER_OPTIONS.filter((filterItem) => pinIconFilters.includes(filterItem.key)).map((filterItem) => filterItem.icon))
+    return layerVisiblePins.filter((pinItem) => activeIconSet.has(pinItem.icon))
+  }, [pinIconFilters, pins, visibleLayerIdSet])
   const visibleLines = useMemo(() => lines.filter((lineItem) => visibleLayerIdSet.has(lineItem.layerId)), [lines, visibleLayerIdSet])
 
   const selectedLine = useMemo(
@@ -262,6 +272,11 @@ function Map() {
       if (latitude === undefined || longitude === undefined) return
       const clickedPoint = { lat: latitude, lng: longitude }
 
+      if (currentMode === TOOL_MODES.ADD_MARKER) {
+        setPendingMarkerPoint(clickedPoint)
+        return
+      }
+
       if (currentMode === TOOL_MODES.DRAW_LINE) {
         appendLinePoint(clickedPoint)
         return
@@ -302,22 +317,8 @@ function Map() {
       setRouteStart,
       isPinClickInProgress,
       setHoverMeasurePoint,
+      setPendingMarkerPoint,
     ],
-  )
-
-  const handleMapMouseDown = useCallback(
-    (event) => {
-      if (currentMode !== TOOL_MODES.ADD_MARKER) return
-      if (isPinClickInProgress) {
-        setIsPinClickInProgress(false)
-        return
-      }
-      const latitude = event.latLng?.lat()
-      const longitude = event.latLng?.lng()
-      if (latitude === undefined || longitude === undefined) return
-      addMarker({ lat: latitude, lng: longitude })
-    },
-    [addMarker, currentMode, isPinClickInProgress],
   )
 
   const handleMapMouseMove = useCallback(
@@ -357,7 +358,7 @@ function Map() {
       }
 
       selectLine(null)
-      if (event?.domEvent?.shiftKey) {
+      if (event?.domEvent?.shiftKey || event?.domEvent?.ctrlKey || event?.domEvent?.metaKey) {
         togglePinInSelection(pinId)
         return
       }
@@ -485,6 +486,7 @@ function Map() {
     if (currentMode === TOOL_MODES.MEASURE_DISTANCE) return
     setHoverMeasurePoint(null)
     setDraggingMeasurePointIndex(null)
+    setPendingMarkerPoint(null)
   }, [currentMode])
 
   return (
@@ -500,7 +502,6 @@ function Map() {
           mapInstanceRef.current = null
         }}
         onClick={handleMapClick}
-        onMouseDown={handleMapMouseDown}
         onMouseMove={handleMapMouseMove}
         onDblClick={handleMapDoubleClick}
         options={{ ...mapOptions, disableDoubleClickZoom: currentMode === TOOL_MODES.MEASURE_DISTANCE || currentMode === TOOL_MODES.DRAW_LINE }}
@@ -612,6 +613,58 @@ function Map() {
         ) : null}
       </GoogleMap>
 
+
+      <div className="absolute bottom-4 right-4 z-20 max-w-[340px] rounded-xl border border-gray-200 bg-white/95 p-2 shadow-lg">
+        <div className="mb-1 flex items-center justify-between">
+          <p className="text-xs font-semibold text-gray-600">지도 핀 아이콘 필터</p>
+          <button
+            type="button"
+            onClick={clearPinIconFilter}
+            disabled={!pinIconFilters.length}
+            className="text-xs text-gray-500 hover:text-gray-700 disabled:opacity-40"
+          >
+            초기화
+          </button>
+        </div>
+        <div className="flex flex-wrap gap-1">
+          {ICON_FILTER_OPTIONS.map((filterItem) => {
+            const isActive = pinIconFilters.includes(filterItem.key)
+            return (
+              <button
+                key={`map-filter-${filterItem.key}`}
+                type="button"
+                onClick={() => togglePinIconFilter(filterItem.key)}
+                className={`rounded-full border px-2 py-0.5 text-xs ${isActive ? 'border-blue-400 bg-blue-50 text-blue-700' : 'border-gray-200 bg-white text-gray-600'}`}
+              >
+                {filterItem.icon}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {currentMode === TOOL_MODES.ADD_MARKER && pendingMarkerPoint && (
+        <div className="absolute bottom-24 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm shadow">
+          <span className="text-gray-700">선택 위치에 핀을 추가할까요?</span>
+          <button
+            type="button"
+            onClick={() => {
+              addMarker(pendingMarkerPoint)
+              setPendingMarkerPoint(null)
+            }}
+            className="rounded bg-blue-600 px-2 py-1 text-white hover:bg-blue-700"
+          >
+            핀 추가
+          </button>
+          <button
+            type="button"
+            onClick={() => setPendingMarkerPoint(null)}
+            className="rounded border border-gray-300 px-2 py-1 text-gray-700 hover:bg-gray-50"
+          >
+            취소
+          </button>
+        </div>
+      )}
       {currentMode === TOOL_MODES.ADD_ROUTE && (
         <div className="absolute left-1/2 top-4 z-20 flex -translate-x-1/2 items-center gap-2 rounded-md bg-white px-3 py-2 text-sm shadow">
           <select

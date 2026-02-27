@@ -160,6 +160,13 @@ const useProjectStore = create((set) => ({
       }
     }),
   clearPinSelection: () => set({ selectedPinId: null, selectedPinIds: [] }),
+  togglePinIconFilter: (iconKey) =>
+    set((state) => ({
+      pinIconFilters: state.pinIconFilters.includes(iconKey)
+        ? state.pinIconFilters.filter((savedIconKey) => savedIconKey !== iconKey)
+        : [...state.pinIconFilters, iconKey],
+    })),
+  clearPinIconFilter: () => set({ pinIconFilters: [] }),
   updatePin: (pinId, patchData) =>
     set((state) => {
       const nextPins = state.pins.map((pinItem) => (pinItem.id === pinId ? { ...pinItem, ...patchData } : pinItem))
