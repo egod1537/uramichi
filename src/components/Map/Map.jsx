@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { GoogleMap, OverlayView, Polyline } from '@react-google-maps/api'
+import { GoogleMap, Polyline } from '@react-google-maps/api'
 import TOOL_MODES from '../../utils/toolModes'
 import { COLOR_PRESETS } from '../../utils/constants'
 import useProjectStore from '../../stores/useProjectStore'
@@ -16,6 +16,8 @@ import RouteService from '../../utils/RouteService'
 import MeasureLayer from './measure/MeasureLayer'
 import MeasureLabels from './measure/MeasureLabels'
 import useMeasureInteraction from './measure/useMeasureInteraction'
+import PoiDetailOverlay from './PoiDetailOverlay'
+import usePoiDetail from './hooks/usePoiDetail'
 
 const containerStyle = { width: '100%', height: '100%' }
 const defaultCenter = { lat: 35.6812, lng: 139.7671 }
@@ -38,7 +40,6 @@ const routeTravelModeList = [
   { value: 'DRIVING', label: '차량' },
 ]
 
-const createGoogleMapsPlaceUrl = (placeId) => `https://www.google.com/maps/search/?api=1&query=Google&query_place_id=${placeId}`
 const ADD_MARKER_DRAG_THRESHOLD_PX = 6
 
 const getNextLineColor = (currentColor) => {
@@ -89,7 +90,11 @@ function Map() {
   const [hoverMeasurePoint, setHoverMeasurePoint] = useState(null)
   const [draggingMeasurePointIndex, setDraggingMeasurePointIndex] = useState(null)
   const [isPinFilterExpanded, setIsPinFilterExpanded] = useState(false)
-  const [selectedPoiDetail, setSelectedPoiDetail] = useState(null)
+  const {
+    selectedPoiDetail,
+    requestPoiDetail,
+    clearPoiDetail,
+  } = usePoiDetail({ mapInstanceRef })
 
   const visibleLayerIdSet = useMemo(
     () => new Set(layers.filter((layerItem) => layerItem.visible).map((layerItem) => layerItem.id)),
@@ -123,50 +128,6 @@ function Map() {
       mapInstanceRef.current.panTo(selectedPin.position)
     }
   }, [selectedPin])
-
-  const requestPoiDetail = useCallback(
-    (placeId, position) => {
-      if (!mapInstanceRef.current || !window.google?.maps?.places?.PlacesService) return
-
-      const placeServiceInstance = new window.google.maps.places.PlacesService(mapInstanceRef.current)
-      setSelectedPoiDetail({
-        placeId,
-        position,
-        isLoading: true,
-        name: '장소 정보 불러오는 중...',
-      })
-
-      placeServiceInstance.getDetails(
-        {
-          placeId,
-          fields: ['place_id', 'name', 'formatted_address', 'website', 'international_phone_number', 'rating'],
-        },
-        (placeResult, placeStatus) => {
-          if (placeStatus !== window.google.maps.places.PlacesServiceStatus.OK || !placeResult) {
-            setSelectedPoiDetail({
-              placeId,
-              position,
-              isLoading: false,
-              name: '장소 정보를 찾을 수 없습니다',
-            })
-            return
-          }
-
-          setSelectedPoiDetail({
-            placeId,
-            position,
-            isLoading: false,
-            name: placeResult.name || '이름 없음',
-            address: placeResult.formatted_address || '',
-            website: placeResult.website || '',
-            phoneNumber: placeResult.international_phone_number || '',
-            rating: placeResult.rating ?? null,
-          })
-        },
-      )
-    },
-    [],
-  )
 
   useEffect(() => {
     syncDraftByMode({ currentMode, actions: { cancelDraftMeasure, cancelDraftLine } })
@@ -300,7 +261,7 @@ function Map() {
       }
 
       if (selectedPoiDetail) {
-        setSelectedPoiDetail(null)
+        clearPoiDetail()
       }
 
       const modeEventContext = createModeEventContext(event)
@@ -315,7 +276,7 @@ function Map() {
       requestPoiDetail,
       selectedPoiDetail,
       isPinClickInProgress,
-      setSelectedPoiDetail,
+      clearPoiDetail,
     ],
   )
 
@@ -489,55 +450,7 @@ function Map() {
         ))}
 
         {selectedPin ? <PinPopup key={selectedPin.id} pin={selectedPin} /> : null}
-
-
-        {selectedPoiDetail && (
-          <OverlayView position={selectedPoiDetail.position} mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}>
-            <div className="w-[320px] rounded-2xl bg-white p-4 shadow-2xl">
-              <div className="mb-3 flex items-start justify-between gap-3">
-                <h3 className="text-lg font-bold text-slate-900">{selectedPoiDetail.name}</h3>
-                <button
-                  type="button"
-                  onClick={() => setSelectedPoiDetail(null)}
-                  className="rounded-md px-2 py-1 text-xl leading-none text-slate-500 hover:bg-slate-100 hover:text-slate-700"
-                >
-                  ×
-                </button>
-              </div>
-
-              {selectedPoiDetail.address ? <p className="text-sm text-slate-600">{selectedPoiDetail.address}</p> : null}
-              {selectedPoiDetail.phoneNumber ? <p className="mt-1 text-sm text-slate-600">{selectedPoiDetail.phoneNumber}</p> : null}
-              {selectedPoiDetail.rating !== null ? <p className="mt-2 text-sm font-semibold text-amber-600">평점 {selectedPoiDetail.rating}</p> : null}
-              {selectedPoiDetail.website ? (
-                <a
-                  href={selectedPoiDetail.website}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-2 block truncate text-sm text-blue-600 hover:underline"
-                >
-                  {selectedPoiDetail.website}
-                </a>
-              ) : null}
-
-              <div className="mt-4 flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => window.open(createGoogleMapsPlaceUrl(selectedPoiDetail.placeId), '_blank', 'noopener,noreferrer')}
-                  className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-                >
-                  Google 지도에서 보기
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSelectedPoiDetail(null)}
-                  className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
-                >
-                  닫기
-                </button>
-              </div>
-            </div>
-          </OverlayView>
-        )}
+        <PoiDetailOverlay poiDetail={selectedPoiDetail} onClose={clearPoiDetail} />
 
         {visibleLines.map((lineItem) => (
           <Polyline

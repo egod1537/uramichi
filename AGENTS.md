@@ -481,3 +481,6 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `public/svg/`에 지도 핀 아이콘 SVG 파일(`pin-transit`, `pin-restaurant`, `pin-tour`, `pin-hotel`, `pin-photo`, `pin-default`)을 추가함.
 - `src/utils/constants.js`의 `TRAVEL_PIN_ICON_PRESETS`에 `svgPath`를 연결하고 기본 아이콘 경로 상수(`DEFAULT_PIN_SVG_PATH`)를 추가함.
 - `src/components/Map/PinMarker.jsx`를 SVG URL 기반 `Marker.icon` 렌더링으로 변경해 지도 핀이 이모지 라벨 대신 SVG 아이콘으로 보이도록 수정함.
+[codex] 2026-02-27 POI 상세 분리 리팩토링 메모
+- 지도 내 POI 상세 표시 블록을 `src/components/Map/PoiDetailOverlay.jsx`로 분리하고, 상세 조회 상태/요청 로직은 `src/components/Map/hooks/usePoiDetail.js`로 이동함.
+- Google Maps 장소 URL 생성 함수는 `src/utils/createGoogleMapsPlaceUrl.js`로 이동해 컴포넌트와 맵 로직에서 공용으로 사용함.
