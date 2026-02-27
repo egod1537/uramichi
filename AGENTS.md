@@ -411,3 +411,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `src/components/Map/Map.jsx`에서 거리 측정 드래프트 완료 로직을 분리해 우클릭/ESC/더블클릭 시 측정 선이 즉시 확정 저장되도록 변경함.
 - 거리선 두께를 상향(`MEASURE_LINE_WIDTH`)하고 꼭짓점을 `Marker` 심볼로 렌더링해 확대/축소 시에도 선/꼭짓점이 화면 기준 일정 비율로 유지되도록 맞춤.
 - 저장된 거리 측정 오브젝트를 지도에 재렌더링하고, `src/components/Sidebar/LayerRow.jsx`에 레이어별 측정 목록(`📏 거리 측정 n`)을 추가해 핀처럼 레이어 패널에서 확인 가능하게 연결함.
+
+[codex] 2026-02-27 핀 추가 확인바 제거 메모
+- `src/components/Map/Map.jsx`에서 ADD_MARKER 모드 클릭 시 `pendingMarkerPoint` 임시 확인 단계를 거치지 않고 `addMarker(clickedPoint)`를 즉시 호출하도록 변경함.
+- 같은 파일에서 하단 확인바 UI("선택 위치에 핀을 추가할까요? / 핀 추가 / 취소") 및 관련 로컬 상태(`pendingMarkerPoint`)를 제거함.
