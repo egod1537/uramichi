@@ -10,7 +10,7 @@ const toolbarButtons = [
   { key: TOOL_MODES.ADD_MARKER, label: 'Add Marker', icon: '📍', tooltip: '핀 추가 (W)', shortcut: 'W' },
   { key: TOOL_MODES.DRAW_LINE, label: 'Draw Line', icon: '✏️', tooltip: '선 그리기 (E)', shortcut: 'E' },
   { key: TOOL_MODES.ADD_ROUTE, label: 'Add Route', icon: '🛤️', tooltip: '경로 추가 (R)', shortcut: 'R' },
-  { key: TOOL_MODES.MEASURE_DISTANCE, label: 'Measure Distance', icon: '📐', tooltip: '거리 측정 (T)', shortcut: 'T' },
+  { key: TOOL_MODES.MEASURE_DISTANCE, label: 'Measure Distance', icon: '📐', tooltip: '거리 측정 (T, 우클릭 종료·저장 안 됨)', shortcut: 'T' },
   { key: 'shortcuts', label: 'Keyboard Shortcuts', icon: '⌨️', tooltip: '단축키 목록' },
 ]
 
@@ -125,7 +125,7 @@ class Toolbar extends React.Component {
                 <li>W: Add Marker 모드</li>
                 <li>E: Draw Line 모드</li>
                 <li>R: Add Route 모드</li>
-                <li>T: Measure Distance 모드</li>
+                <li>T: Measure Distance 모드 (우클릭 종료, 저장 안 됨)</li>
               </ul>
               <div className="mt-4 flex justify-end">
                 <button

@@ -119,3 +119,5 @@
 - `src/components/Map/Map.jsx`의 `handleMapClick` 시작부에서 `DRAW_LINE`/`MEASURE_DISTANCE` 공통 가드(`isLineOrMeasureMode`)를 추가함.
 - 두 모드에서는 `event?.domEvent?.type === "contextmenu"`를 즉시 반환해 우클릭 컨텍스트 메뉴 이벤트가 모드 클릭 핸들러로 내려가지 않게 차단함.
 - 두 모드에서는 `event?.domEvent?.button !== 0`일 때 즉시 반환해 좌클릭(버튼 0)만 클릭 핸들러로 전달되도록 제한함.
+[codex] 2026-02-27 거리 측정 종료 안내 오버레이 문구 메모
+- `MapOverlays.jsx`에 `MEASURE_DISTANCE` 모드 전용 안내 배너를 추가해 "우클릭 시 측정 종료 (저장 안 됨)" 문구를 지도 상단에 명시함.
