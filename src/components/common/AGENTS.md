@@ -12,3 +12,6 @@
 - `src/components/common/UserButton.jsx`의 로그인 흐름을 Google One Tap `prompt()` 재시도 방식에서 OAuth 토큰 팝업(`google.accounts.oauth2.initTokenClient`) 호출 방식으로 변경해, 버튼 클릭 시 계정 선택창이 즉시 열리도록 수정함.
 - 로그인 성공 시 `https://www.googleapis.com/oauth2/v3/userinfo`로 프로필을 조회해 `useUserStore.login`에 `displayName/email/avatarUrl`을 반영하도록 연결함.
 - 기존 스크립트 태그가 이미 존재하는 경우에도 SDK 로드 완료 상태를 즉시 판별해 Promise가 대기 상태로 멈추지 않도록 보강함.
+[codex] 2026-02-27 내 지도 목록 팝업 레이아웃 메모
+- `src/components/common/MyMapsModal.jsx`를 추가해 프로필 메뉴의 `내 지도 목록`에서 열리는 전체 화면 모달 UI(검색 입력, 지도 프리뷰 카드 그리드, 이름/마지막 편집일/공개 아이콘)를 구현함.
+- `src/components/common/UserButton.jsx`의 `내 지도 목록` 메뉴 버튼을 모달 오픈 액션으로 연결하고, 모달 열림/닫힘 상태를 UserButton 로컬 state로 관리하도록 추가함.
