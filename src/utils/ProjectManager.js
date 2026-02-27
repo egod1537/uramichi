@@ -25,6 +25,7 @@ class ProjectManager {
     return {
       pins: ProjectManager.createInitialPins(),
       layers: ProjectManager.createInitialLayers(),
+      lines: [],
       routes: [],
       participants: [],
       currentMode: TOOL_MODES.SELECT,
@@ -32,12 +33,15 @@ class ProjectManager {
       linePath: [],
       routePaths: [],
       measurePath: [],
+      draftLinePoints: [],
+      draftMeasurePoints: [],
       routeDraft: { start: null },
       history: [HistoryManager.createEmptySnapshot()],
       historyIndex: 0,
       mapTitle: '제목없는 지도',
       lastEditedAt: new Date().toISOString(),
       selectedPinId: null,
+      selectedPinIds: [],
       activeLayerId: null,
     }
   }
