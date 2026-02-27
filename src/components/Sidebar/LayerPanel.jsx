@@ -2,9 +2,19 @@ import { useMemo, useState } from 'react'
 import LayerRow from './LayerRow'
 import useProjectStore from '../../stores/useProjectStore'
 
+const findPinNameByPosition = (pinList, targetPosition) => {
+  if (!targetPosition) return 'Unknown'
+  const matchedPin = pinList.find(
+    (pinItem) =>
+      Math.abs(pinItem.position.lat - targetPosition.lat) < 0.000001 && Math.abs(pinItem.position.lng - targetPosition.lng) < 0.000001,
+  )
+  return matchedPin?.name || `${targetPosition.lat.toFixed(3)}, ${targetPosition.lng.toFixed(3)}`
+}
+
 function LayerPanel() {
   const layers = useProjectStore((state) => state.layers)
   const pins = useProjectStore((state) => state.pins)
+  const routes = useProjectStore((state) => state.routes)
   const selectedPinIds = useProjectStore((state) => state.selectedPinIds)
   const removePins = useProjectStore((state) => state.removePins)
   const movePinsToLayer = useProjectStore((state) => state.movePinsToLayer)
@@ -17,6 +27,15 @@ function LayerPanel() {
     const selectedLayerIdSet = new Set(pins.filter((pinItem) => selectedPinIds.includes(pinItem.id)).map((pinItem) => pinItem.layerId))
     return layers.filter((layerItem) => !selectedLayerIdSet.has(layerItem.id))
   }, [layers, pins, selectedPinIds])
+
+  const routeSummaryList = useMemo(
+    () =>
+      routes.map((routeItem) => ({
+        id: routeItem.id,
+        label: `${findPinNameByPosition(pins, routeItem.start)} → ${findPinNameByPosition(pins, routeItem.end)}`,
+      })),
+    [pins, routes],
+  )
 
   if (!layers.length) {
     return <div className="flex-1 overflow-y-auto p-4 text-sm text-gray-500">레이어가 없습니다.</div>
@@ -61,6 +80,19 @@ function LayerPanel() {
           </button>
         </div>
       </div>
+
+      {!!routeSummaryList.length && (
+        <div className="mb-2 rounded-md border border-gray-200 bg-white p-2">
+          <p className="mb-1 text-xs font-semibold text-gray-500">경로</p>
+          <ul className="space-y-1">
+            {routeSummaryList.map((routeSummaryItem) => (
+              <li key={routeSummaryItem.id} className="truncate text-sm text-gray-700">
+                {routeSummaryItem.label}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {layers.map((layerItem) => (
         <LayerRow key={layerItem.id} layer={layerItem} />

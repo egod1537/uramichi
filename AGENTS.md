@@ -280,3 +280,11 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - 더블클릭/ESC로 드래프트 선분을 완료하면 활성 레이어(`activeLayerId`) 기준으로 `addLine({ id, layerId, points, color, width })`를 호출해 line 엔티티를 저장하도록 구현함.
 - Select 모드에서 저장된 선분 Polyline 클릭 시 `selectedLineId`를 선택 상태로 유지하고, Delete/Backspace는 `removeLine`, `c` 키는 `updateLine` 색상 순환 액션으로 연결함.
 - `src/stores/useProjectStore.js`에 `selectedLineId` 상태와 `selectLine` 액션을 추가하고, 선분 추가/삭제 시 선택 상태가 일관되게 갱신되도록 조정함.
+
+[codex] 2026-02-27 경로 기능 구현 메모
+- `src/components/Map/Map.jsx`에서 addRoute 모드 클릭 분기를 `ADD_MARKER -> DRAW_LINE -> ADD_ROUTE -> MEASURE_DISTANCE -> SELECT` 순으로 명시해 line/measure와 충돌 없이 2클릭(start/end) 플로우를 고정함.
+- 같은 파일에 이동수단 선택 UI(도보/대중교통/차량)를 추가하고 `routeDraft.travelMode`로 상태를 유지하도록 연결함.
+- `DirectionsService` 응답에서 `overview_path`, leg 거리/시간, transit 노선명(가능한 경우)을 추출해 route 엔티티로 저장하도록 연결함.
+- `src/utils/DirectionsCache.js`를 추가해 동일 start/end/travelMode 요청은 캐시된 route 데이터를 재사용하도록 구현함.
+- `src/stores/useProjectStore.js`에 `routeDraft.travelMode`와 `setRouteTravelMode()`를 추가하고, `addRoute()` 저장 경로와 routeDraft 초기화 로직이 이동수단 상태를 유지하도록 조정함.
+- `src/components/Sidebar/LayerPanel.jsx`에 routes 목록을 추가해 `"A → B"` 형식의 경로 요약을 표시하도록 구현함.
