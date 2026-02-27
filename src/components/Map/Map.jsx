@@ -20,6 +20,7 @@ const mapOptions = {
 }
 
 const measureOverlayPane = OverlayView.OVERLAY_MOUSE_TARGET
+const lineColorSequence = [COLOR_PRESETS.primaryBlue, COLOR_PRESETS.routeGreen, COLOR_PRESETS.measureOrange, '#8b5cf6']
 
 const createSegmentLabelDataList = (measurePointPath) =>
   measurePointPath.slice(1).map((currentPoint, pointIndex) => {
@@ -45,10 +46,25 @@ const getRouteRequest = (startPoint, endPoint) => ({
   travelMode: window.google.maps.TravelMode.WALKING,
 })
 
+const createLineEntity = (linePointPath, activeLayerId, lineCount) => ({
+  id: `line-${Date.now()}-${lineCount + 1}`,
+  layerId: activeLayerId,
+  points: linePointPath,
+  color: COLOR_PRESETS.primaryBlue,
+  width: 3,
+})
+
+const getNextLineColor = (currentColor) => {
+  const currentColorIndex = lineColorSequence.indexOf(currentColor)
+  if (currentColorIndex === -1) return lineColorSequence[0]
+  return lineColorSequence[(currentColorIndex + 1) % lineColorSequence.length]
+}
+
 function Map() {
   const mapInstanceRef = useRef(null)
   const currentMode = useProjectStore((state) => state.currentMode)
   const markers = useProjectStore((state) => state.markers)
+  const lines = useProjectStore((state) => state.lines)
   const linePath = useProjectStore((state) => state.linePath)
   const routePaths = useProjectStore((state) => state.routePaths)
   const measurePath = useProjectStore((state) => state.measurePath)
@@ -57,24 +73,40 @@ function Map() {
   const layers = useProjectStore((state) => state.layers)
   const selectedPinId = useProjectStore((state) => state.selectedPinId)
   const selectedPinIds = useProjectStore((state) => state.selectedPinIds)
+  const selectedLineId = useProjectStore((state) => state.selectedLineId)
+  const activeLayerId = useProjectStore((state) => state.activeLayerId)
   const addMarker = useProjectStore((state) => state.addMarker)
   const appendLinePoint = useProjectStore((state) => state.appendLinePoint)
+  const cancelDraftLine = useProjectStore((state) => state.cancelDraftLine)
   const appendMeasurePoint = useProjectStore((state) => state.appendMeasurePoint)
   const cancelDraftMeasure = useProjectStore((state) => state.cancelDraftMeasure)
   const setRouteStart = useProjectStore((state) => state.setRouteStart)
   const commitRoutePath = useProjectStore((state) => state.commitRoutePath)
   const selectPin = useProjectStore((state) => state.selectPin)
+  const selectLine = useProjectStore((state) => state.selectLine)
   const togglePinInSelection = useProjectStore((state) => state.togglePinInSelection)
   const clearPinSelection = useProjectStore((state) => state.clearPinSelection)
+  const addLine = useProjectStore((state) => state.addLine)
+  const updateLine = useProjectStore((state) => state.updateLine)
+  const removeLine = useProjectStore((state) => state.removeLine)
   const updatePin = useProjectStore((state) => state.updatePin)
   const commitMarkerDrag = useProjectStore((state) => state.commitMarkerDrag)
   const removePins = useProjectStore((state) => state.removePins)
   const [draggingPinId, setDraggingPinId] = useState(null)
 
-  const visiblePins = useMemo(() => {
-    const visibleLayerIdSet = new Set(layers.filter((layerItem) => layerItem.visible).map((layerItem) => layerItem.id))
-    return pins.filter((pinItem) => visibleLayerIdSet.has(pinItem.layerId))
-  }, [layers, pins])
+  const visibleLayerIdSet = useMemo(
+    () => new Set(layers.filter((layerItem) => layerItem.visible).map((layerItem) => layerItem.id)),
+    [layers],
+  )
+
+  const visiblePins = useMemo(() => pins.filter((pinItem) => visibleLayerIdSet.has(pinItem.layerId)), [pins, visibleLayerIdSet])
+
+  const visibleLines = useMemo(() => lines.filter((lineItem) => visibleLayerIdSet.has(lineItem.layerId)), [lines, visibleLayerIdSet])
+
+  const selectedLine = useMemo(
+    () => visibleLines.find((lineItem) => lineItem.id === selectedLineId) || null,
+    [selectedLineId, visibleLines],
+  )
 
   const selectedPin = useMemo(
     () => visiblePins.find((pinItem) => pinItem.id === selectedPinId) || null,
@@ -91,11 +123,28 @@ function Map() {
     if (currentMode !== TOOL_MODES.MEASURE_DISTANCE) {
       cancelDraftMeasure()
     }
-  }, [cancelDraftMeasure, currentMode])
+    if (currentMode !== TOOL_MODES.DRAW_LINE) {
+      cancelDraftLine()
+    }
+  }, [cancelDraftLine, cancelDraftMeasure, currentMode])
 
   const measureSegmentLabelDataList = useMemo(() => createSegmentLabelDataList(measurePath), [measurePath])
 
   const measureTotalLabelData = useMemo(() => createTotalLabelData(measurePath), [measurePath])
+
+  const completeDraftLine = useCallback(() => {
+    if (currentMode !== TOOL_MODES.DRAW_LINE) return
+    if (linePath.length < 2) {
+      cancelDraftLine()
+      return
+    }
+    const targetLayerId = activeLayerId || layers[0]?.id || null
+    if (!targetLayerId) {
+      cancelDraftLine()
+      return
+    }
+    addLine(createLineEntity(linePath, targetLayerId, lines.length))
+  }, [activeLayerId, addLine, cancelDraftLine, currentMode, layers, linePath, lines.length])
 
   const createRoutePath = useCallback(
     (startPoint, endPoint) => {
@@ -129,22 +178,45 @@ function Map() {
 
       if (currentMode === TOOL_MODES.SELECT) {
         selectPin(null)
+        selectLine(null)
         clearPinSelection()
       }
     },
-    [addMarker, appendLinePoint, appendMeasurePoint, clearPinSelection, createRoutePath, currentMode, routeDraft.start, selectPin, setRouteStart],
+    [
+      addMarker,
+      appendLinePoint,
+      appendMeasurePoint,
+      clearPinSelection,
+      createRoutePath,
+      currentMode,
+      routeDraft.start,
+      selectLine,
+      selectPin,
+      setRouteStart,
+    ],
   )
 
   const handlePinClick = useCallback(
     (pinId, event) => {
       if (currentMode !== TOOL_MODES.SELECT) return
+      selectLine(null)
       if (event?.domEvent?.shiftKey) {
         togglePinInSelection(pinId)
         return
       }
       selectPin(pinId)
     },
-    [currentMode, selectPin, togglePinInSelection],
+    [currentMode, selectLine, selectPin, togglePinInSelection],
+  )
+
+  const handleLineClick = useCallback(
+    (lineId) => {
+      if (currentMode !== TOOL_MODES.SELECT) return
+      selectPin(null)
+      clearPinSelection()
+      selectLine(lineId)
+    },
+    [clearPinSelection, currentMode, selectLine, selectPin],
   )
 
   const handlePinDragStart = useCallback(
@@ -185,27 +257,61 @@ function Map() {
   )
 
   const handleMapDoubleClick = useCallback(() => {
-    if (currentMode !== TOOL_MODES.MEASURE_DISTANCE) return
-    cancelDraftMeasure()
-  }, [cancelDraftMeasure, currentMode])
+    if (currentMode === TOOL_MODES.MEASURE_DISTANCE) {
+      cancelDraftMeasure()
+      return
+    }
+    if (currentMode === TOOL_MODES.DRAW_LINE) {
+      completeDraftLine()
+    }
+  }, [cancelDraftMeasure, completeDraftLine, currentMode])
 
   useEffect(() => {
     const handleDeleteKeyDown = (event) => {
-      if (event.key === 'Escape' && currentMode === TOOL_MODES.MEASURE_DISTANCE) {
-        cancelDraftMeasure()
-        return
+      if (event.key === 'Escape') {
+        if (currentMode === TOOL_MODES.MEASURE_DISTANCE) {
+          cancelDraftMeasure()
+          return
+        }
+        if (currentMode === TOOL_MODES.DRAW_LINE) {
+          completeDraftLine()
+          return
+        }
       }
 
       if (currentMode !== TOOL_MODES.SELECT) return
-      if (event.key !== 'Delete' && event.key !== 'Backspace') return
-      if (!selectedPinIds.length) return
-      event.preventDefault()
-      removePins(selectedPinIds)
+
+      if (event.key === 'Delete' || event.key === 'Backspace') {
+        if (selectedPinIds.length) {
+          event.preventDefault()
+          removePins(selectedPinIds)
+          return
+        }
+        if (selectedLineId) {
+          event.preventDefault()
+          removeLine(selectedLineId)
+        }
+      }
+
+      if (event.key.toLowerCase() === 'c' && selectedLine) {
+        event.preventDefault()
+        updateLine(selectedLine.id, { color: getNextLineColor(selectedLine.color) })
+      }
     }
 
     window.addEventListener('keydown', handleDeleteKeyDown)
     return () => window.removeEventListener('keydown', handleDeleteKeyDown)
-  }, [cancelDraftMeasure, currentMode, removePins, selectedPinIds])
+  }, [
+    cancelDraftMeasure,
+    completeDraftLine,
+    currentMode,
+    removeLine,
+    removePins,
+    selectedLine,
+    selectedLineId,
+    selectedPinIds,
+    updateLine,
+  ])
 
   return (
     <>
@@ -221,7 +327,7 @@ function Map() {
         }}
         onClick={handleMapClick}
         onDblClick={handleMapDoubleClick}
-        options={{ ...mapOptions, disableDoubleClickZoom: currentMode === TOOL_MODES.MEASURE_DISTANCE }}
+        options={{ ...mapOptions, disableDoubleClickZoom: currentMode === TOOL_MODES.MEASURE_DISTANCE || currentMode === TOOL_MODES.DRAW_LINE }}
       >
         {markers.map((markerPoint, markerIndex) => (
           <PinMarker
@@ -247,7 +353,27 @@ function Map() {
 
         {selectedPin ? <PinPopup key={selectedPin.id} pin={selectedPin} /> : null}
 
-        {linePath.length > 1 && <Polyline path={linePath} options={{ strokeColor: COLOR_PRESETS.primaryBlue, strokeWeight: 3, clickable: false }} />}
+        {visibleLines.map((lineItem) => (
+          <Polyline
+            key={lineItem.id}
+            path={lineItem.points}
+            onClick={() => handleLineClick(lineItem.id)}
+            options={{
+              strokeColor: lineItem.color || COLOR_PRESETS.primaryBlue,
+              strokeWeight: lineItem.width || 3,
+              clickable: currentMode === TOOL_MODES.SELECT,
+              zIndex: selectedLineId === lineItem.id ? 10 : 5,
+              strokeOpacity: selectedLineId === lineItem.id ? 1 : 0.8,
+            }}
+          />
+        ))}
+
+        {linePath.length > 1 && (
+          <Polyline
+            path={linePath}
+            options={{ strokeColor: COLOR_PRESETS.primaryBlue, strokeWeight: 3, clickable: false, strokeOpacity: 0.7 }}
+          />
+        )}
 
         {routePaths.map((routePath, routeIndex) => (
           <Polyline key={`route-${routeIndex}`} path={routePath} options={{ strokeColor: COLOR_PRESETS.routeGreen, strokeWeight: 4, clickable: false }} />
