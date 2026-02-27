@@ -50,3 +50,7 @@
 - `src/components/Map/controllers/routeController.js`에서 경로 2번째 클릭(경로 요청 실행) 이후 `setMode(TOOL_MODES.SELECT)`를 호출해 Add Route 완료 직후 자동 복귀하도록 맞춤.
 - `src/components/Map/controllers/lineController.js`에서 선/도형 저장 완료 시 `setMode(TOOL_MODES.SELECT)`를 호출해 Draw Line 종료(우클릭 커밋) 직후 자동 복귀하도록 연결함.
 - `src/components/Map/Map.jsx`, `src/components/Map/measure/useMeasureInteraction.js`에 `setMode` 액션 전달 경로를 추가해 컨트롤러/측정 완료 흐름에서 동일한 모드 전환 액션을 재사용하도록 정리함.
+[codex] 2026-02-27 POI 상세 지도 추가 버튼/별점 표시 메모
+- `PoiDetailOverlay`에 `지도에 추가` 버튼을 추가하고, 클릭 시 `Map.jsx`의 `handleAddPoiToMap`으로 현재 POI 좌표 기반 핀 생성(`addMarker(position, patch)`)을 실행하도록 연결함.
+- 평점 라벨은 `평점 텍스트`에서 별(★/☆) + 숫자 표기로 변경해 시각적으로 바로 인지되도록 조정함.
+- 오버레이 루트에 `onMouseDown/onClick stopPropagation`을 추가해 오버레이 내부 버튼 클릭이 지도 클릭 이벤트로 전파되지 않게 처리함.
