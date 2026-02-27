@@ -440,3 +440,10 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `src/components/Map/PinMarker.jsx`에서 기존 `Marker(드래그)` + `OverlayView(렌더링)` 이중 구조를 제거하고 단일 `Marker`로 렌더링/클릭/드래그를 모두 처리하도록 통합함.
 - 마커 원형 스타일은 `icon(Symbol path)`로 유지하고, 아이콘/경로 인덱스 표시는 `label`로 처리해 좌표 소스를 단일화함.
 - 드래그 중에는 `fillOpacity`를 낮추고 Overlay 기반 transition/scale 자체를 제거해 재투영 시 튐 체감을 줄이도록 반영함.
+[codex] 2026-02-27 거리재기→선그리기 전환 메모
+- `src/components/Map/Map.jsx`에서 선 그리기(`DRAW_LINE`) 입력 경로를 기존 `linePath`/`addLine` 기반이 아니라 `measurePath`/`addMeasurement` 기반으로 전환해, 선 그리기 도구에서 거리 라벨/꼭짓점 편집/완료(더블클릭·우클릭·ESC) 동작이 실행되도록 정리함.
+- 같은 파일에서 `MEASURE_DISTANCE` 모드의 지도 클릭/마우스 이동/완료 트리거를 제거해 거리재기 도구는 동작이 비어 있는 상태가 되도록 맞춤.
+- 동일 전환에 맞춰 `disableDoubleClickZoom`, 드래프트 프리뷰 렌더 조건, 드래프트 정리 효과 조건을 `DRAW_LINE` 기준으로 통일하고, 사용하지 않게 된 `linePath` 드래프트 렌더/line entity 생성 코드를 제거함.
+[codex] 2026-02-27 툴바 툴팁 한국어 번역 메모
+- `src/components/Toolbar/Toolbar.jsx`의 `toolbarButtons` tooltip 문구를 한국어로 변경해 마우스 호버 시 한국어 안내가 표시되도록 수정함.
+- 단축키 표기는 기존과 동일하게 `(Z/Y/Q/W/E/R/T)` 형식을 유지함.

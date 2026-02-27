@@ -67,14 +67,6 @@ const getRouteRequest = (startPoint, endPoint, travelMode) => ({
   travelMode: window.google.maps.TravelMode[travelMode],
 })
 
-const createLineEntity = (linePointPath, activeLayerId, lineCount) => ({
-  id: `line-${Date.now()}-${lineCount + 1}`,
-  layerId: activeLayerId,
-  points: linePointPath,
-  color: COLOR_PRESETS.primaryBlue,
-  width: 3,
-})
-
 const getNextLineColor = (currentColor) => {
   const currentColorIndex = lineColorSequence.indexOf(currentColor)
   if (currentColorIndex === -1) return lineColorSequence[0]
@@ -138,7 +130,6 @@ function Map() {
   const currentMode = useProjectStore((state) => state.currentMode)
   const lines = useProjectStore((state) => state.lines)
   const measurements = useProjectStore((state) => state.measurements)
-  const linePath = useProjectStore((state) => state.linePath)
   const routePaths = useProjectStore((state) => state.routePaths)
   const measurePath = useProjectStore((state) => state.measurePath)
   const routeDraft = useProjectStore((state) => state.routeDraft)
@@ -150,7 +141,6 @@ function Map() {
   const selectedLineId = useProjectStore((state) => state.selectedLineId)
   const activeLayerId = useProjectStore((state) => state.activeLayerId)
   const addMarker = useProjectStore((state) => state.addMarker)
-  const appendLinePoint = useProjectStore((state) => state.appendLinePoint)
   const cancelDraftLine = useProjectStore((state) => state.cancelDraftLine)
   const appendMeasurePoint = useProjectStore((state) => state.appendMeasurePoint)
   const setMeasurePath = useProjectStore((state) => state.setMeasurePath)
@@ -163,7 +153,6 @@ function Map() {
   const selectLine = useProjectStore((state) => state.selectLine)
   const togglePinInSelection = useProjectStore((state) => state.togglePinInSelection)
   const clearPinSelection = useProjectStore((state) => state.clearPinSelection)
-  const addLine = useProjectStore((state) => state.addLine)
   const updateLine = useProjectStore((state) => state.updateLine)
   const removeLine = useProjectStore((state) => state.removeLine)
   const updatePin = useProjectStore((state) => state.updatePin)
@@ -256,7 +245,7 @@ function Map() {
   )
 
   useEffect(() => {
-    if (currentMode !== TOOL_MODES.MEASURE_DISTANCE) {
+    if (currentMode !== TOOL_MODES.DRAW_LINE) {
       cancelDraftMeasure()
     }
     if (currentMode !== TOOL_MODES.DRAW_LINE) {
@@ -267,13 +256,13 @@ function Map() {
   const measureSegmentLabelDataList = useMemo(() => createSegmentLabelDataList(measurePath), [measurePath])
   const measureTotalLabelData = useMemo(() => createTotalLabelData(measurePath), [measurePath])
   const previewMeasurePath = useMemo(() => {
-    if (currentMode !== TOOL_MODES.MEASURE_DISTANCE) return []
+    if (currentMode !== TOOL_MODES.DRAW_LINE) return []
     if (!measurePath.length || !hoverMeasurePoint) return []
     return [...measurePath, hoverMeasurePoint]
   }, [currentMode, hoverMeasurePoint, measurePath])
 
   const completeDraftMeasure = useCallback(() => {
-    if (currentMode !== TOOL_MODES.MEASURE_DISTANCE) return
+    if (currentMode !== TOOL_MODES.DRAW_LINE) return
     if (measurePath.length < 2) {
       cancelDraftMeasure()
       return
@@ -286,20 +275,6 @@ function Map() {
     addMeasurement(createMeasurementEntity(measurePath, targetLayerId, measurements.length))
     cancelDraftMeasure()
   }, [activeLayerId, addMeasurement, cancelDraftMeasure, currentMode, layers, measurePath, measurements.length])
-
-  const completeDraftLine = useCallback(() => {
-    if (currentMode !== TOOL_MODES.DRAW_LINE) return
-    if (linePath.length < 2) {
-      cancelDraftLine()
-      return
-    }
-    const targetLayerId = activeLayerId || layers[0]?.id || null
-    if (!targetLayerId) {
-      cancelDraftLine()
-      return
-    }
-    addLine(createLineEntity(linePath, targetLayerId, lines.length))
-  }, [activeLayerId, addLine, cancelDraftLine, currentMode, layers, linePath, lines.length])
 
   const requestRoute = useCallback(
     (startPoint, endPoint, travelMode) => {
@@ -365,7 +340,8 @@ function Map() {
       const clickedPoint = { lat: latitude, lng: longitude }
 
       if (currentMode === TOOL_MODES.DRAW_LINE) {
-        appendLinePoint(clickedPoint)
+        setHoverMeasurePoint(null)
+        appendMeasurePoint(clickedPoint)
         return
       }
 
@@ -379,12 +355,6 @@ function Map() {
         return
       }
 
-      if (currentMode === TOOL_MODES.MEASURE_DISTANCE) {
-        setHoverMeasurePoint(null)
-        appendMeasurePoint(clickedPoint)
-        return
-      }
-
       if (currentMode === TOOL_MODES.SELECT) {
         selectPin(null)
         selectLine(null)
@@ -392,7 +362,6 @@ function Map() {
       }
     },
     [
-      appendLinePoint,
       appendMeasurePoint,
       clearPinSelection,
       currentMode,
@@ -430,7 +399,7 @@ function Map() {
 
   const handleMapMouseMove = useCallback(
     (event) => {
-      if (currentMode !== TOOL_MODES.MEASURE_DISTANCE) return
+      if (currentMode !== TOOL_MODES.DRAW_LINE) return
       if (!measurePath.length) return
       if (draggingMeasurePointIndex !== null) return
       const latitude = event.latLng?.lat()
@@ -443,7 +412,7 @@ function Map() {
 
   const handleMeasurePointDrag = useCallback(
     (pointIndex, event) => {
-      if (currentMode !== TOOL_MODES.MEASURE_DISTANCE) return
+      if (currentMode !== TOOL_MODES.DRAW_LINE) return
       const latitude = event.latLng?.lat()
       const longitude = event.latLng?.lng()
       if (latitude === undefined || longitude === undefined) return
@@ -521,15 +490,11 @@ function Map() {
   )
 
   const handleMapDoubleClick = useCallback(() => {
-    if (currentMode === TOOL_MODES.MEASURE_DISTANCE) {
+    if (currentMode === TOOL_MODES.DRAW_LINE) {
       setHoverMeasurePoint(null)
       completeDraftMeasure()
-      return
     }
-    if (currentMode === TOOL_MODES.DRAW_LINE) {
-      completeDraftLine()
-    }
-  }, [completeDraftMeasure, completeDraftLine, currentMode])
+  }, [completeDraftMeasure, currentMode])
 
   useEffect(() => {
     const handleDeleteKeyDown = (event) => {
@@ -543,13 +508,9 @@ function Map() {
       if (isInputControlTarget && event.key !== 'Escape') return
 
       if (event.key === 'Escape') {
-        if (currentMode === TOOL_MODES.MEASURE_DISTANCE) {
+        if (currentMode === TOOL_MODES.DRAW_LINE) {
           setHoverMeasurePoint(null)
           completeDraftMeasure()
-          return
-        }
-        if (currentMode === TOOL_MODES.DRAW_LINE) {
-          completeDraftLine()
           return
         }
       }
@@ -578,7 +539,6 @@ function Map() {
     return () => window.removeEventListener('keydown', handleDeleteKeyDown)
   }, [
     completeDraftMeasure,
-    completeDraftLine,
     currentMode,
     removeLine,
     removePins,
@@ -590,7 +550,7 @@ function Map() {
   ])
 
   useEffect(() => {
-    if (currentMode === TOOL_MODES.MEASURE_DISTANCE) return
+    if (currentMode === TOOL_MODES.DRAW_LINE) return
     setHoverMeasurePoint(null)
     setDraggingMeasurePointIndex(null)
   }, [currentMode])
@@ -612,12 +572,12 @@ function Map() {
         onMouseMove={handleMapMouseMove}
         onDblClick={handleMapDoubleClick}
         onRightClick={() => {
-          if (currentMode === TOOL_MODES.MEASURE_DISTANCE) {
+          if (currentMode === TOOL_MODES.DRAW_LINE) {
             setHoverMeasurePoint(null)
             completeDraftMeasure()
           }
         }}
-        options={{ ...mapOptions, disableDoubleClickZoom: currentMode === TOOL_MODES.MEASURE_DISTANCE || currentMode === TOOL_MODES.DRAW_LINE }}
+        options={{ ...mapOptions, disableDoubleClickZoom: currentMode === TOOL_MODES.DRAW_LINE }}
       >
         {visiblePins.map((pinItem, pinIndex) => (
           <PinMarker
@@ -700,13 +660,6 @@ function Map() {
           />
         ))}
 
-        {linePath.length > 1 && (
-          <Polyline
-            path={linePath}
-            options={{ strokeColor: COLOR_PRESETS.primaryBlue, strokeWeight: 3, clickable: false, strokeOpacity: 0.7 }}
-          />
-        )}
-
         {routePaths.map((routePath, routeIndex) => (
           <Polyline key={`route-${routeIndex}`} path={routePath} options={{ strokeColor: COLOR_PRESETS.routeGreen, strokeWeight: 4, clickable: false }} />
         ))}
@@ -777,7 +730,7 @@ function Map() {
               strokeColor: '#ea580c',
               strokeWeight: Math.max(2, MEASURE_LINE_WIDTH - 2),
             }}
-            draggable={currentMode === TOOL_MODES.MEASURE_DISTANCE}
+            draggable={currentMode === TOOL_MODES.DRAW_LINE}
             onDragStart={() => setDraggingMeasurePointIndex(measurePointIndex)}
             onDrag={(event) => handleMeasurePointDrag(measurePointIndex, event)}
             onDragEnd={(event) => {
