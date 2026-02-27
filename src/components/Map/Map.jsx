@@ -1,20 +1,20 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { GoogleMap, Polyline } from '@react-google-maps/api'
+import { GoogleMap } from '@react-google-maps/api'
 import TOOL_MODES from '../../utils/toolModes'
-import { COLOR_PRESETS } from '../../utils/constants'
+import { COLOR_PRESETS, ICON_FILTER_OPTIONS } from '../../utils/constants'
 import useProjectStore from '../../stores/useProjectStore'
-import PinMarker from './PinMarker'
-import PinPopup from './PinPopup'
 import { handleLineMapClick, handleLineMapMouseMove } from './controllers/lineController'
 import { handleMarkerMouseDown, handleMarkerMouseUp } from './controllers/markerController'
 import { handleMeasureMapClick } from './controllers/measureController'
 import { handleRouteMapClick } from './controllers/routeController'
 import { handleSelectMapClick } from './controllers/selectController'
 import { syncDraftByMode } from './controllers/syncDraftByMode'
-import { ICON_FILTER_OPTIONS } from '../../utils/constants'
 import RouteService from '../../utils/RouteService'
-import MeasureLayer from './measure/MeasureLayer'
-import MeasureLabels from './measure/MeasureLabels'
+import PinLayer from './layers/PinLayer'
+import LineLayer from './layers/LineLayer'
+import RouteLayer from './layers/RouteLayer'
+import MeasureLayer from './layers/MeasureLayer'
+import MapOverlays from './MapOverlays'
 import useMeasureInteraction from './measure/useMeasureInteraction'
 import PoiDetailOverlay from './PoiDetailOverlay'
 import usePoiDetail from './hooks/usePoiDetail'
@@ -34,12 +34,6 @@ const mapOptions = {
 }
 
 const lineColorSequence = [COLOR_PRESETS.primaryBlue, COLOR_PRESETS.routeGreen, COLOR_PRESETS.measureOrange, '#8b5cf6']
-const routeTravelModeList = [
-  { value: 'WALKING', label: '도보' },
-  { value: 'TRANSIT', label: '대중교통' },
-  { value: 'DRIVING', label: '차량' },
-]
-
 const ADD_MARKER_DRAG_THRESHOLD_PX = 6
 
 const getNextLineColor = (currentColor) => {
@@ -434,42 +428,29 @@ function Map() {
         onRightClick={triggerMeasureComplete}
         options={{ ...mapOptions, disableDoubleClickZoom: currentMode === TOOL_MODES.DRAW_LINE }}
       >
-        {visiblePins.map((pinItem, pinIndex) => (
-          <PinMarker
-            key={pinItem.id}
-            pin={pinItem}
-            onMouseDown={() => setIsPinClickInProgress(true)}
-            onClick={(event) => handlePinClick(pinItem.id, event)}
-            indexLabel={currentMode === TOOL_MODES.ADD_ROUTE ? String(pinIndex + 1) : ''}
-            draggable={currentMode === TOOL_MODES.SELECT && selectedPinId === pinItem.id}
-            isDragging={draggingPinId === pinItem.id}
-            onDragStart={() => handlePinDragStart(pinItem.id)}
-            onDrag={(event) => handlePinDrag(pinItem.id, event)}
-            onDragEnd={(event) => handlePinDragEnd(pinItem.id, event)}
-          />
-        ))}
+        <PinLayer
+          pins={visiblePins}
+          selectedPin={selectedPin}
+          selectedPinId={selectedPinId}
+          currentMode={currentMode}
+          draggingPinId={draggingPinId}
+          onPinMouseDown={() => setIsPinClickInProgress(true)}
+          onPinClick={handlePinClick}
+          onPinDragStart={handlePinDragStart}
+          onPinDrag={handlePinDrag}
+          onPinDragEnd={handlePinDragEnd}
+        />
 
-        {selectedPin ? <PinPopup key={selectedPin.id} pin={selectedPin} /> : null}
         <PoiDetailOverlay poiDetail={selectedPoiDetail} onClose={clearPoiDetail} />
 
-        {visibleLines.map((lineItem) => (
-          <Polyline
-            key={lineItem.id}
-            path={lineItem.points}
-            onClick={() => handleLineClick(lineItem.id)}
-            options={{
-              strokeColor: lineItem.color || COLOR_PRESETS.primaryBlue,
-              strokeWeight: lineItem.width || 3,
-              clickable: currentMode === TOOL_MODES.SELECT,
-              zIndex: selectedLineId === lineItem.id ? 10 : 5,
-              strokeOpacity: selectedLineId === lineItem.id ? 1 : 0.8,
-            }}
-          />
-        ))}
+        <LineLayer
+          lines={visibleLines}
+          currentMode={currentMode}
+          selectedLineId={selectedLineId}
+          onLineClick={handleLineClick}
+        />
 
-        {routePaths.map((routePath, routeIndex) => (
-          <Polyline key={`route-${routeIndex}`} path={routePath} options={{ strokeColor: COLOR_PRESETS.routeGreen, strokeWeight: 4, clickable: false }} />
-        ))}
+        <RouteLayer routePaths={routePaths} />
 
         <MeasureLayer
           currentMode={currentMode}
@@ -479,86 +460,22 @@ function Map() {
           onMeasurePointDragStart={handleMeasurePointDragStart}
           onMeasurePointDrag={handleMeasurePointDrag}
           onMeasurePointDragEnd={handleMeasurePointDragEnd}
-        />
-
-        <MeasureLabels
           measureSegmentLabelDataList={measureSegmentLabelDataList}
           measureTotalLabelData={measureTotalLabelData}
         />
       </GoogleMap>
 
 
-      <div
-        className={`absolute bottom-4 left-1/2 z-20 -translate-x-1/2 rounded-xl border border-gray-200 bg-white/95 px-3 py-2 shadow-lg transition-all duration-200 ${
-          isPinFilterExpanded ? 'inline-flex max-w-[92vw] items-center gap-3' : 'inline-flex w-auto items-center gap-2'
-        }`}
-      >
-        <p className="shrink-0 text-xs font-semibold text-gray-600">지도 핀 아이콘 필터</p>
-
-        {isPinFilterExpanded ? (
-          <>
-            <button
-              type="button"
-              onClick={clearPinIconFilter}
-              disabled={!pinIconFilters.length}
-              className="shrink-0 text-xs text-gray-500 hover:text-gray-700 disabled:opacity-40"
-            >
-              초기화
-            </button>
-            <div className="flex max-w-[56vw] items-center gap-1 overflow-x-auto">
-              {ICON_FILTER_OPTIONS.map((filterItem) => {
-                const isActive = pinIconFilters.includes(filterItem.key)
-                return (
-                  <button
-                    key={`map-filter-${filterItem.key}`}
-                    type="button"
-                    onClick={() => togglePinIconFilter(filterItem.key)}
-                    className={`shrink-0 rounded-full border px-2 py-0.5 text-xs ${isActive ? 'border-blue-400 bg-blue-50 text-blue-700' : 'border-gray-200 bg-white text-gray-600'}`}
-                  >
-                    {filterItem.icon}
-                  </button>
-                )
-              })}
-            </div>
-            <button
-              type="button"
-              onClick={() => setIsPinFilterExpanded(false)}
-              className="shrink-0 rounded-full border border-gray-200 px-2 py-0.5 text-lg font-semibold leading-none text-gray-700 transition hover:bg-gray-100"
-              aria-label="핀 아이콘 필터 접기"
-              title="핀 아이콘 필터 접기"
-            >
-              −
-            </button>
-          </>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setIsPinFilterExpanded(true)}
-            className="shrink-0 rounded-full border border-gray-200 px-2 py-0.5 text-lg font-semibold leading-none text-gray-700 transition hover:bg-gray-100"
-            aria-label="핀 아이콘 필터 펼치기"
-            title="핀 아이콘 필터 펼치기"
-          >
-            +
-          </button>
-        )}
-      </div>
-
-      {currentMode === TOOL_MODES.ADD_ROUTE && (
-        <div className="absolute left-1/2 top-4 z-20 flex -translate-x-1/2 items-center gap-2 rounded-md bg-white px-3 py-2 text-sm shadow">
-          <select
-            value={routeDraft.travelMode || 'WALKING'}
-            onChange={(event) => setRouteTravelMode(event.target.value)}
-            className="rounded border border-gray-300 px-2 py-1 text-sm text-gray-700"
-          >
-            {routeTravelModeList.map((routeTravelModeItem) => (
-              <option key={routeTravelModeItem.value} value={routeTravelModeItem.value}>
-                {routeTravelModeItem.label}
-              </option>
-            ))}
-          </select>
-          <span className="text-gray-700">{routeDraft.start ? '도착점을 클릭해 경로를 완성하세요' : '출발점을 클릭하세요'}</span>
-        </div>
-      )}
+      <MapOverlays
+        currentMode={currentMode}
+        routeDraft={routeDraft}
+        setRouteTravelMode={setRouteTravelMode}
+        isPinFilterExpanded={isPinFilterExpanded}
+        setIsPinFilterExpanded={setIsPinFilterExpanded}
+        pinIconFilters={pinIconFilters}
+        togglePinIconFilter={togglePinIconFilter}
+        clearPinIconFilter={clearPinIconFilter}
+      />
     </>
   )
 }

@@ -16,3 +16,7 @@
 - `PoiDetailOverlay.jsx`를 추가해 `Map.jsx` 내부 `selectedPoiDetail` Overlay JSX를 컴포넌트로 이관함.
 - `hooks/usePoiDetail.js`를 추가해 `requestPoiDetail`, `selectedPoiDetail`, `poiDetailStatus(loading/error/success)`와 닫기 액션(`clearPoiDetail`)을 분리함.
 - `Map.jsx`는 place 클릭 시 `requestPoiDetail(placeId, position)` 호출만 담당하고, 렌더는 `<PoiDetailOverlay poiDetail={selectedPoiDetail} onClose={clearPoiDetail} />`로 단순화함.
+[codex] 2026-02-27 Map 레이어/오버레이 조합 리팩토링 메모
+- `Map.jsx`는 `GoogleMap` 컨테이너와 공통 이벤트 바인딩, visible 데이터 계산에 집중하고 내부 렌더는 `layers/*` 조합으로 이관함.
+- 하단 핀 아이콘 필터 바와 상단 경로 이동수단 바를 `MapOverlays.jsx`로 분리해 Map 본문 JSX 길이를 축소함.
+- 레이어 컴포넌트들은 store 직접 구독 없이 props 기반 렌더 구조로 통일함.
