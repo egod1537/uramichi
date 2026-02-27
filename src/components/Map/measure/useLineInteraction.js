@@ -1,7 +1,6 @@
 import { useCallback, useMemo } from 'react'
 import TOOL_MODES from '../../../utils/toolModes'
-import { COLOR_PRESETS } from '../../../utils/constants'
-import { formatDistanceLabel, getHaversineDistance, getMidpoint, getPathDistanceInMeters } from '../../../utils/geo'
+import { getHaversineDistance } from '../../../utils/geo'
 import { handleLineDraftComplete, handleLineMeasurePointDrag } from '../controllers/lineController'
 import { MEASURE_LINE_WIDTH, POLYGON_CLOSE_DISTANCE_METERS } from './constants'
 
@@ -26,28 +25,10 @@ const createLineMeasurementEntity = (measurePointPath, activeLayerId, measuremen
     id: `measure-${Date.now()}-${measurementCount + 1}`,
     layerId: activeLayerId,
     points: pointsForPolygon,
-    color: COLOR_PRESETS.measureOrange,
+    color: '#111111',
     width: MEASURE_LINE_WIDTH,
     shapeType,
   }
-}
-
-const createSegmentLabelDataList = (measurePointPath) =>
-  measurePointPath.slice(1).map((currentPoint, pointIndex) => {
-    const previousPoint = measurePointPath[pointIndex]
-    const segmentDistanceInMeters = getPathDistanceInMeters([previousPoint, currentPoint])
-    return {
-      id: `line-segment-${pointIndex + 1}`,
-      position: getMidpoint(previousPoint, currentPoint),
-      label: formatDistanceLabel(segmentDistanceInMeters),
-    }
-  })
-
-const createTotalLabelData = (measurePointPath) => {
-  const totalDistanceInMeters = getPathDistanceInMeters(measurePointPath)
-  if (!totalDistanceInMeters) return null
-  const terminalPoint = measurePointPath[measurePointPath.length - 1]
-  return { id: 'line-total', position: terminalPoint, label: `총 ${formatDistanceLabel(totalDistanceInMeters)}` }
 }
 
 function useLineInteraction({
@@ -64,10 +45,6 @@ function useLineInteraction({
   setDraggingMeasurePointIndex,
   setMode,
 }) {
-  const lineSegmentLabelDataList = useMemo(() => createSegmentLabelDataList(linePath), [linePath])
-
-  const lineTotalLabelData = useMemo(() => createTotalLabelData(linePath), [linePath])
-
   const linePreviewPath = useMemo(() => {
     if (!linePath.length || !hoverMeasurePoint) return []
     return [...linePath, hoverMeasurePoint]
@@ -91,10 +68,10 @@ function useLineInteraction({
         pointIndex,
         clickedPoint,
         state: { linePath },
-        actions: { setLinePath },
+        actions: { setLinePath, lineSnapPointList: [...linePath, ...measurements.flatMap((measurementItem) => measurementItem.points)] },
       })
     },
-    [linePath, setLinePath],
+    [linePath, measurements, setLinePath],
   )
 
   const handleLineDraftPointDragStart = useCallback((pointIndex) => {
@@ -110,8 +87,8 @@ function useLineInteraction({
   )
 
   return {
-    lineSegmentLabelDataList,
-    lineTotalLabelData,
+    lineSegmentLabelDataList: [],
+    lineTotalLabelData: null,
     linePreviewPath,
     completeLineInteraction,
     handleLineDraftPointDrag,
