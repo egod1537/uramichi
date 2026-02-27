@@ -88,3 +88,6 @@
 - DRAW_LINE 완료 엔티티 저장을 measurement 경로로 유지하되 색상을 기본 검은색(`#111111`)으로 고정해 선 두께/톤 불일치가 줄어들도록 조정함.
 - 지도 우클릭 종료 시 선그리기 완료 후 즉시 Select 모드로 복귀되는 기존 플로우를 유지하면서, draw_line에서는 거리 라벨을 렌더링하지 않도록 상호작용 훅 반환값을 비우는 방식으로 정리함.
 - DRAW_LINE 클릭/드래그 시 기존 레이어 오브젝트(저장 선/도형)의 꼭짓점에 근거리 스냅(25m)되도록 line controller에 스냅 포인트 계산을 추가함.
+[codex] 2026-02-27 선그리기 우클릭 종료 중복 호출 잠금 메모
+- `Map.jsx`에 `rightClickCompleteLockRef`를 추가해 `onRightClick`와 DOM `contextmenu`가 같은 우클릭에서 동시에 들어와도 완료 로직이 1회만 실행되도록 잠금 처리함.
+- 우클릭 직후 클릭 무시 플래그(`shouldIgnoreNextMapClickRef`)와 함께 동작해 종료 직후 드래프트가 다시 남는 잔상 케이스를 줄이는 목적임.
