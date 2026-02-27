@@ -25,3 +25,5 @@
 - `useLineInteraction` 훅 인자에서 `measurements`, `addMeasurement` 의존을 `lines`, `addLine`으로 교체함.
 - 선 종료 시 생성 엔티티 팩토리를 `createLineEntity`로 정리하고, `line-*` id로 라인 엔티티가 저장되도록 맞춤.
 - 드래프트 포인트 드래그 스냅 참조도 `lines` 기반으로 동작하도록 조정함.
+[codex] 2026-02-27 MeasureLayer 범위 축소 메모
+- `MeasureLayer.jsx`에서 저장된 선/도형 렌더를 제거하고, 거리 측정 드래프트(`measurePath`, `previewMeasurePath`)와 측정 포인트 드래그 UI만 렌더하도록 범위를 축소함.

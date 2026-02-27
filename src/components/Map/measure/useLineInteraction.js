@@ -2,7 +2,8 @@ import { useCallback, useMemo } from 'react'
 import TOOL_MODES from '../../../utils/toolModes'
 import { getHaversineDistance } from '../../../utils/geo'
 import { handleLineDraftComplete, handleLineMeasurePointDrag } from '../controllers/lineController'
-import { MEASURE_LINE_WIDTH, POLYGON_CLOSE_DISTANCE_METERS } from './constants'
+import { POLYGON_CLOSE_DISTANCE_METERS } from './constants'
+import { LINE_DEFAULT_COLOR, LINE_DEFAULT_WIDTH } from '../../../utils/lineStyle'
 
 const resolveLineShapeType = (linePointPath) => {
   if (linePointPath.length < 3) return 'line'
@@ -25,8 +26,8 @@ const createLineEntity = (linePointPath, activeLayerId, lineCount) => {
     id: `line-${Date.now()}-${lineCount + 1}`,
     layerId: activeLayerId,
     points: pointsForPolygon,
-    color: '#111111',
-    width: MEASURE_LINE_WIDTH,
+    color: LINE_DEFAULT_COLOR,
+    width: LINE_DEFAULT_WIDTH,
     shapeType,
   }
 }
@@ -87,8 +88,6 @@ function useLineInteraction({
   )
 
   return {
-    lineSegmentLabelDataList: [],
-    lineTotalLabelData: null,
     linePreviewPath,
     completeLineInteraction,
     handleLineDraftPointDrag,

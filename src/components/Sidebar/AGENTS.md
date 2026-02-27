@@ -15,3 +15,6 @@
 - `LayerRow.jsx`에서 레이어 이름 라벨 더블클릭 시 즉시 인라인 이름 변경 모드로 진입하도록 `onDoubleClick -> onStartRename(layer)`를 추가함.
 - 같은 파일에서 핀 이름 라벨 더블클릭 시 즉시 인라인 이름 변경 모드로 진입하도록 `onDoubleClick -> onStartRename(pin)`를 추가함.
 - 기존 F2/옵션 메뉴 기반 이름 변경 경로와 Enter/Blur 저장, Escape 취소 규칙은 그대로 유지함.
+[codex] 2026-02-27 Sidebar 선 목록 데이터 소스 정리 메모
+- `LayerPanel`/`LayerRow`의 레이어 하위 선/도형 목록 데이터 소스를 `measurements`에서 `lines`로 전환함.
+- 사이드바 선 목록 라벨(`선분 N`/`도형 N`)은 기존 `shapeType` 분기를 유지하면서 `lines` 엔티티 기준으로 렌더링함.

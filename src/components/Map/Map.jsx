@@ -42,7 +42,6 @@ function Map() {
   const rightClickCompleteLockRef = useRef(false)
   const currentMode = useProjectStore((state) => state.currentMode)
   const lines = useProjectStore((state) => state.lines)
-  const measurements = useProjectStore((state) => state.measurements)
   const routePaths = useProjectStore((state) => state.routePaths)
   const linePath = useProjectStore((state) => state.linePath)
   const measurePath = useProjectStore((state) => state.measurePath)
@@ -105,13 +104,9 @@ function Map() {
     return layerVisiblePins.filter((pinItem) => activeIconSet.has(getTravelPinIconKey(pinItem.icon)))
   }, [pinIconFilters, pins, visibleLayerIdSet])
   const visibleLines = useMemo(() => lines.filter((lineItem) => visibleLayerIdSet.has(lineItem.layerId)), [lines, visibleLayerIdSet])
-  const visibleMeasurements = useMemo(
-    () => measurements.filter((measurementItem) => visibleLayerIdSet.has(measurementItem.layerId)),
-    [measurements, visibleLayerIdSet],
-  )
   const lineSnapPointList = useMemo(
-    () => [...visibleLines.flatMap((lineItem) => lineItem.points), ...visibleMeasurements.flatMap((measurementItem) => measurementItem.points)],
-    [visibleLines, visibleMeasurements],
+    () => visibleLines.flatMap((lineItem) => lineItem.points),
+    [visibleLines],
   )
   const selectedLine = useMemo(
     () => visibleLines.find((lineItem) => lineItem.id === selectedLineId) || null,
@@ -169,8 +164,6 @@ function Map() {
   }, [cancelDraftLine, cancelDraftMeasure, currentMode])
 
   const {
-    lineSegmentLabelDataList,
-    lineTotalLabelData,
     linePreviewPath,
     completeLineInteraction,
     handleLineDraftPointDrag,
@@ -216,16 +209,6 @@ function Map() {
 
   const isDraggingDraftPoint = isLinePointDragging || isMeasurePointDragging
 
-  const activeSegmentLabelDataList = currentMode === TOOL_MODES.DRAW_LINE ? lineSegmentLabelDataList : measureSegmentLabelDataList
-  const activeTotalLabelData = currentMode === TOOL_MODES.DRAW_LINE ? lineTotalLabelData : measureTotalLabelData
-  const activeDraftPath = currentMode === TOOL_MODES.DRAW_LINE ? linePath : measurePath
-  const activePreviewPath = currentMode === TOOL_MODES.DRAW_LINE ? linePreviewPath : previewMeasurePath
-  const activeHandleDraftPointDragStart =
-    currentMode === TOOL_MODES.DRAW_LINE ? handleLineDraftPointDragStart : handleMeasurePointDragStart
-  const activeHandleDraftPointDrag =
-    currentMode === TOOL_MODES.DRAW_LINE ? handleLineDraftPointDrag : handleMeasurePointDrag
-  const activeHandleDraftPointDragEnd =
-    currentMode === TOOL_MODES.DRAW_LINE ? handleLineDraftPointDragEnd : handleMeasurePointDragEnd
 
   const triggerMeasureComplete = useCallback((triggerType = 'default') => {
     if (currentMode === TOOL_MODES.DRAW_LINE) {
@@ -617,20 +600,29 @@ function Map() {
 
         <PoiDetailOverlay poiDetail={selectedPoiDetail} onClose={clearPoiDetail} onAddPoiToMap={handleAddPoiToMap} />
 
-        <LineLayer lines={visibleLines} currentMode={currentMode} selectedLineId={selectedLineId} onLineClick={handleLineClick} />
+        <LineLayer
+          lines={visibleLines}
+          currentMode={currentMode}
+          selectedLineId={selectedLineId}
+          linePath={linePath}
+          previewLinePath={linePreviewPath}
+          onLineClick={handleLineClick}
+          onLinePointDragStart={handleLineDraftPointDragStart}
+          onLinePointDrag={handleLineDraftPointDrag}
+          onLinePointDragEnd={handleLineDraftPointDragEnd}
+        />
 
         <RouteLayer routePaths={routePaths} />
 
         <MeasureLayer
           currentMode={currentMode}
-          visibleMeasurements={visibleMeasurements}
-          measurePath={activeDraftPath}
-          previewMeasurePath={activePreviewPath}
-          measureSegmentLabelDataList={activeSegmentLabelDataList}
-          measureTotalLabelData={activeTotalLabelData}
-          onMeasurePointDragStart={activeHandleDraftPointDragStart}
-          onMeasurePointDrag={activeHandleDraftPointDrag}
-          onMeasurePointDragEnd={activeHandleDraftPointDragEnd}
+          measurePath={measurePath}
+          previewMeasurePath={previewMeasurePath}
+          measureSegmentLabelDataList={measureSegmentLabelDataList}
+          measureTotalLabelData={measureTotalLabelData}
+          onMeasurePointDragStart={handleMeasurePointDragStart}
+          onMeasurePointDrag={handleMeasurePointDrag}
+          onMeasurePointDragEnd={handleMeasurePointDragEnd}
         />
       </GoogleMap>
 

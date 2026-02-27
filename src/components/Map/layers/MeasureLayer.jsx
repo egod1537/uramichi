@@ -3,7 +3,6 @@ import MeasureLabels from '../measure/MeasureLabels'
 
 function MeasureLayer({
   currentMode,
-  visibleMeasurements,
   measurePath,
   previewMeasurePath,
   measureSegmentLabelDataList,
@@ -16,7 +15,6 @@ function MeasureLayer({
     <>
       <BaseMeasureLayer
         currentMode={currentMode}
-        visibleMeasurements={visibleMeasurements}
         measurePath={measurePath}
         previewMeasurePath={previewMeasurePath}
         onMeasurePointDragStart={onMeasurePointDragStart}

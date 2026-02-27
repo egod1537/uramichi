@@ -108,3 +108,6 @@
 - `controllers/lineController.js`의 선 종료 커밋을 `addMeasurement`에서 `addLine`으로 교체해 draw_line 결과가 `lines` 엔티티로 저장되도록 정리함.
 - `Map.jsx`에서 `useLineInteraction` 전달 액션도 `addLine`으로 연결해 컨트롤러-훅-스토어 액션 경로를 일치시킴.
 - Select 모드 선 선택/삭제/색상변경 경로(`selectedLineId`, `removeLine`, `updateLine`)는 그대로 유지되어 신규 선에도 동일하게 적용됨을 빌드/코드 경로로 확인함.
+[codex] 2026-02-27 Map 선/측정 렌더 경계 분리 메모
+- `Map.jsx`에서 일반 선 렌더는 `LineLayer`로, 거리 측정 렌더는 `MeasureLayer`로 명확히 분리해 혼합 표시를 제거함.
+- 선 스냅 포인트 계산은 `lines`만 기준으로 사용하도록 정리해 measurement 레거시 데이터 의존을 제거함.

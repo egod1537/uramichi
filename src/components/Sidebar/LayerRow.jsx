@@ -12,7 +12,7 @@ import useProjectStore from '../../stores/useProjectStore'
 function LayerRow({
   layer,
   filteredPins,
-  measurements,
+  lines,
   isDraggingLayer,
   layerDropPreview,
   onLayerDragStart,
@@ -47,7 +47,7 @@ function LayerRow({
 
 
   const layerPins = useMemo(() => filteredPins.filter((pinItem) => pinItem.layerId === layer.id), [filteredPins, layer.id])
-  const layerMeasurements = useMemo(() => measurements.filter((measurementItem) => measurementItem.layerId === layer.id), [measurements, layer.id])
+  const layerLines = useMemo(() => lines.filter((lineItem) => lineItem.layerId === layer.id), [lines, layer.id])
   const isActiveLayer = activeLayerId === layer.id
   const isLayerDropPreviewBefore = layerDropPreview?.targetLayerId === layer.id && layerDropPreview.dropPosition === 'before'
   const isLayerDropPreviewAfter = layerDropPreview?.targetLayerId === layer.id && layerDropPreview.dropPosition === 'after'
@@ -427,13 +427,13 @@ function LayerRow({
             )
           })}
 
-          {!!layerMeasurements.length && (
+          {!!layerLines.length && (
             <div className="mt-2 space-y-1 px-2">
-              {layerMeasurements.map((measurementItem, measurementIndex) => (
-                <div key={measurementItem.id} className="flex items-center gap-2 rounded bg-orange-50 px-2 py-1 text-xs text-orange-700">
+              {layerLines.map((lineItem, lineIndex) => (
+                <div key={lineItem.id} className="flex items-center gap-2 rounded bg-orange-50 px-2 py-1 text-xs text-orange-700">
                   <span>📏</span>
-                  <span className="truncate">{measurementItem.shapeType === 'polygon' ? `도형 ${measurementIndex + 1}` : `선분 ${measurementIndex + 1}`}</span>
-                  <span className="ml-auto text-[11px] text-orange-500">{measurementItem.points.length}점</span>
+                  <span className="truncate">{lineItem.shapeType === 'polygon' ? `도형 ${lineIndex + 1}` : `선분 ${lineIndex + 1}`}</span>
+                  <span className="ml-auto text-[11px] text-orange-500">{lineItem.points.length}점</span>
                 </div>
               ))}
             </div>
