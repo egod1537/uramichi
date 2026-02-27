@@ -347,3 +347,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 [codex] 2026-02-27 핀 추가 입력 타이밍 변경 메모
 - `src/components/Map/Map.jsx`에서 핀 추가(`addMarker`) 트리거를 지도 `onClick`에서 `onMouseDown`으로 이동해, 클릭 업이 아닌 클릭 다운 시점에 핀이 생성되도록 변경함.
 - 기존 지도 클릭 핸들러는 Select/Line/Route/Measure 흐름만 유지하도록 정리함.
+
+[codex] 2026-02-27 키다운 입력 컨트롤 가드 작업 메모
+- `src/components/Toolbar/Toolbar.jsx`의 `handleKeydown` 시작부에 입력 컨트롤 가드(`INPUT`/`TEXTAREA`/`SELECT`/`isContentEditable`)를 추가해, 입력 중에는 단축키가 동작하지 않도록 하고 `Escape`만 예외 허용함.
+- `src/components/Map/Map.jsx`의 `handleDeleteKeyDown`에도 동일한 입력 컨트롤 가드를 적용해, 입력 중 Delete/Backspace/C 단축키 오동작을 방지하고 `Escape` 흐름은 유지함.

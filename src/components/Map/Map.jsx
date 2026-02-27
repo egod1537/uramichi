@@ -380,6 +380,15 @@ function Map() {
 
   useEffect(() => {
     const handleDeleteKeyDown = (event) => {
+      const eventTarget = event.target
+      const isInputControlTarget =
+        eventTarget instanceof HTMLElement
+        && (eventTarget.tagName === 'INPUT'
+          || eventTarget.tagName === 'TEXTAREA'
+          || eventTarget.tagName === 'SELECT'
+          || eventTarget.isContentEditable)
+      if (isInputControlTarget && event.key !== 'Escape') return
+
       if (event.key === 'Escape') {
         if (currentMode === TOOL_MODES.MEASURE_DISTANCE) {
           setHoverMeasurePoint(null)
