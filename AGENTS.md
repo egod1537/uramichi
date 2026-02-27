@@ -410,3 +410,9 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - 동일 파일에 JWT credential payload 파싱 후 `useUserStore.login(...)`으로 `displayName/email/avatarUrl`를 동기화하는 로그인 콜백을 추가함.
 - 로그아웃 시 `window.google.accounts.id.disableAutoSelect()`를 호출해 자동 계정 선택을 해제하도록 보강함.
 - 실행 전제: `.env.local` 또는 환경변수에 `VITE_GOOGLE_CLIENT_ID`가 필요하며, 누락 시 토스트로 안내함.
+
+[codex] 2026-02-27 거리 도구 오브젝트화/UX 수정 메모
+- `src/stores/useProjectStore.js`와 `src/utils/{ProjectManager,HistoryManager}.js`에 `measurements` 상태 스냅샷 필드를 추가하고, `addMeasurement` 액션으로 거리 측정 결과를 히스토리 커밋 가능한 레이어 오브젝트로 저장하도록 확장함.
+- `src/components/Map/Map.jsx`에서 거리 측정 드래프트 완료 로직을 분리해 우클릭/ESC/더블클릭 시 측정 선이 즉시 확정 저장되도록 변경함.
+- 거리선 두께를 상향(`MEASURE_LINE_WIDTH`)하고 꼭짓점을 `Marker` 심볼로 렌더링해 확대/축소 시에도 선/꼭짓점이 화면 기준 일정 비율로 유지되도록 맞춤.
+- 저장된 거리 측정 오브젝트를 지도에 재렌더링하고, `src/components/Sidebar/LayerRow.jsx`에 레이어별 측정 목록(`📏 거리 측정 n`)을 추가해 핀처럼 레이어 패널에서 확인 가능하게 연결함.
