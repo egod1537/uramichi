@@ -60,19 +60,13 @@ function PinMarker({
   }, [indexLabel])
 
   const handlePinClick = (event) => {
-    if (isInteractionBlocked) {
-      event?.domEvent?.stopPropagation?.()
-      return
-    }
+    if (isInteractionBlocked) return
     event?.domEvent?.stopPropagation?.()
     onClick(event)
   }
 
   const handlePinMouseDown = (event) => {
-    if (isInteractionBlocked) {
-      event?.domEvent?.stopPropagation?.()
-      return
-    }
+    if (isInteractionBlocked) return
     event?.domEvent?.stopPropagation?.()
     onMouseDown?.()
   }
@@ -83,7 +77,7 @@ function PinMarker({
       icon={markerIcon}
       label={markerLabel}
       draggable={draggable}
-      clickable
+      clickable={!isInteractionBlocked}
       opacity={isDragging ? 0.6 : 1}
       zIndex={isSelected ? 100 : 10}
       onMouseDown={handlePinMouseDown}
