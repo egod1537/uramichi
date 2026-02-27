@@ -106,6 +106,10 @@ function Map() {
     () => measurements.filter((measurementItem) => visibleLayerIdSet.has(measurementItem.layerId)),
     [measurements, visibleLayerIdSet],
   )
+  const lineSnapPointList = useMemo(
+    () => [...visibleLines.flatMap((lineItem) => lineItem.points), ...visibleMeasurements.flatMap((measurementItem) => measurementItem.points)],
+    [visibleLines, visibleMeasurements],
+  )
   const selectedLine = useMemo(
     () => visibleLines.find((lineItem) => lineItem.id === selectedLineId) || null,
     [selectedLineId, visibleLines],
@@ -261,6 +265,7 @@ function Map() {
           setIsPinClickInProgress,
           addMarker,
           setMode,
+          lineSnapPointList,
         },
         refs: {
           addMarkerMouseDownPositionRef,
@@ -284,6 +289,7 @@ function Map() {
       setHoverMeasurePoint,
       setRouteStart,
       setMode,
+      lineSnapPointList,
     ],
   )
 
