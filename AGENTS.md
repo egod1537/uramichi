@@ -405,3 +405,9 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 [codex] 2026-02-27 지도 핀 아이콘 필터 폭 자동 맞춤 메모
 - `src/components/Map/Map.jsx`의 하단 핀 아이콘 필터 바를 고정 폭(`w-[min(92vw,860px)]`)에서 내용 기반 `inline-flex + max-w` 구조로 변경해 우측 여백이 과하게 비는 문제를 줄임.
 - 아이콘 버튼 영역은 `flex-1` 확장 대신 `max-w-[56vw] overflow-x-auto`로 제한해, 버튼 수에 맞춰 폭이 자연스럽게 늘고 좁은 화면에서는 가로 스크롤로 대응하도록 조정함.
+
+[codex] 2026-02-27 거리 도구 오브젝트화/UX 수정 메모
+- `src/stores/useProjectStore.js`와 `src/utils/{ProjectManager,HistoryManager}.js`에 `measurements` 상태 스냅샷 필드를 추가하고, `addMeasurement` 액션으로 거리 측정 결과를 히스토리 커밋 가능한 레이어 오브젝트로 저장하도록 확장함.
+- `src/components/Map/Map.jsx`에서 거리 측정 드래프트 완료 로직을 분리해 우클릭/ESC/더블클릭 시 측정 선이 즉시 확정 저장되도록 변경함.
+- 거리선 두께를 상향(`MEASURE_LINE_WIDTH`)하고 꼭짓점을 `Marker` 심볼로 렌더링해 확대/축소 시에도 선/꼭짓점이 화면 기준 일정 비율로 유지되도록 맞춤.
+- 저장된 거리 측정 오브젝트를 지도에 재렌더링하고, `src/components/Sidebar/LayerRow.jsx`에 레이어별 측정 목록(`📏 거리 측정 n`)을 추가해 핀처럼 레이어 패널에서 확인 가능하게 연결함.

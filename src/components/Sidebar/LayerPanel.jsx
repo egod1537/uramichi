@@ -16,6 +16,7 @@ function LayerPanel() {
   const layers = useProjectStore((state) => state.layers)
   const pins = useProjectStore((state) => state.pins)
   const routes = useProjectStore((state) => state.routes)
+  const measurements = useProjectStore((state) => state.measurements)
   const selectedPinIds = useProjectStore((state) => state.selectedPinIds)
   const removePins = useProjectStore((state) => state.removePins)
   const movePinsToLayer = useProjectStore((state) => state.movePinsToLayer)
@@ -141,6 +142,7 @@ function LayerPanel() {
           key={layerItem.id}
           layer={layerItem}
           filteredPins={filteredPins}
+          measurements={measurements}
           isDraggingLayer={dragLayerId === layerItem.id}
           layerDropPreview={layerDropPreview}
           onLayerDragStart={(layerId) => setDragLayerId(layerId)}

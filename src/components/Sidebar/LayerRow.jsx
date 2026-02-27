@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { CATEGORY_PRESETS, TRANSPORT_PRESETS } from '../../utils/constants'
 import useProjectStore from '../../stores/useProjectStore'
 
-function LayerRow({ layer, filteredPins, isDraggingLayer, layerDropPreview, onLayerDragStart, onLayerDragEnd, onLayerDragOver, onLayerDrop }) {
+function LayerRow({ layer, filteredPins, measurements, isDraggingLayer, layerDropPreview, onLayerDragStart, onLayerDragEnd, onLayerDragOver, onLayerDrop }) {
   const activeLayerId = useProjectStore((state) => state.activeLayerId)
   const setActiveLayer = useProjectStore((state) => state.setActiveLayer)
   const toggleLayerVisibility = useProjectStore((state) => state.toggleLayerVisibility)
@@ -19,6 +19,7 @@ function LayerRow({ layer, filteredPins, isDraggingLayer, layerDropPreview, onLa
   const [pinDropPreview, setPinDropPreview] = useState(null)
 
   const layerPins = useMemo(() => filteredPins.filter((pinItem) => pinItem.layerId === layer.id), [filteredPins, layer.id])
+  const layerMeasurements = useMemo(() => measurements.filter((measurementItem) => measurementItem.layerId === layer.id), [measurements, layer.id])
   const isActiveLayer = activeLayerId === layer.id
   const isLayerDropPreviewBefore = layerDropPreview?.targetLayerId === layer.id && layerDropPreview.dropPosition === 'before'
   const isLayerDropPreviewAfter = layerDropPreview?.targetLayerId === layer.id && layerDropPreview.dropPosition === 'after'
@@ -219,6 +220,19 @@ function LayerRow({ layer, filteredPins, isDraggingLayer, layerDropPreview, onLa
               </div>
             )
           })}
+
+          {!!layerMeasurements.length && (
+            <div className="mt-2 space-y-1 px-2">
+              {layerMeasurements.map((measurementItem, measurementIndex) => (
+                <div key={measurementItem.id} className="flex items-center gap-2 rounded bg-orange-50 px-2 py-1 text-xs text-orange-700">
+                  <span>📏</span>
+                  <span className="truncate">거리 측정 {measurementIndex + 1}</span>
+                  <span className="ml-auto text-[11px] text-orange-500">{measurementItem.points.length}점</span>
+                </div>
+              ))}
+            </div>
+          )}
+
           {!!layerPins.length && (
             <div
               className={`mx-2 h-1 rounded bg-blue-500 transition-opacity ${pinDropPreview?.targetPinId === '__end__' ? 'opacity-100' : 'opacity-0'}`}
