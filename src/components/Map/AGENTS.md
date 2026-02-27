@@ -91,3 +91,13 @@
 
 [codex] 2026-02-27 POI 커스텀 오버레이 닫기 버튼 중복 제거 메모
 - `src/components/Map/PoiDetailOverlay.jsx` 하단 액션 영역의 `닫기` 버튼을 제거하고, 헤더의 `×` 버튼만 닫기 동작으로 유지해 중복 UI를 정리함.
+[codex] 2026-02-27 Map 검색-POI 오버레이 소비 메모
+- `Map.jsx`에서 `poiSearchRequest`를 구독해 검색 요청이 들어오면 지도 `panTo`/줌 이동 후 POI 상세 오버레이를 열도록 `useEffect` 소비 경로를 추가함.
+- 검색 결과에 `placeId`가 없더라도 fallback 데이터(이름/주소/평점)로 커스텀 POI 상세를 렌더링할 수 있게 `usePoiDetail.requestPoiDetail(placeId, position, fallbackData)` 시그니처를 확장함.
+- 요청 처리 후 `consumePoiSearchRequest()`를 호출해 동일 요청이 재실행되지 않도록 단발성 소비 패턴으로 고정함.
+[codex] 2026-02-27 지도 시간 필터 슬라이더 버그 수정 메모
+- `src/components/Map/MapOverlays.jsx`의 양방향 슬라이더 입력 레이어에 z-index/clipPath를 분리 적용해, 좌측 핸들이 우측 핸들 레이어에 가려져 드래그되지 않던 문제를 수정함.
+- 좌측 입력은 왼쪽 절반, 우측 입력은 오른쪽 절반 상호작용 영역만 받도록 제한해 각 핸들 조작 충돌을 줄임.
+[codex] 2026-02-27 선그리기 우클릭 종료 중복 호출 잠금 메모
+- `Map.jsx`에 `rightClickCompleteLockRef`를 추가해 `onRightClick`와 DOM `contextmenu`가 같은 우클릭에서 동시에 들어와도 완료 로직이 1회만 실행되도록 잠금 처리함.
+- 우클릭 직후 클릭 무시 플래그(`shouldIgnoreNextMapClickRef`)와 함께 동작해 종료 직후 드래프트가 다시 남는 잔상 케이스를 줄이는 목적임.

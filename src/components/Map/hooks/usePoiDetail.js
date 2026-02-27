@@ -10,11 +10,11 @@ const createLoadingPoiDetail = (placeId, position) => ({
   rating: null,
 })
 
-const createErrorPoiDetail = (placeId, position) => ({
+const createErrorPoiDetail = (placeId, position, fallbackData = {}) => ({
   placeId,
   position,
-  name: '장소 정보를 찾을 수 없습니다',
-  address: '',
+  name: fallbackData.name || '장소 정보를 찾을 수 없습니다',
+  address: fallbackData.address || '',
   website: '',
   phoneNumber: '',
   rating: null,
@@ -30,8 +30,20 @@ function usePoiDetail({ mapInstanceRef }) {
   }, [])
 
   const requestPoiDetail = useCallback(
-    (placeId, position) => {
-      if (!mapInstanceRef.current || !window.google?.maps?.places?.PlacesService) return
+    (placeId, position, fallbackData = {}) => {
+      if (!mapInstanceRef.current || !window.google?.maps?.places?.PlacesService || !placeId) {
+        setSelectedPoiDetail({
+          placeId: placeId || `search-${Date.now()}`,
+          position,
+          name: fallbackData.name || 'POI',
+          address: fallbackData.address || '',
+          website: '',
+          phoneNumber: '',
+          rating: typeof fallbackData.rating === 'number' ? fallbackData.rating : null,
+        })
+        setPoiDetailStatus('success')
+        return
+      }
 
       setSelectedPoiDetail(createLoadingPoiDetail(placeId, position))
       setPoiDetailStatus('loading')
@@ -44,7 +56,7 @@ function usePoiDetail({ mapInstanceRef }) {
         },
         (placeResult, placeStatus) => {
           if (placeStatus !== window.google.maps.places.PlacesServiceStatus.OK || !placeResult) {
-            setSelectedPoiDetail(createErrorPoiDetail(placeId, position))
+            setSelectedPoiDetail(createErrorPoiDetail(placeId, position, fallbackData))
             setPoiDetailStatus('error')
             return
           }

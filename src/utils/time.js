@@ -13,7 +13,7 @@ export function convertTimeStringToMinutes(timeText) {
   if (minuteValue < 0 || minuteValue > 59) return null
   if (hourValue === 24 && minuteValue !== 0) return null
 
-  return (hourValue * 60 + minuteValue) % MINUTES_IN_DAY
+  return hourValue * 60 + minuteValue
 }
 
 export function convertMinutesToTimelinePercent(totalMinutes) {

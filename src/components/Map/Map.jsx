@@ -39,6 +39,7 @@ function Map() {
   const mapInstanceRef = useRef(null)
   const addMarkerMouseDownPositionRef = useRef(null)
   const shouldIgnoreNextMapClickRef = useRef(false)
+  const rightClickCompleteLockRef = useRef(false)
   const currentMode = useProjectStore((state) => state.currentMode)
   const lines = useProjectStore((state) => state.lines)
   const measurements = useProjectStore((state) => state.measurements)
@@ -76,6 +77,8 @@ function Map() {
   const pinIconFilters = useProjectStore((state) => state.pinIconFilters)
   const togglePinIconFilter = useProjectStore((state) => state.togglePinIconFilter)
   const clearPinIconFilter = useProjectStore((state) => state.clearPinIconFilter)
+  const poiSearchRequest = useProjectStore((state) => state.poiSearchRequest)
+  const consumePoiSearchRequest = useProjectStore((state) => state.consumePoiSearchRequest)
   const [isPinClickInProgress, setIsPinClickInProgress] = useState(false)
   const removePins = useProjectStore((state) => state.removePins)
   const [draggingPinId, setDraggingPinId] = useState(null)
@@ -125,6 +128,41 @@ function Map() {
       mapInstanceRef.current.panTo(selectedPin.position)
     }
   }, [selectedPin])
+
+  useEffect(() => {
+    if (!poiSearchRequest) return
+
+    const searchPosition = poiSearchRequest.position
+    if (mapInstanceRef.current && searchPosition) {
+      mapInstanceRef.current.panTo(searchPosition)
+      mapInstanceRef.current.setZoom?.(16)
+    }
+
+    if (selectedPinId) {
+      selectPin(null)
+      clearPinSelection()
+    }
+
+    if (poiSearchRequest.placeId) {
+      requestPoiDetail(poiSearchRequest.placeId, searchPosition)
+      consumePoiSearchRequest()
+      return
+    }
+
+    requestPoiDetail(null, searchPosition, {
+      name: poiSearchRequest.name || 'POI',
+      address: poiSearchRequest.address || '',
+      rating: poiSearchRequest.rating,
+    })
+    consumePoiSearchRequest()
+  }, [
+    clearPinSelection,
+    consumePoiSearchRequest,
+    poiSearchRequest,
+    requestPoiDetail,
+    selectPin,
+    selectedPinId,
+  ])
 
   useEffect(() => {
     syncDraftByMode({ currentMode, actions: { cancelDraftMeasure, cancelDraftLine } })
@@ -361,6 +399,11 @@ function Map() {
   const handleMapRightClick = useCallback(
     (event) => {
       event?.domEvent?.preventDefault?.()
+      if (rightClickCompleteLockRef.current) return
+      rightClickCompleteLockRef.current = true
+      window.setTimeout(() => {
+        rightClickCompleteLockRef.current = false
+      }, 0)
       shouldIgnoreNextMapClickRef.current = true
       triggerMeasureComplete('contextmenu')
     },
@@ -373,6 +416,11 @@ function Map() {
 
     const handleMapContextMenu = (event) => {
       event.preventDefault()
+      if (rightClickCompleteLockRef.current) return
+      rightClickCompleteLockRef.current = true
+      window.setTimeout(() => {
+        rightClickCompleteLockRef.current = false
+      }, 0)
       shouldIgnoreNextMapClickRef.current = true
       triggerMeasureComplete('contextmenu')
     }

@@ -553,3 +553,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 [codex] 2026-02-27 선그리기 이슈 대응 메모
 - 선그리기(draw_line)는 measurement 엔티티로 저장되는 구조를 유지하며, UX 요구사항(검정 기본색/거리라벨 비표시/완료 후 Select 복귀)을 렌더·상호작용 레이어에서 우선 반영함.
 - 우클릭 완료 시 남는 잔상 문제 대응으로 draw_line의 점선 스타일을 제거하고 실선 렌더로 통일함.
+[codex] 2026-02-27 검색 엔터 후 커스텀 POI 미표시 이슈 메모
+- `src/components/Toolbar/Search.jsx`에서 Autocomplete `place_changed` 결과를 스토어 요청(`poiSearchRequest`)으로 넘기고, `src/components/Map/Map.jsx`가 이를 소비해 POI 상세 오버레이를 여는 흐름으로 연결함.
+- `src/components/Map/hooks/usePoiDetail.js`는 `placeId`가 없는 검색 결과도 fallback 데이터로 상세 오버레이를 생성하도록 확장해, 엔터 검색 케이스에서 빈 반응 문제를 방지함.
+- `src/stores/useProjectStore.js`에 `poiSearchRequest`, `requestPoiFromSearch`, `consumePoiSearchRequest`를 추가해 Toolbar→Map 단발성 이벤트 브리지를 구성함.
