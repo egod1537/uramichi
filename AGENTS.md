@@ -464,6 +464,10 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 [codex] 2026-02-27 핀 추가 드래그 임계값 메모
 - `src/components/Map/Map.jsx`에서 ADD_MARKER 모드일 때 마우스 다운/업의 화면 좌표 이동량(px)을 계산하고, 임계값(6px) 이상 드래그한 경우 mouse up 시 `addMarker`를 호출하지 않도록 조정함.
 - 지도 패닝 후 mouse up으로 핀이 의도치 않게 생성되던 문제를 완화함.
+[codex] 2026-02-27 AI 챗 버튼 아이콘 경로 변경 메모
+- `src/components/Chat/ChatButton.jsx`의 FAB 아이콘을 인라인 SVG 대신 `public/claude.svg` 파일을 로드하는 `<img src="/claude.svg">`로 교체함.
+[codex] 2026-02-27 AI 챗 버튼 배경색 조정 메모
+- `src/components/Chat/ChatButton.jsx`의 FAB 배경색을 흰색(`bg-white`)으로 변경하고 hover 색상을 `hover:bg-gray-100`으로 조정함.
 [codex] 2026-02-27 RouteService 분리 메모
 - `src/utils/RouteService.js`를 추가해 경로 요청 빌드(`getRouteRequest`), 응답 정규화(`createRouteCacheData`), route id 충돌 방지(`createUniqueRouteId`/`hasRouteIdConflict`), 최종 route 엔티티 생성(`createRouteEntityOrNull`)을 한 곳으로 모음.
 - `src/components/Map/Map.jsx`의 `requestRoute`는 서비스 호출 결과를 받아 성공 시 `addRoute`만 호출하고, 실패(null) 시 `setRouteStart(null)`로 종료하도록 단순화함.
