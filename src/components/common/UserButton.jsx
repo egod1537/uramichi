@@ -197,26 +197,17 @@ class UserButton extends React.Component {
 
   render() {
     const profileInitial = this.getProfileInitial()
+    const profileButtonClassName = this.state.isLoggedIn
+      ? 'flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-gray-300 bg-white text-sm font-medium text-gray-700 shadow-[0_1px_6px_rgba(60,64,67,0.3)] hover:bg-gray-50'
+      : 'flex h-10 min-w-[40px] items-center justify-center overflow-hidden rounded-full border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700 shadow-[0_1px_6px_rgba(60,64,67,0.3)] hover:bg-gray-50'
 
     return (
-      <div ref={this.containerRef} className="absolute top-3 right-3 z-30 flex items-start gap-2">
-        {this.state.isLoggedIn && (
-          <button
-            type="button"
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-300 bg-white text-gray-600 shadow-sm hover:bg-gray-50"
-            aria-label="앱 메뉴"
-          >
-            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" aria-hidden="true">
-              {[5, 12, 19].flatMap((x) => [5, 12, 19].map((y) => <circle key={`${x}-${y}`} cx={x} cy={y} r="1.5" />))}
-            </svg>
-          </button>
-        )}
-
+      <div ref={this.containerRef} className="absolute top-3 right-3 z-30 flex items-start">
         <div className="relative">
           <button
             type="button"
             onClick={this.handleProfileButtonClick}
-            className="flex h-10 min-w-[40px] items-center justify-center overflow-hidden rounded-full border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700 shadow-[0_1px_6px_rgba(60,64,67,0.3)] hover:bg-gray-50"
+            className={profileButtonClassName}
             aria-expanded={this.state.isDropdownOpen}
             aria-haspopup="menu"
           >

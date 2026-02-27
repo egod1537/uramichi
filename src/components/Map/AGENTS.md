@@ -20,3 +20,7 @@
 - `src/components/Map/Map.jsx`에 우클릭 직후 발생하는 지도 `click` 이벤트를 1회 무시하는 ref(`shouldIgnoreNextMapClickRef`)와 `handleMapRightClick`를 추가해, 선 그리기 종료 시 마지막 프리뷰 선이 반투명으로 남는 현상을 방지함.
 - 지도 `onRightClick`을 `triggerMeasureComplete` 직접 연결에서 `handleMapRightClick`으로 교체해 우클릭 종료 동작과 클릭 무시 플래그를 함께 처리하도록 정리함.
 - 저장된 선(`visibleLines`)의 각 점을 원형 `Marker`로 렌더링해, 선분 꼭짓점이 항상 지도에 보이도록 보강함.
+[codex] 2026-02-27 Map/PinPopup 아이콘 SVG 표시 전환 메모
+- `PinPopup` 아이콘 버튼/피커에서 이모지 문자 대신 `public/svg/pin-*.svg` 이미지를 렌더링하도록 변경함.
+- 아이콘 선택 저장값을 `iconPreset.icon`(emoji)에서 `iconPreset.key`로 바꾸고, 기존 데이터 호환은 `getTravelPinIconKey/getTravelPinIconPreset`로 유지함.
+- 지도 하단 핀 아이콘 필터도 버튼 내부를 SVG 이미지로 렌더링하고, 필터 판별은 key 기준으로 비교하도록 수정함.
