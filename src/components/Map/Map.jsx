@@ -155,6 +155,8 @@ function Map() {
     measureTotalLabelData,
     previewMeasurePath,
     completeDistanceMeasureInteraction,
+    completeDistanceMeasureInteractionByContextMenu,
+    completeDistanceMeasureInteractionByEscape,
     handleMeasurePointDrag,
     handleMeasurePointDragStart,
     handleMeasurePointDragEnd,
@@ -167,6 +169,7 @@ function Map() {
     cancelDraftMeasure,
     setMeasurePath,
     setDraggingMeasurePointIndex,
+    setMode,
   })
 
   const isDraggingDraftPoint = isLinePointDragging || isMeasurePointDragging
@@ -182,15 +185,29 @@ function Map() {
   const activeHandleDraftPointDragEnd =
     currentMode === TOOL_MODES.DRAW_LINE ? handleLineDraftPointDragEnd : handleMeasurePointDragEnd
 
-  const triggerMeasureComplete = useCallback(() => {
+  const triggerMeasureComplete = useCallback((triggerType = 'default') => {
     if (currentMode === TOOL_MODES.DRAW_LINE) {
       completeLineInteraction()
       return
     }
     if (currentMode === TOOL_MODES.MEASURE_DISTANCE) {
+      if (triggerType === 'contextmenu') {
+        completeDistanceMeasureInteractionByContextMenu()
+        return
+      }
+      if (triggerType === 'escape') {
+        completeDistanceMeasureInteractionByEscape()
+        return
+      }
       completeDistanceMeasureInteraction()
     }
-  }, [completeDistanceMeasureInteraction, completeLineInteraction, currentMode])
+  }, [
+    completeDistanceMeasureInteraction,
+    completeDistanceMeasureInteractionByContextMenu,
+    completeDistanceMeasureInteractionByEscape,
+    completeLineInteraction,
+    currentMode,
+  ])
 
   const requestRoute = useCallback(
     async (startPoint, endPoint, travelMode) => {
@@ -294,6 +311,13 @@ function Map() {
 
       if (event.placeId) {
         event.stop()
+        if (currentMode === TOOL_MODES.MEASURE_DISTANCE) {
+          const modeEventContext = createModeEventContext(event)
+          const modeHandler = mapClickModeHandlerMap[currentMode]
+          if (!modeHandler) return
+          modeHandler(modeEventContext)
+          return
+        }
         const latitudeFromPoi = event.latLng?.lat()
         const longitudeFromPoi = event.latLng?.lng()
         if (latitudeFromPoi === undefined || longitudeFromPoi === undefined) return
@@ -332,7 +356,7 @@ function Map() {
     (event) => {
       event?.domEvent?.preventDefault?.()
       shouldIgnoreNextMapClickRef.current = true
-      triggerMeasureComplete()
+      triggerMeasureComplete('contextmenu')
     },
     [triggerMeasureComplete],
   )
@@ -344,7 +368,7 @@ function Map() {
     const handleMapContextMenu = (event) => {
       event.preventDefault()
       shouldIgnoreNextMapClickRef.current = true
-      triggerMeasureComplete()
+      triggerMeasureComplete('contextmenu')
     }
 
     mapDivElement.addEventListener('contextmenu', handleMapContextMenu)
@@ -463,6 +487,10 @@ function Map() {
           || eventTarget.isContentEditable)
       if (isInputControlTarget && event.key !== 'Escape') return
 
+      if (event.key === 'Escape') {
+        triggerMeasureComplete('escape')
+      }
+
       if (currentMode !== TOOL_MODES.SELECT) return
 
       if (event.key === 'Delete' || event.key === 'Backspace') {
@@ -493,6 +521,7 @@ function Map() {
     selectedLineId,
     selectedPinIds,
     updateLine,
+    triggerMeasureComplete,
   ])
 
   return (
@@ -512,13 +541,18 @@ function Map() {
         onMouseMove={handleMapMouseMove}
         onMouseDown={handleMapMouseDown}
         onRightClick={handleMapRightClick}
-        options={{ ...MAP_OPTIONS, disableDoubleClickZoom: currentMode === TOOL_MODES.DRAW_LINE }}
+        options={{
+          ...MAP_OPTIONS,
+          clickableIcons: currentMode !== TOOL_MODES.MEASURE_DISTANCE,
+          disableDoubleClickZoom: currentMode === TOOL_MODES.DRAW_LINE,
+        }}
       >
         <PinLayer
           pins={visiblePins}
           selectedPin={selectedPoiDetail ? null : selectedPin}
           selectedPinId={selectedPinId}
           currentMode={currentMode}
+          isPinInteractionBlocked={currentMode === TOOL_MODES.MEASURE_DISTANCE}
           draggingPinId={draggingPinId}
           onPinMouseDown={() => setIsPinClickInProgress(true)}
           onPinClick={handlePinClick}

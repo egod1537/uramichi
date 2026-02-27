@@ -1,5 +1,6 @@
 import { useCallback, useMemo } from 'react'
 import { formatDistanceLabel, getMidpoint, getPathDistanceInMeters } from '../../../utils/geo'
+import TOOL_MODES from '../../../utils/toolModes'
 
 const createSegmentLabelDataList = (measurePointPath) =>
   measurePointPath.slice(1).map((currentPoint, pointIndex) => {
@@ -27,6 +28,7 @@ function useDistanceMeasureInteraction({
   cancelDraftMeasure,
   setMeasurePath,
   setDraggingMeasurePointIndex,
+  setMode,
 }) {
   const measureSegmentLabelDataList = useMemo(() => createSegmentLabelDataList(measurePath), [measurePath])
 
@@ -41,6 +43,17 @@ function useDistanceMeasureInteraction({
     setHoverMeasurePoint(null)
     cancelDraftMeasure()
   }, [cancelDraftMeasure, setHoverMeasurePoint])
+
+  const completeDistanceMeasureInteractionByContextMenu = useCallback(() => {
+    setHoverMeasurePoint(null)
+    cancelDraftMeasure()
+  }, [cancelDraftMeasure, setHoverMeasurePoint])
+
+  const completeDistanceMeasureInteractionByEscape = useCallback(() => {
+    setHoverMeasurePoint(null)
+    cancelDraftMeasure()
+    setMode?.(TOOL_MODES.SELECT)
+  }, [cancelDraftMeasure, setHoverMeasurePoint, setMode])
 
   const handleMeasurePointDrag = useCallback(
     (pointIndex, event) => {
@@ -72,6 +85,8 @@ function useDistanceMeasureInteraction({
     measureTotalLabelData,
     previewMeasurePath,
     completeDistanceMeasureInteraction,
+    completeDistanceMeasureInteractionByContextMenu,
+    completeDistanceMeasureInteractionByEscape,
     handleMeasurePointDrag,
     handleMeasurePointDragStart,
     handleMeasurePointDragEnd,
