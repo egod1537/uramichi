@@ -329,3 +329,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - 같은 파일에서 비-Select 모드에서도 핀 클릭 시 `selectPin(pinId)`가 동작하도록 분기해, 어떤 모드에서도 핀 팝업을 열 수 있게 정리함.
 - 같은 파일에서 핀 드래그 가능 조건을 `selectedPinId === pin.id`로 제한해 지도 이동 중 핀이 튀는 것처럼 보이는 오조작 가능성을 줄임.
 - `src/components/Map/PinPopup.jsx` 루트 컨테이너에 `onMouseDown/onClick stopPropagation`을 추가해 팝업 내부 버튼 클릭이 지도 클릭으로 전파되어 편집/삭제 액션이 끊기던 문제를 방지함.
+
+[codex] 2026-02-27 핀 추가 입력 이벤트 수정 메모
+- `src/components/Map/Map.jsx`에서 핀 추가를 `GoogleMap onClick` 분기에서 제거하고 `onMouseDown` 핸들러(`handleMapMouseDown`)로 이동해 Clickdown 시점에 생성되도록 변경함.
+- 기존 `handleMapClick`은 Select/선분/경로/거리 측정 전용으로 유지해 Add Marker 모드에서 Clickup으로 핀이 추가되지 않도록 분리함.

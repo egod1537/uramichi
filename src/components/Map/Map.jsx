@@ -213,11 +213,6 @@ function Map() {
       if (latitude === undefined || longitude === undefined) return
       const clickedPoint = { lat: latitude, lng: longitude }
 
-      if (currentMode === TOOL_MODES.ADD_MARKER) {
-        addMarker(clickedPoint)
-        return
-      }
-
       if (currentMode === TOOL_MODES.DRAW_LINE) {
         appendLinePoint(clickedPoint)
         return
@@ -245,7 +240,6 @@ function Map() {
       }
     },
     [
-      addMarker,
       appendLinePoint,
       appendMeasurePoint,
       clearPinSelection,
@@ -258,6 +252,17 @@ function Map() {
       setRouteStart,
       isPinClickInProgress,
     ],
+  )
+
+  const handleMapMouseDown = useCallback(
+    (event) => {
+      if (currentMode !== TOOL_MODES.ADD_MARKER) return
+      const latitude = event.latLng?.lat()
+      const longitude = event.latLng?.lng()
+      if (latitude === undefined || longitude === undefined) return
+      addMarker({ lat: latitude, lng: longitude })
+    },
+    [addMarker, currentMode],
   )
 
   const handlePinClick = useCallback(
@@ -394,6 +399,7 @@ function Map() {
         onUnmount={() => {
           mapInstanceRef.current = null
         }}
+        onMouseDown={handleMapMouseDown}
         onClick={handleMapClick}
         onDblClick={handleMapDoubleClick}
         options={{ ...mapOptions, disableDoubleClickZoom: currentMode === TOOL_MODES.MEASURE_DISTANCE || currentMode === TOOL_MODES.DRAW_LINE }}
