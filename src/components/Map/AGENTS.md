@@ -20,3 +20,8 @@
 - `PinPopup` 아이콘 버튼/피커에서 이모지 문자 대신 `public/svg/pin-*.svg` 이미지를 렌더링하도록 변경함.
 - 아이콘 선택 저장값을 `iconPreset.icon`(emoji)에서 `iconPreset.key`로 바꾸고, 기존 데이터 호환은 `getTravelPinIconKey/getTravelPinIconPreset`로 유지함.
 - 지도 하단 핀 아이콘 필터도 버튼 내부를 SVG 이미지로 렌더링하고, 필터 판별은 key 기준으로 비교하도록 수정함.
+[codex] 2026-02-27 Map layer/render 분리 메모
+- `src/components/Map/layers/`에 `PinLayer`, `LineLayer`, `RouteLayer`, `MeasureLayer`를 추가해 지도 내부 렌더를 레이어 조합으로 분리함.
+- `Map.jsx`는 `GoogleMap` 이벤트/컨텍스트 생성과 레이어 조합만 담당하도록 정리하고, 기존 핀/선/경로/측정 JSX 블록을 각 레이어 컴포넌트로 이관함.
+- 하단 핀 아이콘 필터 바와 상단 이동수단 선택 바는 `MapOverlays.jsx`로 분리해 지도 본문 렌더 책임을 경량화함.
+- `PinMarker`는 `selectedPinId`를 props로 받아 선택 상태를 계산하도록 바꿔, 레이어 구조에서 store 직접 구독을 제거함.

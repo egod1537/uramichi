@@ -503,3 +503,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - 핀 아이콘 관련 UI(핀 팝업/사이드바/지도 필터)에서 이모지 텍스트를 직접 그리던 부분을 `public/svg` 이미지 렌더링으로 통일함.
 - 핀 데이터의 `icon` 필드는 기존 emoji 값도 읽을 수 있게 유지하면서, 신규 저장은 `TRAVEL_PIN_ICON_PRESETS.key` 기반으로 전환함.
 - 아이콘 필터 매칭은 key 기준으로 변경해 데이터 포맷 전환 중에도 필터 동작이 깨지지 않도록 함.
+[codex] 2026-02-27 Map 레이어 컴포지션 리팩토링 메모
+- 지도 렌더 전용 컴포넌트를 `src/components/Map/layers/PinLayer.jsx`, `LineLayer.jsx`, `RouteLayer.jsx`, `MeasureLayer.jsx`로 분리해 `Map.jsx`의 렌더 책임을 축소함.
+- 지도 외부 오버레이 UI(하단 핀 아이콘 필터, 상단 경로 이동수단 바)는 `src/components/Map/MapOverlays.jsx`로 분리함.
+- `PinMarker`는 선택 상태를 store에서 직접 읽지 않고 상위 전달 props(`selectedPinId`)로 계산하도록 변경해 레이어-프레젠테이션 경계를 맞춤.

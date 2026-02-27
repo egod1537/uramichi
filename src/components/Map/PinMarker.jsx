@@ -1,6 +1,5 @@
 import { useMemo } from 'react'
 import { Marker } from '@react-google-maps/api'
-import useProjectStore from '../../stores/useProjectStore'
 import { CATEGORY_PRESETS, DEFAULT_PIN_SVG_PATH, getTravelPinIconPreset } from '../../utils/constants'
 
 function PinMarker({
@@ -13,9 +12,8 @@ function PinMarker({
   onDragStart,
   onDrag,
   onDragEnd,
+  selectedPinId,
 }) {
-  const selectedPinId = useProjectStore((state) => state.selectedPinId)
-
   const markerPreset = useMemo(() => {
     const categoryKey = pin.category || 'default'
     const categoryInfo = CATEGORY_PRESETS[categoryKey] || CATEGORY_PRESETS.default
