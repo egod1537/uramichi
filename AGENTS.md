@@ -499,3 +499,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 [codex] 2026-02-27 패널 열기 버튼 삼단 아이콘 적용 메모
 - `public/svg/sidebar-open-menu.svg` 파일을 추가해 패널 열기용 삼단(햄버거) 아이콘 에셋을 분리함.
 - `src/components/Sidebar/Sidebar.jsx`의 패널 열기 버튼 텍스트를 아이콘 `<img src="/svg/sidebar-open-menu.svg">` 렌더링으로 교체하고, 원형 아이콘 버튼 스타일/접근성 라벨을 적용함.
+
+[codex] 2026-02-27 UserButton 프로필 버튼 정리 메모
+- `src/components/common/UserButton.jsx`에서 로그인 상태 프로필 버튼을 40x40 원형으로 고정해 아바타가 타원형으로 보이지 않도록 조정함.
+- 같은 컴포넌트에서 프로필 왼쪽의 9점 메뉴 버튼을 제거해 우측 상단 오버레이를 단일 프로필 버튼 구조로 단순화함.
