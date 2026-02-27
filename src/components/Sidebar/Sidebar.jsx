@@ -11,9 +11,10 @@ function Sidebar() {
       <button
         type="button"
         onClick={() => setSidebarOpen(true)}
-        className="absolute left-4 top-4 z-20 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 shadow"
+        className="absolute left-4 top-4 z-20 inline-flex h-10 w-10 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-700 shadow hover:bg-gray-50"
+        aria-label="패널 열기"
       >
-        패널 열기
+        <img src="/svg/sidebar-open-menu.svg" alt="" aria-hidden="true" className="h-5 w-5" />
       </button>
     )
   }

@@ -1,8 +1,23 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { CATEGORY_PRESETS, TRANSPORT_PRESETS, TRAVEL_PIN_ICON_PRESETS } from '../../utils/constants'
 import useProjectStore from '../../stores/useProjectStore'
 
-function LayerRow({ layer, filteredPins, measurements, isDraggingLayer, layerDropPreview, onLayerDragStart, onLayerDragEnd, onLayerDragOver, onLayerDrop }) {
+function LayerRow({
+  layer,
+  filteredPins,
+  measurements,
+  isDraggingLayer,
+  layerDropPreview,
+  onLayerDragStart,
+  onLayerDragEnd,
+  onLayerDragOver,
+  onLayerDrop,
+  focusedRenameTarget,
+  editingRenameTarget,
+  onFocusRenameTarget,
+  onStartRename,
+  onFinishRename,
+}) {
   const activeLayerId = useProjectStore((state) => state.activeLayerId)
   const setActiveLayer = useProjectStore((state) => state.setActiveLayer)
   const toggleLayerVisibility = useProjectStore((state) => state.toggleLayerVisibility)
@@ -18,6 +33,11 @@ function LayerRow({ layer, filteredPins, measurements, isDraggingLayer, layerDro
   const [iconPickerPinId, setIconPickerPinId] = useState(null)
   const [dragPinId, setDragPinId] = useState(null)
   const [pinDropPreview, setPinDropPreview] = useState(null)
+  const [layerRenameDraft, setLayerRenameDraft] = useState(layer.name)
+  const [pinRenameDraftsById, setPinRenameDraftsById] = useState({})
+  const layerRenameInputRef = useRef(null)
+  const pinRenameInputRefsById = useRef({})
+
 
   const layerPins = useMemo(() => filteredPins.filter((pinItem) => pinItem.layerId === layer.id), [filteredPins, layer.id])
   const layerMeasurements = useMemo(() => measurements.filter((measurementItem) => measurementItem.layerId === layer.id), [measurements, layer.id])
@@ -34,13 +54,66 @@ function LayerRow({ layer, filteredPins, measurements, isDraggingLayer, layerDro
     [layerPins],
   )
 
-  const handleRename = () => {
-    const nextLayerName = window.prompt('레이어 이름 변경', layer.name)
-    if (nextLayerName?.trim()) {
-      renameLayer(layer.id, nextLayerName.trim())
+  const layerRenameTargetId = `layer:${layer.id}`
+  const isLayerNameEditing = editingRenameTarget?.id === layerRenameTargetId
+  const isLayerNameFocused = focusedRenameTarget?.id === layerRenameTargetId
+
+  const commitLayerRename = () => {
+    const nextLayerName = layerRenameDraft.trim()
+    if (nextLayerName) {
+      renameLayer(layer.id, nextLayerName)
     }
-    setIsMenuOpen(false)
+    onFinishRename()
   }
+
+  const cancelLayerRename = () => {
+    setLayerRenameDraft(layer.name)
+    onFinishRename()
+  }
+
+  const commitPinRename = (pinItem) => {
+    const nextPinName = (pinRenameDraftsById[pinItem.id] ?? pinItem.name).trim()
+    if (nextPinName) {
+      updatePin(pinItem.id, { name: nextPinName })
+      setPinRenameDraftsById((previousDraftMap) => ({ ...previousDraftMap, [pinItem.id]: nextPinName }))
+    }
+    onFinishRename()
+  }
+
+  const cancelPinRename = (pinItem) => {
+    setPinRenameDraftsById((previousDraftMap) => ({ ...previousDraftMap, [pinItem.id]: pinItem.name }))
+    onFinishRename()
+  }
+
+  useEffect(() => {
+    setLayerRenameDraft(layer.name)
+  }, [layer.name])
+
+  useEffect(() => {
+    setPinRenameDraftsById((previousDraftMap) => {
+      const nextDraftMap = {}
+      layerPins.forEach((pinItem) => {
+        nextDraftMap[pinItem.id] = previousDraftMap[pinItem.id] ?? pinItem.name
+      })
+      return nextDraftMap
+    })
+  }, [layerPins])
+
+  useEffect(() => {
+    if (isLayerNameEditing) {
+      layerRenameInputRef.current?.focus()
+      layerRenameInputRef.current?.select()
+    }
+  }, [isLayerNameEditing])
+
+  useEffect(() => {
+    const editingPinId = editingRenameTarget?.type === 'pin' ? editingRenameTarget.pinId : null
+    if (!editingPinId) return
+    if (editingRenameTarget?.layerId !== layer.id) return
+    const pinInputElement = pinRenameInputRefsById.current[editingPinId]
+    pinInputElement?.focus()
+    pinInputElement?.select()
+  }, [editingRenameTarget, layer.id])
 
   return (
     <div
@@ -98,7 +171,37 @@ function LayerRow({ layer, filteredPins, measurements, isDraggingLayer, layerDro
           >
             {layer.collapsed ? '▸' : '▾'}
           </span>
-          <span className={`truncate text-left text-base ${isActiveLayer ? 'font-semibold text-blue-700' : 'text-gray-800'}`}>{layer.name}</span>
+          {isLayerNameEditing ? (
+            <input
+              ref={layerRenameInputRef}
+              type="text"
+              value={layerRenameDraft}
+              onClick={(event) => event.stopPropagation()}
+              onChange={(event) => setLayerRenameDraft(event.target.value)}
+              onBlur={commitLayerRename}
+              onKeyDown={(event) => {
+                event.stopPropagation()
+                if (event.key === 'Enter') {
+                  event.preventDefault()
+                  commitLayerRename()
+                }
+                if (event.key === 'Escape') {
+                  event.preventDefault()
+                  cancelLayerRename()
+                }
+              }}
+              className="w-full rounded border border-blue-300 bg-white px-2 py-0.5 text-left text-base text-gray-800 outline-none ring-1 ring-blue-200"
+            />
+          ) : (
+            <span
+              className={`truncate text-left text-base ${isActiveLayer ? 'font-semibold text-blue-700' : 'text-gray-800'} ${isLayerNameFocused ? 'underline underline-offset-2' : ''}`}
+              tabIndex={0}
+              onFocus={() => onFocusRenameTarget({ type: 'layer', id: layerRenameTargetId, layerId: layer.id })}
+              onClick={() => onFocusRenameTarget({ type: 'layer', id: layerRenameTargetId, layerId: layer.id })}
+            >
+              {layer.name}
+            </span>
+          )}
         </button>
 
         <div className="relative">
@@ -107,7 +210,12 @@ function LayerRow({ layer, filteredPins, measurements, isDraggingLayer, layerDro
           </button>
           {isMenuOpen && (
             <div className="absolute right-0 top-7 z-10 w-24 rounded border border-gray-200 bg-white py-1 shadow">
-              <button type="button" onClick={handleRename} className="block w-full px-3 py-1 text-left text-sm text-gray-700 hover:bg-gray-100">
+              <button
+                type="button"
+                onClick={() => {
+                  onStartRename({ type: 'layer', id: layerRenameTargetId, layerId: layer.id })
+                  setIsMenuOpen(false)
+                }} className="block w-full px-3 py-1 text-left text-sm text-gray-700 hover:bg-gray-100">
                 이름 변경
               </button>
               <button type="button" onClick={() => removeLayer(layer.id)} className="block w-full px-3 py-1 text-left text-sm text-red-500 hover:bg-gray-100">
@@ -202,7 +310,48 @@ function LayerRow({ layer, filteredPins, measurements, isDraggingLayer, layerDro
                         </div>
                       ) : null}
                     </span>
-                    <span className="truncate">{pinItem.name}</span>
+                    {editingRenameTarget?.id === `pin:${pinItem.id}` ? (
+                      <input
+                        ref={(inputElement) => {
+                          pinRenameInputRefsById.current[pinItem.id] = inputElement
+                        }}
+                        type="text"
+                        value={pinRenameDraftsById[pinItem.id] ?? pinItem.name}
+                        onClick={(event) => event.stopPropagation()}
+                        onChange={(event) => {
+                          const nextPinNameDraft = event.target.value
+                          setPinRenameDraftsById((previousDraftMap) => ({
+                            ...previousDraftMap,
+                            [pinItem.id]: nextPinNameDraft,
+                          }))
+                        }}
+                        onBlur={() => commitPinRename(pinItem)}
+                        onKeyDown={(event) => {
+                          event.stopPropagation()
+                          if (event.key === 'Enter') {
+                            event.preventDefault()
+                            commitPinRename(pinItem)
+                          }
+                          if (event.key === 'Escape') {
+                            event.preventDefault()
+                            cancelPinRename(pinItem)
+                          }
+                        }}
+                        className="w-full rounded border border-blue-300 bg-white px-2 py-0.5 text-sm text-gray-700 outline-none ring-1 ring-blue-200"
+                      />
+                    ) : (
+                      <span
+                        className={`truncate ${focusedRenameTarget?.id === `pin:${pinItem.id}` ? 'underline underline-offset-2' : ''}`}
+                        tabIndex={0}
+                        onFocus={() => onFocusRenameTarget({ type: 'pin', id: `pin:${pinItem.id}`, layerId: layer.id, pinId: pinItem.id })}
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          onFocusRenameTarget({ type: 'pin', id: `pin:${pinItem.id}`, layerId: layer.id, pinId: pinItem.id })
+                        }}
+                      >
+                        {pinItem.name}
+                      </span>
+                    )}
                   </button>
                   <div className="relative">
                     <button
@@ -222,10 +371,7 @@ function LayerRow({ layer, filteredPins, measurements, isDraggingLayer, layerDro
                           type="button"
                           onClick={(event) => {
                             event.stopPropagation()
-                            const nextPinName = window.prompt('핀 이름 변경', pinItem.name)
-                            if (nextPinName?.trim()) {
-                              updatePin(pinItem.id, { name: nextPinName.trim() })
-                            }
+                            onStartRename({ type: 'pin', id: `pin:${pinItem.id}`, layerId: layer.id, pinId: pinItem.id })
                             setPinOptionsPinId(null)
                           }}
                           className="block w-full px-3 py-1 text-left text-sm text-gray-700 hover:bg-gray-100"
