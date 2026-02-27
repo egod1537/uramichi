@@ -45,3 +45,6 @@
 - `Map.jsx`에서 선 그리기 완료 트리거를 우클릭(`onRightClick` + DOM `contextmenu`)으로만 유지하고, ESC/더블클릭으로 종료되지 않도록 정리함.
 - `measure/useMeasureInteraction.js`에서 드래프트 종료 시 시작점-끝점 거리가 임계값 이하인 경우 `shapeType: "polygon"`으로 판정하고, 폐곡선이 닫히도록 첫 점을 마지막에 추가해 저장함.
 - `measure/MeasureLayer.jsx`는 `shapeType === "polygon"`일 때 `Polygon`으로 렌더링해 반투명 내부 채움(`fillOpacity`)이 보이도록 처리함.
+[codex] 2026-02-27 거리 측정 우클릭 종료/모드 분리 메모
+- `Map.jsx`의 우클릭 종료 트리거(`triggerMeasureComplete`)를 `DRAW_LINE`과 `MEASURE_DISTANCE` 모두 처리하도록 유지하면서, `MEASURE_DISTANCE`는 저장 없이 드래프트 종료만 수행하도록 `useMeasureInteraction`과 연동함.
+- 지도 우클릭(`onRightClick` + DOM `contextmenu`) 종료 플로우는 그대로 사용해, 거리 측정 도구에서도 마우스 우클릭으로 즉시 종료되도록 유지함.

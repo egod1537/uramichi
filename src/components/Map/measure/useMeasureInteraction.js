@@ -4,7 +4,7 @@ import { COLOR_PRESETS } from '../../../utils/constants'
 import { formatDistanceLabel, getHaversineDistance, getMidpoint, getPathDistanceInMeters } from '../../../utils/geo'
 import { handleLineDraftComplete, handleLineMeasurePointDrag } from '../controllers/lineController'
 
-export const MEASURE_LINE_WIDTH = 6
+export const MEASURE_LINE_WIDTH = 4
 const POLYGON_CLOSE_DISTANCE_METERS = 30
 
 const resolveMeasurementShapeType = (measurePointPath) => {
@@ -71,12 +71,18 @@ function useMeasureInteraction({
   const measureTotalLabelData = useMemo(() => createTotalLabelData(measurePath), [measurePath])
 
   const previewMeasurePath = useMemo(() => {
-    if (currentMode !== TOOL_MODES.DRAW_LINE) return []
+    if (currentMode !== TOOL_MODES.MEASURE_DISTANCE && currentMode !== TOOL_MODES.DRAW_LINE) return []
     if (!measurePath.length || !hoverMeasurePoint) return []
     return [...measurePath, hoverMeasurePoint]
   }, [currentMode, hoverMeasurePoint, measurePath])
 
   const completeMeasureInteraction = useCallback(() => {
+    if (currentMode === TOOL_MODES.MEASURE_DISTANCE) {
+      setHoverMeasurePoint(null)
+      cancelDraftMeasure()
+      return
+    }
+
     handleLineDraftComplete({
       currentMode,
       state: { measurePath, activeLayerId, layers, measurements, createMeasurementEntity },
@@ -90,14 +96,14 @@ function useMeasureInteraction({
       const longitude = event?.latLng?.lng()
       const clickedPoint = latitude === undefined || longitude === undefined ? null : { lat: latitude, lng: longitude }
       handleLineMeasurePointDrag({
-        currentMode,
+        currentMode: TOOL_MODES.DRAW_LINE,
         pointIndex,
         clickedPoint,
         state: { measurePath },
         actions: { setMeasurePath },
       })
     },
-    [currentMode, measurePath, setMeasurePath],
+    [measurePath, setMeasurePath],
   )
 
   const handleMeasurePointDragStart = useCallback((pointIndex) => {

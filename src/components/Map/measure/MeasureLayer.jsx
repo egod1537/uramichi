@@ -5,6 +5,7 @@ import { COLOR_PRESETS } from '../../../utils/constants'
 import { MEASURE_LINE_WIDTH } from './useMeasureInteraction'
 
 const MEASURE_VERTEX_PIXEL_SIZE = 12
+const MEASURE_STROKE_COLOR = '#3b82f6'
 
 function MeasureLayer({
   currentMode,
@@ -65,10 +66,10 @@ function MeasureLayer({
         <Polyline
           path={measurePath}
           options={{
-            strokeColor: COLOR_PRESETS.measureOrange,
+            strokeColor: MEASURE_STROKE_COLOR,
             strokeWeight: MEASURE_LINE_WIDTH,
             clickable: false,
-            icons: [{ icon: { path: 'M 0,-1 0,1', strokeOpacity: 1, scale: 4 }, offset: '0', repeat: '20px' }],
+            icons: [{ icon: { path: 'M 0,-1 0,1', strokeOpacity: 1, strokeColor: MEASURE_STROKE_COLOR, scale: 4 }, offset: '0', repeat: '14px' }],
           }}
         />
       ) : null}
@@ -77,7 +78,7 @@ function MeasureLayer({
         <Polyline
           path={previewMeasurePath}
           options={{
-            strokeColor: COLOR_PRESETS.measureOrange,
+            strokeColor: MEASURE_STROKE_COLOR,
             strokeWeight: Math.max(2, MEASURE_LINE_WIDTH - 2),
             clickable: false,
             strokeOpacity: 0.45,
@@ -94,10 +95,10 @@ function MeasureLayer({
             scale: MEASURE_VERTEX_PIXEL_SIZE / 2,
             fillColor: '#ffffff',
             fillOpacity: 1,
-            strokeColor: '#ea580c',
+            strokeColor: MEASURE_STROKE_COLOR,
             strokeWeight: Math.max(2, MEASURE_LINE_WIDTH - 2),
           }}
-          draggable={currentMode === TOOL_MODES.DRAW_LINE}
+          draggable={currentMode === TOOL_MODES.MEASURE_DISTANCE || currentMode === TOOL_MODES.DRAW_LINE}
           onDragStart={() => onMeasurePointDragStart(measurePointIndex)}
           onDrag={(event) => onMeasurePointDrag(measurePointIndex, event)}
           onDragEnd={(event) => onMeasurePointDragEnd(measurePointIndex, event)}

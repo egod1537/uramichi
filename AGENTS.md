@@ -521,3 +521,6 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - 저장된 폐곡선은 지도에서 반투명 채움 Polygon으로 렌더링하고, Sidebar 라벨도 `도형`/`선분`으로 구분해 표시함.
 [codex] 2026-02-27 핀 SVG 검정 테두리 보강 메모
 - `public/svg/pin-default.svg`, `pin-hotel.svg`, `pin-photo.svg`, `pin-restaurant.svg`, `pin-tour.svg`, `pin-transit.svg`의 메인 컬러 도형에 진한 검정(`stroke #111111`) 테두리를 추가해 지도/사이드바 썸네일에서 아이콘 윤곽이 더 선명하게 보이도록 조정함.
+[codex] 2026-02-27 거리 측정 도구 요구 반영 메모
+- 거리 측정 도구(`measure_distance`)는 지도 위 드래프트 오버레이(파란 점선 + 꼭짓점 + 라벨)만 표시하고, 우클릭 종료 시 레이어 영구 데이터(`measurements`)에 커밋하지 않는 방향으로 정리함.
+- 우클릭 종료 입력은 `GoogleMap onRightClick`와 지도 DOM `contextmenu` 리스너를 함께 사용해 브라우저/지도 이벤트 누락 케이스를 방어하는 기존 방식을 유지함.
