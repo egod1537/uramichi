@@ -61,6 +61,10 @@
 - `Map.jsx`에서 기존 단일 훅(`useMeasureInteraction`) 의존을 제거하고, 선그리기 전용 훅(`useLineInteraction`)과 거리측정 전용 훅(`useDistanceMeasureInteraction`)을 각각 구독하도록 분리함.
 - 우클릭 종료 트리거(`triggerMeasureComplete`)도 모드별로 분기해, `DRAW_LINE`은 선 저장 완료 경로만, `MEASURE_DISTANCE`는 측정 드래프트 종료 경로만 호출하도록 독립시킴.
 - 지도 드래프트 라벨/프리뷰/포인트 드래그 핸들러 전달 역시 모드별 active 핸들러 선택 방식으로 분리해 두 도구가 서로의 완료/저장 로직을 공유하지 않도록 정리함.
+[codex] 2026-02-27 지도 시간 필터 레이아웃 추가 메모
+- `src/components/Map/MapOverlays.jsx`에 핀 아이콘 필터 바 위쪽(`bottom-20`)에 시간 필터 바를 추가함.
+- 시간 필터 바도 `+`/`−` 버튼으로 접기/펼치기되며, 펼친 상태에서 시작/종료 `type=\"time\"` 입력 UI를 표시함.
+- `src/components/Map/Map.jsx`에서 시간 필터 UI 전용 로컬 상태(`isTimeFilterExpanded`, `timeFilterRange`)를 추가하고, 오버레이 컴포넌트로 props 전달해 레이아웃만 동작하도록 구성함(실제 필터 로직 미연결).
 [codex] 2026-02-27 PinPopup 영업시간 타임라인 바 메모
 - `TimelineBar.jsx`를 추가해 핀 `openingHours` 배열(복수 구간)을 24시간 바(회색 배경 + 주황 구간)로 렌더링하도록 구현함.
 - 자정 넘김 구간은 정규화 결과에 따라 `18:00~24:00`, `00:00~02:00`처럼 분리 렌더링하며, 각 구간 시작/종료 라벨과 하단 눈금(0/6/12/18/24)을 함께 표시함.
