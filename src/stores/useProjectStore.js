@@ -240,11 +240,22 @@ const useProjectStore = create((set) => ({
       }
     }),
   removeRoute: (routeId) =>
-    set((state) => ({
-      routes: state.routes.filter((routeItem) => routeItem.id !== routeId),
-      routePaths: state.routes.filter((routeItem) => routeItem.id !== routeId).map((routeItem) => routeItem.path || []),
-      lastEditedAt: new Date().toISOString(),
-    })),
+    set((state) => {
+      const nextRoutes = state.routes.filter((routeItem) => routeItem.id !== routeId)
+      const nextRoutePaths = nextRoutes.map((routeItem) => routeItem.path || [])
+      const committedHistory = HistoryManager.commit(state.history, state.historyIndex, {
+        ...createSnapshotFromState(state),
+        routes: nextRoutes,
+        routePaths: nextRoutePaths,
+      })
+      return {
+        ...committedHistory.snapshot,
+        routeDraft: { start: null, travelMode: state.routeDraft.travelMode || defaultTravelMode },
+        history: committedHistory.history,
+        historyIndex: committedHistory.historyIndex,
+        lastEditedAt: new Date().toISOString(),
+      }
+    }),
   startDraftLine: (startPoint) => set({ draftLinePoints: [startPoint], linePath: [startPoint] }),
   appendDraftLinePoint: (point) =>
     set((state) => ({
