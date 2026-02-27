@@ -10,12 +10,14 @@ export const CATEGORY_PRESETS = {
 }
 
 export const TRAVEL_PIN_ICON_PRESETS = [
-  { key: 'transit', icon: '🚇', label: '대중교통' },
-  { key: 'restaurant', icon: '🍽️', label: '식당' },
-  { key: 'tour', icon: '🗼', label: '관광지' },
-  { key: 'hotel', icon: '🏨', label: '숙소' },
-  { key: 'photo', icon: '📷', label: '포토스팟' },
+  { key: 'transit', icon: '🚇', label: '대중교통', svgPath: '/svg/pin-transit.svg' },
+  { key: 'restaurant', icon: '🍽️', label: '식당', svgPath: '/svg/pin-restaurant.svg' },
+  { key: 'tour', icon: '🗼', label: '관광지', svgPath: '/svg/pin-tour.svg' },
+  { key: 'hotel', icon: '🏨', label: '숙소', svgPath: '/svg/pin-hotel.svg' },
+  { key: 'photo', icon: '📷', label: '포토스팟', svgPath: '/svg/pin-photo.svg' },
 ]
+
+export const DEFAULT_PIN_SVG_PATH = '/svg/pin-default.svg'
 
 export const TRANSPORT_PRESETS = {
   flight: { icon: '✈️', color: '#34a853' },

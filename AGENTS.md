@@ -466,3 +466,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - 지도 패닝 후 mouse up으로 핀이 의도치 않게 생성되던 문제를 완화함.
 [codex] 2026-02-27 지도 아이콘 필터 접힘 너비 축소 메모
 - `src/components/Map/Map.jsx`의 핀 아이콘 필터 컨테이너 접힘 상태 클래스를 `w-[min(92vw,360px)] justify-between`에서 `w-auto gap-2`로 변경해, 접혀 있을 때 필요한 최소 가로 너비만 차지하도록 조정함.
+[codex] 2026-02-27 지도 핀 SVG 아이콘 전환 메모
+- `public/svg/`에 지도 핀 아이콘 SVG 파일(`pin-transit`, `pin-restaurant`, `pin-tour`, `pin-hotel`, `pin-photo`, `pin-default`)을 추가함.
+- `src/utils/constants.js`의 `TRAVEL_PIN_ICON_PRESETS`에 `svgPath`를 연결하고 기본 아이콘 경로 상수(`DEFAULT_PIN_SVG_PATH`)를 추가함.
+- `src/components/Map/PinMarker.jsx`를 SVG URL 기반 `Marker.icon` 렌더링으로 변경해 지도 핀이 이모지 라벨 대신 SVG 아이콘으로 보이도록 수정함.

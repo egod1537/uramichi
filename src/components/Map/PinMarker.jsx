@@ -1,9 +1,7 @@
 import { useMemo } from 'react'
 import { Marker } from '@react-google-maps/api'
 import useProjectStore from '../../stores/useProjectStore'
-import { CATEGORY_PRESETS, PIN_ICON_STYLE_PRESETS, PIN_MARKER_COLOR_PRESETS, TRAVEL_PIN_ICON_PRESETS } from '../../utils/constants'
-
-const MARKER_CIRCLE_PATH = 'M 0,0 m -1,0 a 1,1 0 1,0 2,0 a 1,1 0 1,0 -2,0'
+import { CATEGORY_PRESETS, DEFAULT_PIN_SVG_PATH, TRAVEL_PIN_ICON_PRESETS } from '../../utils/constants'
 
 function PinMarker({
   pin,
@@ -22,41 +20,43 @@ function PinMarker({
     const categoryKey = pin.category || 'default'
     const categoryInfo = CATEGORY_PRESETS[categoryKey] || CATEGORY_PRESETS.default
     const pinIcon = pin.icon || categoryInfo.icon
-    const iconPresetKey = TRAVEL_PIN_ICON_PRESETS.find((iconPreset) => iconPreset.icon === pinIcon)?.key
-    const categoryColorInfo = PIN_MARKER_COLOR_PRESETS[categoryKey] || PIN_MARKER_COLOR_PRESETS.default
-    const iconStyleInfo = iconPresetKey ? PIN_ICON_STYLE_PRESETS[iconPresetKey] : null
+    const iconPreset = TRAVEL_PIN_ICON_PRESETS.find((presetItem) => presetItem.icon === pinIcon)
 
     return {
-      icon: pinIcon,
-      backgroundColor: pin.color || iconStyleInfo?.backgroundColor || categoryColorInfo.backgroundColor,
-      ringColor: iconStyleInfo?.ringColor || categoryColorInfo.ringColor,
+      svgPath: iconPreset?.svgPath || DEFAULT_PIN_SVG_PATH,
     }
-  }, [pin.category, pin.color, pin.icon])
+  }, [pin.category, pin.icon])
 
   const isSelected = selectedPinId === pin.id
-  const markerLabelText = indexLabel || markerPreset.icon
 
-  const markerSymbol = useMemo(
-    () => ({
-      path: MARKER_CIRCLE_PATH,
-      fillColor: markerPreset.backgroundColor,
-      fillOpacity: isDragging ? 0.6 : 1,
-      strokeColor: markerPreset.ringColor,
-      strokeOpacity: 1,
-      strokeWeight: isSelected ? 0.24 : 0.16,
-      scale: isSelected ? 24 : 22,
-    }),
-    [isDragging, isSelected, markerPreset.backgroundColor, markerPreset.ringColor],
-  )
+  const markerIcon = useMemo(() => {
+    const markerSize = isSelected ? 44 : 40
+    const mapsApi = window.google?.maps
 
-  const markerLabel = useMemo(
-    () => ({
-      text: markerLabelText,
-      className: 'text-base font-semibold',
+    if (!mapsApi?.Size || !mapsApi?.Point) {
+      return { url: markerPreset.svgPath }
+    }
+
+    return {
+      url: markerPreset.svgPath,
+      scaledSize: new mapsApi.Size(markerSize, markerSize),
+      anchor: new mapsApi.Point(markerSize / 2, markerSize),
+      labelOrigin: new mapsApi.Point(markerSize / 2, markerSize / 2.15),
+    }
+  }, [isSelected, markerPreset.svgPath])
+
+  const markerLabel = useMemo(() => {
+    if (!indexLabel) {
+      return undefined
+    }
+
+    return {
+      text: indexLabel,
       color: '#ffffff',
-    }),
-    [markerLabelText],
-  )
+      fontSize: '12px',
+      fontWeight: '700',
+    }
+  }, [indexLabel])
 
   const handlePinClick = (event) => {
     event?.domEvent?.stopPropagation?.()
@@ -71,10 +71,11 @@ function PinMarker({
   return (
     <Marker
       position={pin.position}
-      icon={markerSymbol}
+      icon={markerIcon}
       label={markerLabel}
       draggable={draggable}
       clickable
+      opacity={isDragging ? 0.6 : 1}
       zIndex={isSelected ? 100 : 10}
       onMouseDown={handlePinMouseDown}
       onClick={handlePinClick}
