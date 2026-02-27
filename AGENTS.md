@@ -521,3 +521,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - 저장된 폐곡선은 지도에서 반투명 채움 Polygon으로 렌더링하고, Sidebar 라벨도 `도형`/`선분`으로 구분해 표시함.
 [codex] 2026-02-27 핀 SVG 검정 테두리 보강 메모
 - `public/svg/pin-default.svg`, `pin-hotel.svg`, `pin-photo.svg`, `pin-restaurant.svg`, `pin-tour.svg`, `pin-transit.svg`의 메인 컬러 도형에 진한 검정(`stroke #111111`) 테두리를 추가해 지도/사이드바 썸네일에서 아이콘 윤곽이 더 선명하게 보이도록 조정함.
+[codex] 2026-02-27 POI 지도 추가/별점 UI 메모
+- `src/components/Map/PoiDetailOverlay.jsx`에 `지도에 추가` 버튼을 추가해 커스텀 POI 상세에서 바로 핀 생성 액션을 호출할 수 있게 연결함.
+- POI 평점 표시는 `평점 N` 텍스트 대신 별 문자열(★/☆) + 숫자(소수 1자리) 조합으로 변경함.
+- `src/stores/useProjectStore.js`의 `addMarker`는 선택적 `pinPatchData`를 받도록 확장해, POI 이름/카테고리/메모를 핀 생성 시점에 함께 주입할 수 있게 맞춤.
