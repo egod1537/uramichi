@@ -9,7 +9,7 @@ const projectRootPath = path.resolve(scriptDirectoryPath, '..')
 
 async function main() {
   const normalizedConfig = normalizeConfig(localizationConfig)
-  const cliArguments = process.argv.slice(2)
+  const cliArguments = resolveCliArguments()
 
   if (cliArguments.includes('--list')) {
     printSheetList(normalizedConfig.sheets)
@@ -32,6 +32,38 @@ async function main() {
 
   printFinalReport(sheetReports)
 
+}
+
+function resolveCliArguments() {
+  const directArguments = process.argv.slice(2)
+
+  if (directArguments.length > 0) {
+    return directArguments
+  }
+
+  const npmConfigArgvRaw = process.env.npm_config_argv
+  if (!npmConfigArgvRaw) {
+    return []
+  }
+
+  try {
+    const parsedNpmConfigArgv = JSON.parse(npmConfigArgvRaw)
+    const originalArguments = Array.isArray(parsedNpmConfigArgv?.original) ? parsedNpmConfigArgv.original : []
+    const runScriptIndex = originalArguments.findIndex((argumentValue) => argumentValue === 'run')
+
+    if (runScriptIndex === -1) {
+      return []
+    }
+
+    const scriptName = originalArguments[runScriptIndex + 1]
+    if (!scriptName || scriptName !== 'locales') {
+      return []
+    }
+
+    return originalArguments.slice(runScriptIndex + 2).filter((argumentValue) => argumentValue !== '--')
+  } catch {
+    return []
+  }
 }
 
 function normalizeConfig(rawConfig) {

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import LayerRow from './LayerRow'
 import useProjectStore from '../../stores/useProjectStore'
 import { ICON_FILTER_OPTIONS } from '../../utils/constants'
@@ -27,6 +27,8 @@ function LayerPanel() {
   const [targetLayerId, setTargetLayerId] = useState('')
   const [dragLayerId, setDragLayerId] = useState(null)
   const [layerDropPreview, setLayerDropPreview] = useState(null)
+  const [focusedRenameTarget, setFocusedRenameTarget] = useState(null)
+  const [editingRenameTarget, setEditingRenameTarget] = useState(null)
 
   const selectedPinCount = selectedPinIds.length
 
@@ -50,6 +52,18 @@ function LayerPanel() {
       })),
     [pins, routes],
   )
+
+  useEffect(() => {
+    const handleF2Keydown = (event) => {
+      if (event.key !== 'F2') return
+      if (!focusedRenameTarget?.id) return
+      event.preventDefault()
+      setEditingRenameTarget(focusedRenameTarget)
+    }
+
+    window.addEventListener('keydown', handleF2Keydown)
+    return () => window.removeEventListener('keydown', handleF2Keydown)
+  }, [focusedRenameTarget])
 
   if (!layers.length) {
     return <div className="flex-1 overflow-y-auto p-4 text-sm text-gray-500">레이어가 없습니다.</div>
@@ -163,6 +177,14 @@ function LayerPanel() {
             setDragLayerId(null)
             setLayerDropPreview(null)
           }}
+          focusedRenameTarget={focusedRenameTarget}
+          editingRenameTarget={editingRenameTarget}
+          onFocusRenameTarget={setFocusedRenameTarget}
+          onStartRename={(renameTarget) => {
+            setFocusedRenameTarget(renameTarget)
+            setEditingRenameTarget(renameTarget)
+          }}
+          onFinishRename={() => setEditingRenameTarget(null)}
         />
       ))}
       <div
