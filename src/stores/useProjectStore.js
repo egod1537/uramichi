@@ -361,14 +361,28 @@ const useProjectStore = create((set) => ({
       const nextLayers = state.layers.filter((layerItem) => layerItem.id !== layerId)
       const removedPinIdSet = new Set(state.pins.filter((pinItem) => pinItem.layerId === layerId).map((pinItem) => pinItem.id))
       const nextPins = state.pins.filter((pinItem) => pinItem.layerId !== layerId)
+      const removedLineIdSet = new Set(state.lines.filter((lineItem) => lineItem.layerId === layerId).map((lineItem) => lineItem.id))
+      const nextLines = state.lines.filter((lineItem) => lineItem.layerId !== layerId)
+      const nextRoutes = state.routes.filter((routeItem) => routeItem.layerId !== layerId)
+      const nextRoutePaths = nextRoutes.map((routeItem) => routeItem.path || [])
       const nextActiveLayerId = state.activeLayerId === layerId ? nextLayers[0]?.id ?? null : state.activeLayerId
+      const committedHistory = HistoryManager.commit(state.history, state.historyIndex, {
+        ...createSnapshotFromState(state),
+        markers: createMarkersFromPins(nextPins),
+        lines: nextLines,
+        routes: nextRoutes,
+        routePaths: nextRoutePaths,
+      })
       return {
+        ...committedHistory.snapshot,
         layers: nextLayers,
         pins: nextPins,
-        markers: createMarkersFromPins(nextPins),
         selectedPinId: removedPinIdSet.has(state.selectedPinId) ? null : state.selectedPinId,
         selectedPinIds: state.selectedPinIds.filter((selectedPinIdItem) => !removedPinIdSet.has(selectedPinIdItem)),
+        selectedLineId: removedLineIdSet.has(state.selectedLineId) ? null : state.selectedLineId,
         activeLayerId: nextActiveLayerId,
+        history: committedHistory.history,
+        historyIndex: committedHistory.historyIndex,
         lastEditedAt: new Date().toISOString(),
       }
     }),
