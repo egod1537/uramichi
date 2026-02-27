@@ -507,3 +507,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - 핀 아이콘 관련 UI(핀 팝업/사이드바/지도 필터)에서 이모지 텍스트를 직접 그리던 부분을 `public/svg` 이미지 렌더링으로 통일함.
 - 핀 데이터의 `icon` 필드는 기존 emoji 값도 읽을 수 있게 유지하면서, 신규 저장은 `TRAVEL_PIN_ICON_PRESETS.key` 기반으로 전환함.
 - 아이콘 필터 매칭은 key 기준으로 변경해 데이터 포맷 전환 중에도 필터 동작이 깨지지 않도록 함.
+
+[codex] 2026-02-27 pin SVG 외곽선 스타일 작업 메모
+- `public/svg/pin-*.svg`에서 원형 배경(채움/테두리 원)을 제거하고, 아이콘 본체를 배경색 기반 단색 외곽선(stroke) 스타일로 통일함.
+- 아이콘별 외곽선 색상은 기존 배경 원의 fill 색(`default #5F6368`, `hotel #0F766E`, `photo #DB2777`, `restaurant #DC2626`, `tour #7C3AED`, `transit #2563EB`)을 그대로 사용함.
