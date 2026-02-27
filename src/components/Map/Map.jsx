@@ -52,6 +52,7 @@ function Map() {
   const selectedLineId = useProjectStore((state) => state.selectedLineId)
   const activeLayerId = useProjectStore((state) => state.activeLayerId)
   const addMarker = useProjectStore((state) => state.addMarker)
+  const setMode = useProjectStore((state) => state.setMode)
   const cancelDraftLine = useProjectStore((state) => state.cancelDraftLine)
   const appendMeasurePoint = useProjectStore((state) => state.appendMeasurePoint)
   const setMeasurePath = useProjectStore((state) => state.setMeasurePath)
@@ -141,6 +142,7 @@ function Map() {
     addMeasurement,
     setMeasurePath,
     setDraggingMeasurePointIndex,
+    setMode,
   })
 
   const triggerMeasureComplete = useCallback(() => {
@@ -197,6 +199,7 @@ function Map() {
           clearPinSelection,
           setIsPinClickInProgress,
           addMarker,
+          setMode,
         },
         refs: {
           addMarkerMouseDownPositionRef,
@@ -217,6 +220,7 @@ function Map() {
       selectPin,
       setHoverMeasurePoint,
       setRouteStart,
+      setMode,
     ],
   )
 
@@ -350,6 +354,22 @@ function Map() {
     [clearPinSelection, currentMode, selectLine, selectPin],
   )
 
+  const handleAddPoiToMap = useCallback(
+    (poiDetail) => {
+      if (!poiDetail?.position) return
+      const poiRating = typeof poiDetail.rating === 'number' ? poiDetail.rating.toFixed(1) : null
+      addMarker(poiDetail.position, {
+        name: poiDetail.name || 'POI',
+        category: 'tour',
+        memo: poiRating ? `Rating: ${poiRating}` : '',
+      })
+      selectPin(null)
+      clearPinSelection()
+      clearPoiDetail()
+    },
+    [addMarker, clearPinSelection, clearPoiDetail, selectPin],
+  )
+
   const handlePinDragStart = useCallback(
     (pinId) => {
       if (currentMode !== TOOL_MODES.SELECT) return
@@ -461,7 +481,7 @@ function Map() {
           onPinDragEnd={handlePinDragEnd}
         />
 
-        <PoiDetailOverlay poiDetail={selectedPoiDetail} onClose={clearPoiDetail} />
+        <PoiDetailOverlay poiDetail={selectedPoiDetail} onClose={clearPoiDetail} onAddPoiToMap={handleAddPoiToMap} />
 
         <LineLayer lines={visibleLines} currentMode={currentMode} selectedLineId={selectedLineId} onLineClick={handleLineClick} />
 

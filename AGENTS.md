@@ -524,3 +524,10 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 [codex] 2026-02-27 거리 측정 도구 요구 반영 메모
 - 거리 측정 도구(`measure_distance`)는 지도 위 드래프트 오버레이(파란 점선 + 꼭짓점 + 라벨)만 표시하고, 우클릭 종료 시 레이어 영구 데이터(`measurements`)에 커밋하지 않는 방향으로 정리함.
 - 우클릭 종료 입력은 `GoogleMap onRightClick`와 지도 DOM `contextmenu` 리스너를 함께 사용해 브라우저/지도 이벤트 누락 케이스를 방어하는 기존 방식을 유지함.
+[codex] 2026-02-27 선 도구 종료 입력 정책 정리 메모
+- 사용자 요구사항 기준으로 선 그리기 모드에서 ESC 단축키는 모드 전환/종료 입력으로 사용하지 않으며, 종료는 마우스 우클릭으로만 처리하는 정책을 유지함.
+- 레이어 패널 선분/도형 표기와 폐곡선 반투명 채움 렌더링은 기존 구현(`measurement.shapeType` 기반) 그대로 동작함을 확인함.
+[codex] 2026-02-27 POI 지도 추가/별점 UI 메모
+- `src/components/Map/PoiDetailOverlay.jsx`에 `지도에 추가` 버튼을 추가해 커스텀 POI 상세에서 바로 핀 생성 액션을 호출할 수 있게 연결함.
+- POI 평점 표시는 `평점 N` 텍스트 대신 별 문자열(★/☆) + 숫자(소수 1자리) 조합으로 변경함.
+- `src/stores/useProjectStore.js`의 `addMarker`는 선택적 `pinPatchData`를 받도록 확장해, POI 이름/카테고리/메모를 핀 생성 시점에 함께 주입할 수 있게 맞춤.

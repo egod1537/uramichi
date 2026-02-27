@@ -65,6 +65,7 @@ function useMeasureInteraction({
   addMeasurement,
   setMeasurePath,
   setDraggingMeasurePointIndex,
+  setMode,
 }) {
   const measureSegmentLabelDataList = useMemo(() => createSegmentLabelDataList(measurePath), [measurePath])
 
@@ -86,9 +87,9 @@ function useMeasureInteraction({
     handleLineDraftComplete({
       currentMode,
       state: { measurePath, activeLayerId, layers, measurements, createMeasurementEntity },
-      actions: { setHoverMeasurePoint, cancelDraftMeasure, addMeasurement },
+      actions: { setHoverMeasurePoint, cancelDraftMeasure, addMeasurement, setMode },
     })
-  }, [activeLayerId, addMeasurement, cancelDraftMeasure, currentMode, layers, measurePath, measurements, setHoverMeasurePoint])
+  }, [activeLayerId, addMeasurement, cancelDraftMeasure, currentMode, layers, measurePath, measurements, setHoverMeasurePoint, setMode])
 
   const handleMeasurePointDrag = useCallback(
     (pointIndex, event) => {
