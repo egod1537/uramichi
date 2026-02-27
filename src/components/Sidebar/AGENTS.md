@@ -6,3 +6,6 @@
 - `LayerPanel` 핀 아이콘 필터 매칭 기준을 emoji 값에서 icon key 값으로 전환함.
 - `LayerRow` 핀 행의 아이콘 표시와 아이콘 피커 항목을 emoji 텍스트 대신 `svgPath` 이미지 렌더링으로 교체함.
 - Sidebar에서 아이콘 변경 저장값도 `iconPreset.key`로 통일해 Map/Popup과 동일 데이터 포맷을 사용함.
+
+[codex] 2026-02-27 Sidebar 기본 핀 아이콘 SVG 고정 메모
+- `LayerRow` 핀 아이콘 버튼 fallback을 emoji 텍스트에서 `DEFAULT_PIN_SVG_PATH` 이미지로 변경해, 아이콘 미지정/기본 카테고리 핀도 SVG로 표시되도록 수정함.

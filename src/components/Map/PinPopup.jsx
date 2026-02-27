@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { OverlayView } from '@react-google-maps/api'
 import useProjectStore from '../../stores/useProjectStore'
-import { CATEGORY_PRESETS, PIN_MARKER_COLOR_PRESETS, TRAVEL_PIN_ICON_PRESETS, getTravelPinIconKey, getTravelPinIconPreset } from '../../utils/constants'
+import { CATEGORY_PRESETS, DEFAULT_PIN_SVG_PATH, PIN_MARKER_COLOR_PRESETS, TRAVEL_PIN_ICON_PRESETS, getTravelPinIconKey, getTravelPinIconPreset } from '../../utils/constants'
 import { convertFileToDataUrl } from '../../utils/file'
 
 const overlayPane = OverlayView.OVERLAY_MOUSE_TARGET
@@ -147,7 +147,11 @@ function PinPopup({ pin }) {
                 aria-label="아이콘 선택"
                 title="아이콘 선택"
               >
-                {currentPinIconPreset ? <img src={currentPinIconPreset.svgPath} alt={currentPinIconPreset.label} className="h-6 w-6" /> : categoryPreset.icon}
+                <img
+                  src={currentPinIconPreset?.svgPath || DEFAULT_PIN_SVG_PATH}
+                  alt={currentPinIconPreset?.label || '기본 아이콘'}
+                  className="h-6 w-6"
+                />
               </button>
               {isIconPickerOpen ? (
                 <div className="absolute left-0 top-9 z-30 w-56 rounded-xl border border-gray-200 bg-white p-2 shadow-xl">
