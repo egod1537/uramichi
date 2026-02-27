@@ -614,8 +614,8 @@ function Map() {
       </GoogleMap>
 
 
-      <div className="absolute bottom-4 right-4 z-20 max-w-[340px] rounded-xl border border-gray-200 bg-white/95 p-2 shadow-lg">
-        <div className="mb-1 flex items-center justify-between">
+      <div className="absolute bottom-4 left-1/2 z-20 flex w-[min(92vw,860px)] -translate-x-1/2 items-center gap-3 rounded-xl border border-gray-200 bg-white/95 px-3 py-2 shadow-lg">
+        <div className="flex shrink-0 items-center gap-2">
           <p className="text-xs font-semibold text-gray-600">지도 핀 아이콘 필터</p>
           <button
             type="button"
@@ -626,7 +626,7 @@ function Map() {
             초기화
           </button>
         </div>
-        <div className="flex flex-wrap gap-1">
+        <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto">
           {ICON_FILTER_OPTIONS.map((filterItem) => {
             const isActive = pinIconFilters.includes(filterItem.key)
             return (
@@ -634,7 +634,7 @@ function Map() {
                 key={`map-filter-${filterItem.key}`}
                 type="button"
                 onClick={() => togglePinIconFilter(filterItem.key)}
-                className={`rounded-full border px-2 py-0.5 text-xs ${isActive ? 'border-blue-400 bg-blue-50 text-blue-700' : 'border-gray-200 bg-white text-gray-600'}`}
+                className={`shrink-0 rounded-full border px-2 py-0.5 text-xs ${isActive ? 'border-blue-400 bg-blue-50 text-blue-700' : 'border-gray-200 bg-white text-gray-600'}`}
               >
                 {filterItem.icon}
               </button>
