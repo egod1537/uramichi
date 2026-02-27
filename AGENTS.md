@@ -436,3 +436,8 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `src/components/Map/Map.jsx`에서 ADD_MARKER 모드의 `pendingMarkerPoint` 확인 배너("선택 위치에 핀을 추가할까요?")를 제거함.
 - 지도 `onMouseUp`에서 좌표 클릭 즉시 `addMarker`를 호출하도록 변경해 추가 확인 단계 없이 핀이 바로 생성되도록 맞춤.
 - 확인 UI 제거에 맞춰 `pendingMarkerPoint` 관련 로컬 상태/리셋 코드를 함께 정리함.
+[codex] 2026-02-27 핀 드래그 가드 강화 메모
+- `src/components/Map/Map.jsx`에 `isPinDragEnabled`, `isMapDragging` 로컬 상태를 추가하고 Alt+핀 mousedown 제스처일 때만 핀 드래그가 활성화되도록 제한함.
+- 같은 파일에서 `handlePinDragStart`, `handlePinDrag`, `handlePinDragEnd` 시작부를 동일 가드(`isPinDragAllowed`)로 통일하고, 지도 드래그 중에는 핀 드래그 업데이트/커밋을 무시하도록 정리함.
+- `GoogleMap`의 `onDragStart`/`onDragEnd` 이벤트로 지도 드래그 상태를 관리하고, 드래그 시작 시 핀 드래그 활성 상태를 즉시 해제하도록 연결함.
+- `src/components/Map/PinMarker.jsx`의 `onMouseDown` 이벤트 객체를 부모로 전달하도록 조정해 `isPinClickInProgress` 플래그와 Alt 제스처 판별이 충돌 없이 동작하도록 맞춤.
