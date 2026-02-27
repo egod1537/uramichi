@@ -5,6 +5,7 @@ import Sidebar from './components/Sidebar/Sidebar'
 import Toolbar from './components/Toolbar/Toolbar'
 import ChatButton from './components/Chat/ChatButton'
 import ChatPanel from './components/Chat/ChatPanel'
+import UserButton from './components/common/UserButton'
 import Testbed from './pages/Testbed'
 import { getRoute } from './route'
 import useProjectStore from './stores/useProjectStore'
@@ -45,6 +46,7 @@ function App() {
         <Map />
         <Sidebar />
         <Toolbar currentMode={currentMode} historyIndex={historyIndex} historyLength={historyLength} />
+        <UserButton />
         {!chatPanelOpen && <ChatButton onClick={() => setChatPanelOpen(true)} />}
         <ChatPanel isOpen={chatPanelOpen} onClose={() => setChatPanelOpen(false)} />
       </div>
