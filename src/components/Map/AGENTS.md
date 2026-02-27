@@ -12,3 +12,7 @@
 - `src/components/Map/measure/` 폴더를 추가하고, 측정 선/포인트 렌더(`MeasureLayer.jsx`), 거리 라벨 렌더(`MeasureLabels.jsx`), 측정 상호작용/계산 훅(`useMeasureInteraction.js`)으로 역할을 분리함.
 - `Map.jsx`는 측정 렌더 JSX 블록을 제거하고 `measurePath`, `currentMode`, 콜백을 measure 전용 모듈로 전달하는 조합 구조로 정리함.
 - 측정 종료 트리거(ESC/더블클릭/우클릭)는 `triggerMeasureComplete` 단일 함수로 통일함.
+[codex] 2026-02-27 POI 상세 오버레이/훅 분리 메모
+- `PoiDetailOverlay.jsx`를 추가해 `Map.jsx` 내부 `selectedPoiDetail` Overlay JSX를 컴포넌트로 이관함.
+- `hooks/usePoiDetail.js`를 추가해 `requestPoiDetail`, `selectedPoiDetail`, `poiDetailStatus(loading/error/success)`와 닫기 액션(`clearPoiDetail`)을 분리함.
+- `Map.jsx`는 place 클릭 시 `requestPoiDetail(placeId, position)` 호출만 담당하고, 렌더는 `<PoiDetailOverlay poiDetail={selectedPoiDetail} onClose={clearPoiDetail} />`로 단순화함.
