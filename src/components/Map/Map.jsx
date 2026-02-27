@@ -39,6 +39,7 @@ function Map() {
   const mapInstanceRef = useRef(null)
   const addMarkerMouseDownPositionRef = useRef(null)
   const shouldIgnoreNextMapClickRef = useRef(false)
+  const rightClickCompleteLockRef = useRef(false)
   const currentMode = useProjectStore((state) => state.currentMode)
   const lines = useProjectStore((state) => state.lines)
   const measurements = useProjectStore((state) => state.measurements)
@@ -398,6 +399,11 @@ function Map() {
   const handleMapRightClick = useCallback(
     (event) => {
       event?.domEvent?.preventDefault?.()
+      if (rightClickCompleteLockRef.current) return
+      rightClickCompleteLockRef.current = true
+      window.setTimeout(() => {
+        rightClickCompleteLockRef.current = false
+      }, 0)
       shouldIgnoreNextMapClickRef.current = true
       triggerMeasureComplete('contextmenu')
     },
@@ -410,6 +416,11 @@ function Map() {
 
     const handleMapContextMenu = (event) => {
       event.preventDefault()
+      if (rightClickCompleteLockRef.current) return
+      rightClickCompleteLockRef.current = true
+      window.setTimeout(() => {
+        rightClickCompleteLockRef.current = false
+      }, 0)
       shouldIgnoreNextMapClickRef.current = true
       triggerMeasureComplete('contextmenu')
     }
