@@ -21,3 +21,15 @@ export const COLOR_PRESETS = {
   routeGreen: '#34a853',
   measureOrange: '#f9ab00',
 }
+
+
+export const PIN_MARKER_COLOR_PRESETS = {
+  default: { backgroundColor: '#5f6368', ringColor: '#d1d5db' },
+  airport: { backgroundColor: '#2563eb', ringColor: '#93c5fd' },
+  station: { backgroundColor: '#4f46e5', ringColor: '#a5b4fc' },
+  cafe: { backgroundColor: '#8b5e34', ringColor: '#d6b998' },
+  food: { backgroundColor: '#f97316', ringColor: '#fdba74' },
+  photo: { backgroundColor: '#db2777', ringColor: '#f9a8d4' },
+  shopping: { backgroundColor: '#0d9488', ringColor: '#5eead4' },
+  spot: { backgroundColor: '#dc2626', ringColor: '#fca5a5' },
+}

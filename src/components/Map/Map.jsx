@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react'
-import { GoogleMap, InfoWindow, Marker, Polyline } from '@react-google-maps/api'
+import { GoogleMap, InfoWindow, Polyline } from '@react-google-maps/api'
 import TOOL_MODES from '../../utils/toolModes'
 import { COLOR_PRESETS } from '../../utils/constants'
 import useProjectStore from '../../stores/useProjectStore'
+import PinMarker from './PinMarker'
 
 const containerStyle = { width: '100%', height: '100%' }
 const defaultCenter = { lat: 35.6812, lng: 139.7671 }
@@ -124,11 +125,20 @@ function Map() {
         onClick={handleMapClick}
       >
         {markers.map((markerPoint, markerIndex) => (
-          <Marker key={`marker-${markerIndex}`} position={markerPoint} />
+          <PinMarker
+            key={`marker-${markerIndex}`}
+            pin={{ id: `marker-${markerIndex}`, position: markerPoint, category: 'default' }}
+            onClick={() => {}}
+          />
         ))}
 
-        {visiblePins.map((pinItem) => (
-          <Marker key={pinItem.id} position={pinItem.position} onClick={() => selectPin(pinItem.id)} />
+        {visiblePins.map((pinItem, pinIndex) => (
+          <PinMarker
+            key={pinItem.id}
+            pin={pinItem}
+            onClick={() => selectPin(pinItem.id)}
+            indexLabel={currentMode === TOOL_MODES.ADD_ROUTE ? String(pinIndex + 1) : ''}
+          />
         ))}
 
         {selectedPin && (
