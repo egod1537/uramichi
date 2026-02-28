@@ -17,3 +17,7 @@
 [codex] 2026-02-28 LineLayer 드래프트 렌더 제거 메모
 - `LineLayer.jsx`에서 draw line 드래프트 렌더 입력(`linePath`, `previewLinePath`)을 제거함.
 - 레이어 책임을 저장된 선/도형(`lines`) 및 Select 모드 꼭짓점 편집 렌더로 한정함.
+[codex] 2026-02-28 LineLayer 드래프트/팝업 확장 메모
+- `LineLayer.jsx`에 draw line 드래프트 선/프리뷰 선 렌더와 드래프트 꼭짓점 핸들 드래그를 추가함.
+- 선택 선/도형에 대해 InfoWindow 기반 이름·스타일(선 색/두께, 도형 fill 색) 편집 및 삭제 UI를 추가함.
+- 꼭짓점 핸들 `mousedown` 중 내부 색상을 바꿔 홀드 피드백을 표시하도록 조정함.
