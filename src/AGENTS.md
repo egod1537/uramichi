@@ -5,3 +5,5 @@
 [codex] 2026-02-28 전역 range 슬라이더 스타일 메모
 - `src/index.css`에 `map-time-range-slider` 전용 스타일을 추가함.
 - 슬라이더 트랙은 투명 유지, thumb만 포인터 이벤트를 허용해 겹침 구간 드래그 충돌을 줄임.
+[codex] 2026-02-28 시간 필터 슬라이더 홀드 피드백 보강 메모
+- `src/index.css`의 `map-time-range-slider` thumb active 상태 배경색을 회색(`#d1d5db`)으로 추가해, 핸들을 누르고 있는 동안 눌림 피드백이 보이도록 조정함.
