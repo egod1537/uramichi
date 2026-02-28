@@ -107,9 +107,11 @@ class LayerPanel extends React.Component {
                   key={filterItem.key}
                   type="button"
                   onClick={() => togglePinIconFilter(filterItem.key)}
-                  className={`rounded-full border px-2 py-0.5 text-xs ${isActive ? 'border-blue-400 bg-blue-50 text-blue-700' : 'border-gray-200 bg-white text-gray-600'}`}
+                  title={filterItem.label}
+                  aria-label={filterItem.label}
+                  className={`rounded-full border p-1 ${isActive ? 'border-blue-400 bg-blue-50 text-blue-700' : 'border-gray-200 bg-white text-gray-600'}`}
                 >
-                  <img src={filterItem.svgPath} alt={filterItem.label} className="h-4 w-4" /> {filterItem.label}
+                  <img src={filterItem.svgPath} alt={filterItem.label} className="h-5 w-5" />
                 </button>
               )
             })}
