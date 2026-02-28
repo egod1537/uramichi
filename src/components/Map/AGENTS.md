@@ -158,3 +158,6 @@
 [codex] 2026-02-28 핀 아이콘 필터 축약 상태 표시 보강 메모
 - `MapOverlays.jsx`에서 핀 필터가 접힌 상태일 때도 현재 활성 필터 아이콘(최대 2개)과 나머지 개수(`+N`)가 보이도록 프리뷰 UI를 추가함.
 - 핀 필터 패널의 초기화 텍스트 버튼을 SVG 아이콘 버튼(`/svg/filter-reset-alt.svg`)으로 교체하고, 기존 clear 액션 경로(`onClearPinIconFilter`)는 유지함.
+[codex] 2026-02-28 선 오브젝트 선택/편집 동작 보강 메모
+- `Map.jsx`에서 선 꼭짓점 드래그 핸들러(`handleLinePointDrag*`)를 연결해, Select 모드에서 선택된 선의 점 좌표를 직접 이동할 수 있도록 `updateLine(points)` 경로를 추가함.
+- draw line 드래프트는 기존처럼 `currentMode`가 `DRAW_LINE`에서 벗어나는 즉시 `linePath/previewLinePoint`를 비워 파기하도록 유지함.
