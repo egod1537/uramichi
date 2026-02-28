@@ -72,6 +72,7 @@ class Map extends React.Component {
       poiDetailStatus: 'idle',
     }
     this.mapInstance = null
+    this.addMarkerMouseDownPositionRef = { current: null }
     this.shouldIgnoreNextMapClick = false
     this.rightClickCompleteLock = false
     this.mapContextMenuHandler = null
