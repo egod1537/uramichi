@@ -10,3 +10,5 @@
 [codex] 2026-02-28 Chat 마크다운 렌더링 지원 메모
 - `ChatMessage.jsx`에서 `react-markdown` + `remark-gfm` + `rehype-highlight`를 적용해 AI/사용자 메시지 본문이 마크다운(목록, 링크, 코드블록)으로 렌더링되도록 반영함.
 - 링크는 새 탭으로 열리고, 인라인 코드/코드블록 스타일을 말풍선 톤에 맞춰 분기해 가독성을 유지함.
+[codex] 2026-02-28 Chat placeholder 문구 단순화 메모
+- `ChatPanel.jsx` 입력창 placeholder를 `우즈지가 뭐냐 질문을 입력하세요`에서 `질문을 입력하세요`로 변경함.
