@@ -46,8 +46,8 @@ class PinPopup extends React.Component {
   }
 
   createInitialState = (props) => ({
-    isEditMode: false,
     isIconPickerOpen: false,
+    isColorPickerOpen: false,
     isOpeningHoursEditorOpen: false,
     isNameEditing: false,
     tagDraftInput: '',
@@ -134,13 +134,14 @@ class PinPopup extends React.Component {
   render() {
     const { pin, projectStore } = this.props
     const { selectedPinId, updatePin, removePin } = projectStore
-    const { isEditMode, isIconPickerOpen, isOpeningHoursEditorOpen, isNameEditing, tagDraftInput, editDraft } = this.state
+    const { isIconPickerOpen, isColorPickerOpen, isOpeningHoursEditorOpen, isNameEditing, tagDraftInput, editDraft } = this.state
 
     if (!selectedPinId || selectedPinId !== pin.id) return null
 
     const categoryPreset = CATEGORY_PRESETS[pin.category] || CATEGORY_PRESETS.default
     const currentPinIconKey = getTravelPinIconKey(pin.icon || categoryPreset.icon)
     const currentPinIconPreset = getTravelPinIconPreset(currentPinIconKey)
+    const selectedColor = editDraft.color || PIN_MARKER_COLOR_PRESETS[editDraft.category || 'default']?.backgroundColor
     const isCustomStayDuration = editDraft.stayDuration === '' || Boolean(editDraft.stayDurationCustom)
     const openingHoursRangeList = Array.isArray(pin.openingHours) ? pin.openingHours : []
 
@@ -150,16 +151,35 @@ class PinPopup extends React.Component {
           ref={this.popupContainerRef}
           onMouseDown={(event) => event.stopPropagation()}
           onClick={(event) => event.stopPropagation()}
-          className="relative w-[360px] -translate-x-1/2 -translate-y-[calc(100%+14px)] rounded-xl border border-gray-200 bg-white p-3 shadow-2xl"
+          className="relative w-[360px] -translate-x-1/2 -translate-y-[calc(100%+28px)] rounded-xl border border-gray-200 bg-white p-3 shadow-2xl"
         >
           <div className="mb-2 flex items-start gap-2">
-            <button
-              type="button"
-              className="rounded-lg border border-gray-200 p-1 hover:bg-gray-50"
-              onClick={() => this.setState((previousState) => ({ isIconPickerOpen: !previousState.isIconPickerOpen }))}
-            >
-              <img src={currentPinIconPreset?.svgPath || DEFAULT_PIN_SVG_PATH} alt={currentPinIconPreset?.label || '기본 아이콘'} className="h-6 w-6" />
-            </button>
+            <div className="relative">
+              <button
+                type="button"
+                className="rounded-lg border border-gray-200 p-1 hover:bg-gray-50"
+                onClick={() => this.setState((previousState) => ({ isIconPickerOpen: !previousState.isIconPickerOpen, isColorPickerOpen: false }))}
+              >
+                <img src={currentPinIconPreset?.svgPath || DEFAULT_PIN_SVG_PATH} alt={currentPinIconPreset?.label || '기본 아이콘'} className="h-6 w-6" />
+              </button>
+              {isIconPickerOpen ? (
+                <div className="absolute bottom-full left-0 z-10 mb-2 grid w-[228px] grid-cols-6 gap-1 rounded-lg border border-gray-200 bg-white p-2 shadow-lg">
+                  {TRAVEL_PIN_ICON_PRESETS.map((iconPreset) => (
+                    <button
+                      key={iconPreset.key}
+                      type="button"
+                      onClick={() => {
+                        updatePin(pin.id, { icon: iconPreset.key })
+                        this.setState({ isIconPickerOpen: false })
+                      }}
+                      className={`rounded p-1 hover:bg-gray-100 ${currentPinIconKey === iconPreset.key ? 'bg-blue-50 ring-1 ring-blue-300' : ''}`}
+                    >
+                      <img src={iconPreset.svgPath} alt={iconPreset.label} className="h-5 w-5" />
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+            </div>
             <div className="min-w-0 flex-1">
               {isNameEditing ? (
                 <input
@@ -180,29 +200,35 @@ class PinPopup extends React.Component {
               )}
               <p className="mt-1 text-xs text-gray-500">{categoryPreset.label}</p>
             </div>
-            <button type="button" onClick={() => removePin(pin.id)} className="rounded px-2 py-1 text-sm text-red-500 hover:bg-red-50">삭제</button>
-            <button type="button" onClick={() => this.setState((previousState) => ({ isEditMode: !previousState.isEditMode }))} className="rounded px-2 py-1 text-sm text-blue-600 hover:bg-blue-50">
-              {isEditMode ? '완료' : '편집'}
-            </button>
-          </div>
-
-          {isIconPickerOpen ? (
-            <div className="mb-2 grid grid-cols-6 gap-1 rounded-lg border border-gray-200 p-2">
-              {TRAVEL_PIN_ICON_PRESETS.map((iconPreset) => (
-                <button
-                  key={iconPreset.key}
-                  type="button"
-                  onClick={() => {
-                    updatePin(pin.id, { icon: iconPreset.key })
-                    this.setState({ isIconPickerOpen: false })
-                  }}
-                  className={`rounded p-1 hover:bg-gray-100 ${currentPinIconKey === iconPreset.key ? 'bg-blue-50 ring-1 ring-blue-300' : ''}`}
-                >
-                  <img src={iconPreset.svgPath} alt={iconPreset.label} className="h-5 w-5" />
-                </button>
-              ))}
+            <div className="relative">
+              <button
+                type="button"
+                className="h-7 w-7 rounded border border-gray-200"
+                onClick={() => this.setState((previousState) => ({ isColorPickerOpen: !previousState.isColorPickerOpen, isIconPickerOpen: false }))}
+                style={{ backgroundColor: selectedColor }}
+              />
+              {isColorPickerOpen ? (
+                <div className="absolute bottom-full right-0 z-10 mb-2 grid grid-cols-4 gap-2 rounded-lg border border-gray-200 bg-white p-2 shadow-lg">
+                  {colorPresetList.map((colorHex) => {
+                    const isColorSelected = selectedColor === colorHex
+                    return (
+                      <button
+                        key={colorHex}
+                        type="button"
+                        onClick={() => {
+                          this.setState((previousState) => ({ editDraft: { ...previousState.editDraft, color: colorHex }, isColorPickerOpen: false }))
+                          updatePin(pin.id, { color: colorHex })
+                        }}
+                        className={`h-6 w-6 rounded-full border-2 ${isColorSelected ? 'border-gray-900' : 'border-white'} shadow`}
+                        style={{ backgroundColor: colorHex }}
+                      />
+                    )
+                  })}
+                </div>
+              ) : null}
             </div>
-          ) : null}
+            <button type="button" onClick={() => removePin(pin.id)} className="rounded px-2 py-1 text-sm text-red-500 hover:bg-red-50">삭제</button>
+          </div>
 
           <div className="space-y-3">
             <textarea
@@ -308,8 +334,7 @@ class PinPopup extends React.Component {
               </div>
             ) : null}
 
-            {isEditMode ? (
-              <div className="space-y-2 rounded border border-gray-100 p-2">
+            <div className="space-y-2 rounded border border-gray-100 p-2">
                 <select
                   value={editDraft.category}
                   onChange={(event) => {
@@ -373,26 +398,7 @@ class PinPopup extends React.Component {
                   />
                 </div>
 
-                <div className="flex flex-wrap gap-2">
-                  {colorPresetList.map((colorHex) => {
-                    const selectedColor = editDraft.color || PIN_MARKER_COLOR_PRESETS[editDraft.category || 'default']?.backgroundColor
-                    const isColorSelected = selectedColor === colorHex
-                    return (
-                      <button
-                        key={colorHex}
-                        type="button"
-                        onClick={() => {
-                          this.setState((previousState) => ({ editDraft: { ...previousState.editDraft, color: colorHex } }))
-                          updatePin(pin.id, { color: colorHex })
-                        }}
-                        className={`h-6 w-6 rounded-full border-2 ${isColorSelected ? 'border-gray-900' : 'border-white'} shadow`}
-                        style={{ backgroundColor: colorHex }}
-                      />
-                    )
-                  })}
-                </div>
               </div>
-            ) : null}
             <TimelineBar openingHours={pin.openingHours} />
           </div>
           <div className="absolute left-1/2 top-full h-0 w-0 -translate-x-1/2 border-l-[12px] border-r-[12px] border-t-[14px] border-l-transparent border-r-transparent border-t-white" />
