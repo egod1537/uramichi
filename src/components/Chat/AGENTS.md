@@ -12,3 +12,5 @@
 - 링크는 새 탭으로 열리고, 인라인 코드/코드블록 스타일을 말풍선 톤에 맞춰 분기해 가독성을 유지함.
 [codex] 2026-02-28 Chat placeholder 문구 단순화 메모
 - `ChatPanel.jsx` 입력창 placeholder를 `우즈지가 뭐냐 질문을 입력하세요`에서 `질문을 입력하세요`로 변경함.
+[codex] 2026-02-28 Chat import 해상도 오류 대응 메모
+- `ChatMessage.jsx`에서 `react-markdown`/`remark-gfm`/`rehype-highlight` 의존 import를 제거하고, 메시지를 기본 텍스트 렌더링(`whitespace-pre-wrap`, `break-words`)으로 전환해 Preview 환경의 모듈 해상도 실패를 차단함.
