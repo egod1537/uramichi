@@ -31,3 +31,6 @@
 [codex] 2026-02-28 LayerPanel 클래스 본전환 메모
 - `LayerPanel.jsx`에서 훅 기반 `LayerPanelView`를 제거하고, `withStore`로 주입된 `projectStore`를 사용하는 단일 클래스 컴포넌트로 전환함.
 - F2 이름변경 진입 로직은 클래스 생명주기(`componentDidMount/componentWillUnmount`)에서 전역 keydown 리스너로 유지함.
+[codex] 2026-02-28 레이어 아이콘 필터 라벨 제거 메모
+- `LayerPanel.jsx`의 핀 아이콘 필터 버튼에서 텍스트 라벨을 제거하고 아이콘만 노출하도록 변경함.
+- 접근성 유지를 위해 버튼에 `title`/`aria-label`을 유지하고, 활성/비활성 스타일은 기존 토큰을 그대로 사용함.
