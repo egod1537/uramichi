@@ -158,7 +158,7 @@ class ChatPanel extends React.Component {
               value={this.state.draftMessage}
               onChange={this.handleDraftMessageChange}
               onKeyDown={this.handleTextareaKeyDown}
-              placeholder="우즈지가 뭐냐 질문을 입력하세요"
+              placeholder="질문을 입력하세요"
               className="min-h-[28px] w-full resize-none bg-transparent text-[15px] text-gray-800 outline-none placeholder:text-gray-400"
             />
             <div className="mt-2 flex justify-end">
