@@ -90,8 +90,7 @@ class Map extends React.Component {
     }
 
     if (
-      previousStore.currentMode === TOOL_MODES.DRAW_LINE
-      && currentStore.currentMode !== TOOL_MODES.DRAW_LINE
+      currentStore.currentMode !== TOOL_MODES.DRAW_LINE
       && (this.state.linePath.length || this.state.previewLinePoint)
     ) {
       this.setState({ linePath: [], previewLinePoint: null })
@@ -406,6 +405,21 @@ class Map extends React.Component {
     const nextLinePointList = targetLine.points.map((linePoint, pointIndex) =>
       pointIndex === linePointIndex ? { lat: latitude, lng: longitude } : linePoint,
     )
+
+    const isClosedShape =
+      targetLine.shapeType === 'polygon'
+      && targetLine.points.length > 2
+      && targetLine.points[0].lat === targetLine.points[targetLine.points.length - 1].lat
+      && targetLine.points[0].lng === targetLine.points[targetLine.points.length - 1].lng
+    if (isClosedShape) {
+      const lastPointIndex = nextLinePointList.length - 1
+      if (linePointIndex === 0) {
+        nextLinePointList[lastPointIndex] = { lat: latitude, lng: longitude }
+      }
+      if (linePointIndex === lastPointIndex) {
+        nextLinePointList[0] = { lat: latitude, lng: longitude }
+      }
+    }
 
     projectStore.updateLine(lineId, { points: nextLinePointList })
   }
