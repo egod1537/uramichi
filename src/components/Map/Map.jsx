@@ -393,6 +393,37 @@ class Map extends React.Component {
     projectStore.selectLine(lineId)
   }
 
+  updateLinePointByIndex = (lineId, linePointIndex, event) => {
+    const { projectStore } = this.props
+    if (projectStore.currentMode !== TOOL_MODES.SELECT) return
+    const latitude = event?.latLng?.lat()
+    const longitude = event?.latLng?.lng()
+    if (latitude === undefined || longitude === undefined) return
+
+    const targetLine = projectStore.lines.find((lineItem) => lineItem.id === lineId)
+    if (!targetLine) return
+
+    const nextLinePointList = targetLine.points.map((linePoint, pointIndex) =>
+      pointIndex === linePointIndex ? { lat: latitude, lng: longitude } : linePoint,
+    )
+
+    projectStore.updateLine(lineId, { points: nextLinePointList })
+  }
+
+  handleLinePointDragStart = (lineId) => {
+    const { projectStore } = this.props
+    if (projectStore.currentMode !== TOOL_MODES.SELECT) return
+    if (projectStore.selectedLineId !== lineId) projectStore.selectLine(lineId)
+  }
+
+  handleLinePointDrag = (lineId, linePointIndex, event) => {
+    this.updateLinePointByIndex(lineId, linePointIndex, event)
+  }
+
+  handleLinePointDragEnd = (lineId, linePointIndex, event) => {
+    this.updateLinePointByIndex(lineId, linePointIndex, event)
+  }
+
   handleAddPoiToMap = (poiDetail) => {
     const { projectStore } = this.props
     if (!poiDetail?.position) return
@@ -538,9 +569,9 @@ class Map extends React.Component {
             linePath={this.state.linePath}
             previewLinePath={previewLinePath}
             onLineClick={this.handleLineClick}
-            onLinePointDragStart={() => {}}
-            onLinePointDrag={() => {}}
-            onLinePointDragEnd={() => {}}
+            onLinePointDragStart={this.handleLinePointDragStart}
+            onLinePointDrag={this.handleLinePointDrag}
+            onLinePointDragEnd={this.handleLinePointDragEnd}
           />
 
           <RouteLayer routePaths={projectStore.routePaths} />

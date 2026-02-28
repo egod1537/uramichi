@@ -50,20 +50,24 @@ function LineLayer({
       )}
 
       {lines.map((lineItem) =>
-        (currentMode !== TOOL_MODES.SELECT || selectedLineId === lineItem.id)
+        currentMode === TOOL_MODES.SELECT
           ? lineItem.points.map((linePoint, linePointIndex) => (
               <Marker
-            key={`${lineItem.id}-vertex-${linePointIndex}`}
-            position={linePoint}
-            icon={{
-              path: window.google.maps.SymbolPath.CIRCLE,
-              scale: LINE_VERTEX_PIXEL_SIZE / 2,
-              fillColor: '#ffffff',
-              fillOpacity: 1,
-              strokeColor: lineItem.color || LINE_DEFAULT_COLOR,
-              strokeWeight: 2,
-            }}
-                clickable={false}
+                key={`${lineItem.id}-vertex-${linePointIndex}`}
+                position={linePoint}
+                icon={{
+                  path: window.google.maps.SymbolPath.CIRCLE,
+                  scale: LINE_VERTEX_PIXEL_SIZE / 2,
+                  fillColor: '#ffffff',
+                  fillOpacity: 1,
+                  strokeColor: lineItem.color || LINE_DEFAULT_COLOR,
+                  strokeWeight: 2,
+                }}
+                draggable={selectedLineId === lineItem.id}
+                onClick={() => onLineClick(lineItem.id)}
+                onDragStart={() => onLinePointDragStart(lineItem.id, linePointIndex)}
+                onDrag={(event) => onLinePointDrag(lineItem.id, linePointIndex, event)}
+                onDragEnd={(event) => onLinePointDragEnd(lineItem.id, linePointIndex, event)}
               />
             ))
           : null,
