@@ -51,3 +51,6 @@
 - `MapPanel`이 `onCloseSidebar` props를 받아 닫기 아이콘 버튼 클릭 시 사이드바를 닫도록 연결함.
 [codex] 2026-02-28 선/도형 이름 표시 메모
 - `LayerRow.jsx`의 레이어 선 목록 라벨을 자동 번호 우선에서 `lineItem.name` 우선 표시로 변경해 저장된 선/도형 이름이 사이드바에 직접 노출되도록 조정함.
+[codex] 2026-02-28 레이어 패널 선택 핀 일괄 액션 제거 메모
+- `LayerPanel.jsx`에서 `선택된 핀 N개` 박스와 `일괄 삭제/이동` UI를 제거함.
+- 관련 로컬 상태(`targetLayerId`)와 미사용 스토어 참조(`selectedPinIds`, `removePins`, `movePinsToLayer`)를 함께 정리함.
