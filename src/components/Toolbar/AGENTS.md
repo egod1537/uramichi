@@ -13,3 +13,6 @@
 [codex] 2026-02-28 선/거리 도구 버튼 제거 메모
 - `Toolbar.jsx`의 툴바 버튼 목록에서 Draw Line(E), Measure Distance(T) 항목을 제거하고 단축키 매핑/단축키 안내 문구도 동일하게 정리함.
 - ESC 동작은 모드 예외 없이 항상 Select/Pan 복귀로 단순화함.
+[codex] 2026-02-28 Draw Line 툴바 연동 메모
+- `Toolbar.jsx` 툴바 버튼 목록에 Draw Line 버튼(`TOOL_MODES.DRAW_LINE`, 단축키 E)을 추가함.
+- 키다운 핸들러에 `E` 단축키 모드 전환을 연결하고, 단축키 모달 안내 문구에도 Draw Line 항목을 추가함.
