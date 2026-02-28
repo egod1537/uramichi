@@ -25,3 +25,5 @@
 [codex] 2026-02-28 프로젝트/히스토리 기본 상태 정리 메모
 - `ProjectManager.createInitialProjectState()`에서 선/거리 드래프트 상태(`linePath`, `measurePath`, `draftLinePoints`, `draftMeasurePoints`) 기본값을 제거함.
 - `HistoryManager` 빈 스냅샷/clone 대상에서 `linePath`, `measurePath`를 제외해 선/거리 드래프트 히스토리 복원 로직을 제거함.
+[codex] 2026-02-28 툴 모드 상수 확장 메모
+- `toolModes.js`에 `DRAW_LINE: 'draw_line'` 모드를 추가해 Toolbar/Map에서 동일 키로 선 그리기 모드를 제어하도록 통합함.

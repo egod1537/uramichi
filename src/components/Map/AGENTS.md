@@ -147,3 +147,8 @@
 [codex] 2026-02-28 핀 추가 도구 미동작 원인/수정 메모
 - `Map.jsx` 클래스 전환 이후 `addMarkerMouseDownPositionRef` 초기화가 누락되어 ADD_MARKER 마우스업 경로에서 `.current` 접근 시 런타임 오류로 핀 추가가 중단되던 문제를 확인함.
 - `constructor`에서 `this.addMarkerMouseDownPositionRef = { current: null }`를 명시적으로 초기화해 markerController의 mousedown/mouseup 드래그 판별 로직이 정상 동작하도록 복구함.
+[codex] 2026-02-28 Draw Line 자유 선분 도구 메모
+- `Map.jsx`에 draw line 드래프트 상태(`linePath`, `previewLinePoint`)를 로컬 state로 추가하고, 지도 클릭으로 꼭짓점 누적 + 마우스 이동 미리보기 선 렌더를 연결함.
+- draw line 완료 트리거를 우클릭(`onRightClick`)과 더블클릭(`onDblClick`) 모두 지원하도록 추가하고, 완료 시 2점 미만은 저장하지 않고 Select 모드로 복귀하도록 처리함.
+- 첫 점/마지막 점 거리(30m) 기준으로 폐쇄 여부를 판정해 Polygon 자동 전환 및 폐쇄 경로(마지막 점=첫 점) 저장을 적용함.
+- draw line 모드에서 `clickableIcons`를 비활성화해 POI 클릭 이벤트를 억제하고, 커서를 `crosshair`로 변경함.
