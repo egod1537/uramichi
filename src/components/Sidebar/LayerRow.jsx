@@ -255,10 +255,6 @@ class LayerRow extends React.Component {
           </div>
         )}
 
-        {objectType === 'line' && (
-          <div className="px-2 text-xs text-gray-500">{(objectData.points || []).length}점</div>
-        )}
-
         {objectDropPreview?.targetObjectId === objectRenameTargetId && objectDropPreview.dropPosition === 'after' && <div className="mx-2 h-1 rounded bg-blue-500" />}
       </div>
     )
