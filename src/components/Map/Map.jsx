@@ -4,29 +4,22 @@ import TOOL_MODES from '../../utils/toolModes'
 import { COLOR_PRESETS, MAP_DEFAULT_ZOOM, TIME_FILTER_DEFAULT_RANGE } from '../../utils/config'
 import useProjectStore from '../../stores/useProjectStore'
 import withStore from '../../utils/withStore'
-import { handleLineMapClick, handleLineMapMouseMove, handleLineDraftComplete, handleLineMeasurePointDrag } from './controllers/lineController'
 import { handleMarkerMouseDown, handleMarkerMouseUp } from './controllers/markerController'
-import { handleMeasureMapClick } from './controllers/measureController'
 import { handleRouteMapClick } from './controllers/routeController'
 import { handleSelectMapClick } from './controllers/selectController'
-import { syncDraftByMode } from './controllers/syncDraftByMode'
 import { ICON_FILTER_OPTIONS, getTravelPinIconKey } from '../../utils/opts'
 import RouteService from '../../utils/RouteService'
 import PoiDetailOverlay from './PoiDetailOverlay'
 import PinLayer from './layers/PinLayer'
 import LineLayer from './layers/LineLayer'
 import RouteLayer from './layers/RouteLayer'
-import MeasureLayer from './layers/MeasureLayer'
 import MapOverlays from './MapOverlays'
-import { formatDistanceLabel, getHaversineDistance, getMidpoint, getPathDistanceInMeters } from '../../utils/geo'
-import { LINE_DEFAULT_COLOR, LINE_DEFAULT_WIDTH } from '../../utils/lineStyle'
 import {
   ADD_MARKER_DRAG_THRESHOLD_PX,
   MAP_CONTAINER_STYLE,
   MAP_DEFAULT_CENTER,
   MAP_OPTIONS,
 } from './config'
-import { POLYGON_CLOSE_DISTANCE_METERS } from './measure/constants'
 
 const lineColorSequence = [COLOR_PRESETS.primaryBlue, COLOR_PRESETS.routeGreen, COLOR_PRESETS.measureOrange, '#8b5cf6']
 
@@ -62,8 +55,6 @@ class Map extends React.Component {
     this.state = {
       isPinClickInProgress: false,
       draggingPinId: null,
-      hoverMeasurePoint: null,
-      draggingMeasurePointIndex: null,
       isPinFilterExpanded: false,
       isTimeFilterExpanded: false,
       timeFilterRange: TIME_FILTER_DEFAULT_RANGE,
@@ -74,8 +65,6 @@ class Map extends React.Component {
     this.mapInstance = null
     this.addMarkerMouseDownPositionRef = { current: null }
     this.shouldIgnoreNextMapClick = false
-    this.rightClickCompleteLock = false
-    this.mapContextMenuHandler = null
   }
 
   componentDidMount() {
@@ -95,20 +84,10 @@ class Map extends React.Component {
     if (previousStore?.poiSearchRequest !== currentStore.poiSearchRequest && currentStore.poiSearchRequest) {
       this.handlePoiSearchRequest(currentStore)
     }
-
-    if (previousStore?.currentMode !== currentStore.currentMode) {
-      syncDraftByMode({
-        currentMode: currentStore.currentMode,
-        actions: { cancelDraftMeasure: currentStore.cancelDraftMeasure, cancelDraftLine: currentStore.cancelDraftLine },
-      })
-    }
-
-    this.syncMapContextMenuListener()
   }
 
   componentWillUnmount() {
     window.removeEventListener('keydown', this.handleDeleteKeyDown)
-    this.detachMapContextMenuListener()
   }
 
   getVisibleLayerIdSet = (projectStore) => new Set(projectStore.layers.filter((layerItem) => layerItem.visible).map((layerItem) => layerItem.id))
@@ -129,59 +108,6 @@ class Map extends React.Component {
   getSelectedPin = (projectStore) => this.getVisiblePins(projectStore).find((pinItem) => pinItem.id === projectStore.selectedPinId) || null
 
   getSelectedLine = (projectStore) => this.getVisibleLines(projectStore).find((lineItem) => lineItem.id === projectStore.selectedLineId) || null
-
-  getLinePreviewPath = (projectStore) => {
-    const { linePath } = projectStore
-    const { hoverMeasurePoint } = this.state
-    if (!linePath.length || !hoverMeasurePoint) return []
-    return [...linePath, hoverMeasurePoint]
-  }
-
-  getPreviewMeasurePath = (projectStore) => {
-    const { measurePath } = projectStore
-    const { hoverMeasurePoint } = this.state
-    if (!measurePath.length || !hoverMeasurePoint) return []
-    return [...measurePath, hoverMeasurePoint]
-  }
-
-  getMeasureSegmentLabelDataList = (projectStore) =>
-    projectStore.measurePath.slice(1).map((currentPoint, pointIndex) => {
-      const previousPoint = projectStore.measurePath[pointIndex]
-      const segmentDistanceInMeters = getPathDistanceInMeters([previousPoint, currentPoint])
-      return {
-        id: `measure-segment-${pointIndex + 1}`,
-        position: getMidpoint(previousPoint, currentPoint),
-        label: formatDistanceLabel(segmentDistanceInMeters),
-      }
-    })
-
-  getMeasureTotalLabelData = (projectStore) => {
-    const totalDistanceInMeters = getPathDistanceInMeters(projectStore.measurePath)
-    if (!totalDistanceInMeters) return null
-    const terminalPoint = projectStore.measurePath[projectStore.measurePath.length - 1]
-    return { id: 'measure-total', position: terminalPoint, label: `총 ${formatDistanceLabel(totalDistanceInMeters)}` }
-  }
-
-  createLineEntity = (linePointPath, activeLayerId, lineCount) => {
-    const firstPoint = linePointPath[0]
-    const lastPoint = linePointPath[linePointPath.length - 1]
-    const isLoopClosed = linePointPath.length >= 3 && getHaversineDistance(firstPoint, lastPoint) <= POLYGON_CLOSE_DISTANCE_METERS
-    const shapeType = isLoopClosed ? 'polygon' : 'line'
-    const pointsForPolygon =
-      shapeType === 'polygon' && firstPoint && lastPoint && (firstPoint.lat !== lastPoint.lat || firstPoint.lng !== lastPoint.lng)
-        ? [...linePointPath, firstPoint]
-        : linePointPath
-
-    return {
-      id: `line-${Date.now()}-${lineCount + 1}`,
-      layerId: activeLayerId,
-      points: pointsForPolygon,
-      color: LINE_DEFAULT_COLOR,
-      width: LINE_DEFAULT_WIDTH,
-      shapeType,
-      sourceType: 'line',
-    }
-  }
 
   clearPoiDetail = () => {
     this.setState({ selectedPoiDetail: null, poiDetailStatus: 'idle' })
@@ -255,49 +181,6 @@ class Map extends React.Component {
     projectStore.consumePoiSearchRequest()
   }
 
-  completeLineInteraction = () => {
-    const { projectStore } = this.props
-    handleLineDraftComplete({
-      currentMode: TOOL_MODES.DRAW_LINE,
-      state: {
-        linePath: projectStore.linePath,
-        activeLayerId: projectStore.activeLayerId,
-        layers: projectStore.layers,
-        lines: projectStore.lines,
-        createLineEntity: this.createLineEntity,
-      },
-      actions: {
-        setHoverMeasurePoint: (value) => this.setState({ hoverMeasurePoint: value }),
-        cancelDraftLine: projectStore.cancelDraftLine,
-        addLine: projectStore.addLine,
-        setMode: projectStore.setMode,
-      },
-    })
-  }
-
-  completeDistanceMeasureInteraction = (triggerType = 'default') => {
-    const { projectStore } = this.props
-    this.setState({ hoverMeasurePoint: null, draggingMeasurePointIndex: null })
-    projectStore.cancelDraftMeasure()
-    if (triggerType === 'contextmenu') {
-      projectStore.setMode?.(TOOL_MODES.MEASURE_DISTANCE)
-    }
-    if (triggerType === 'escape') {
-      projectStore.setMode?.(TOOL_MODES.SELECT)
-    }
-  }
-
-  triggerMeasureComplete = (triggerType = 'default') => {
-    const { currentMode } = this.props.projectStore
-    if (currentMode === TOOL_MODES.DRAW_LINE) {
-      this.completeLineInteraction()
-      return
-    }
-    if (currentMode === TOOL_MODES.MEASURE_DISTANCE) {
-      this.completeDistanceMeasureInteraction(triggerType)
-    }
-  }
-
   requestRoute = async (startPoint, endPoint, travelMode) => {
     const { projectStore } = this.props
     const resolvedLayerId = projectStore.activeLayerId || projectStore.layers[0]?.id || null
@@ -321,8 +204,6 @@ class Map extends React.Component {
     const latitude = event?.latLng?.lat()
     const longitude = event?.latLng?.lng()
     const clickedPoint = latitude === undefined || longitude === undefined ? null : { lat: latitude, lng: longitude }
-    const visibleLines = this.getVisibleLines(projectStore)
-    const lineSnapPointList = [...projectStore.linePath, ...visibleLines.flatMap((lineItem) => lineItem.points)]
 
     return {
       event,
@@ -332,15 +213,9 @@ class Map extends React.Component {
         clickedPoint,
         isPinClickInProgress: this.state.isPinClickInProgress,
         routeDraft: projectStore.routeDraft,
-        linePath: projectStore.linePath,
-        measurePath: projectStore.measurePath,
-        draggingMeasurePointIndex: this.state.draggingMeasurePointIndex !== null ? 0 : null,
         addMarkerDragThresholdPx: ADD_MARKER_DRAG_THRESHOLD_PX,
       },
       actions: {
-        setHoverMeasurePoint: (value) => this.setState({ hoverMeasurePoint: value }),
-        appendLinePoint: projectStore.appendLinePoint,
-        appendMeasurePoint: projectStore.appendMeasurePoint,
         setRouteStart: projectStore.setRouteStart,
         requestRoute: this.requestRoute,
         setRecentRouteInfo: (value) => this.setState({ recentRouteInfo: value }),
@@ -350,7 +225,6 @@ class Map extends React.Component {
         setIsPinClickInProgress: (value) => this.setState({ isPinClickInProgress: value }),
         addMarker: projectStore.addMarker,
         setMode: projectStore.setMode,
-        lineSnapPointList,
       },
       refs: {
         addMarkerMouseDownPositionRef: this.addMarkerMouseDownPositionRef,
@@ -361,14 +235,9 @@ class Map extends React.Component {
   handleMapClick = (event) => {
     const { projectStore } = this.props
     const mapClickModeHandlerMap = {
-      [TOOL_MODES.DRAW_LINE]: handleLineMapClick,
       [TOOL_MODES.ADD_ROUTE]: handleRouteMapClick,
       [TOOL_MODES.SELECT]: handleSelectMapClick,
-      [TOOL_MODES.MEASURE_DISTANCE]: handleMeasureMapClick,
     }
-    const isLineOrMeasureMode = projectStore.currentMode === TOOL_MODES.DRAW_LINE || projectStore.currentMode === TOOL_MODES.MEASURE_DISTANCE
-    if (isLineOrMeasureMode && event?.domEvent?.type === 'contextmenu') return
-    if (isLineOrMeasureMode && event?.domEvent?.button !== 0) return
     if (this.shouldIgnoreNextMapClick) {
       this.shouldIgnoreNextMapClick = false
       return
@@ -381,10 +250,6 @@ class Map extends React.Component {
     if (event.placeId) {
       event.stop()
       if (projectStore.currentMode === TOOL_MODES.ADD_MARKER) return
-      if (projectStore.currentMode === TOOL_MODES.MEASURE_DISTANCE) {
-        mapClickModeHandlerMap[projectStore.currentMode]?.(this.createModeEventContext(event))
-        return
-      }
       const latitudeFromPoi = event.latLng?.lat()
       const longitudeFromPoi = event.latLng?.lng()
       if (latitudeFromPoi === undefined || longitudeFromPoi === undefined) return
@@ -400,41 +265,6 @@ class Map extends React.Component {
     mapClickModeHandlerMap[projectStore.currentMode]?.(this.createModeEventContext(event))
   }
 
-  handleMapRightClick = (event) => {
-    event?.domEvent?.preventDefault?.()
-    if (this.rightClickCompleteLock) return
-    this.rightClickCompleteLock = true
-    window.setTimeout(() => {
-      this.rightClickCompleteLock = false
-    }, 0)
-    this.shouldIgnoreNextMapClick = true
-    this.triggerMeasureComplete('contextmenu')
-  }
-
-  syncMapContextMenuListener = () => {
-    this.detachMapContextMenuListener()
-    const mapDivElement = this.mapInstance?.getDiv?.()
-    if (!mapDivElement) return
-    this.mapContextMenuHandler = (event) => {
-      event.preventDefault()
-      if (this.rightClickCompleteLock) return
-      this.rightClickCompleteLock = true
-      window.setTimeout(() => {
-        this.rightClickCompleteLock = false
-      }, 0)
-      this.shouldIgnoreNextMapClick = true
-      this.triggerMeasureComplete('contextmenu')
-    }
-    mapDivElement.addEventListener('contextmenu', this.mapContextMenuHandler)
-  }
-
-  detachMapContextMenuListener = () => {
-    const mapDivElement = this.mapInstance?.getDiv?.()
-    if (!mapDivElement || !this.mapContextMenuHandler) return
-    mapDivElement.removeEventListener('contextmenu', this.mapContextMenuHandler)
-    this.mapContextMenuHandler = null
-  }
-
   handleMapMouseDown = (event) => {
     handleMarkerMouseDown(this.createModeEventContext(event))
   }
@@ -444,7 +274,7 @@ class Map extends React.Component {
   }
 
   handleMapMouseMove = (event) => {
-    handleLineMapMouseMove(this.createModeEventContext(event))
+    void event
   }
 
   handlePinClick = (pinId, event) => {
@@ -515,50 +345,6 @@ class Map extends React.Component {
     this.setState({ draggingPinId: null })
   }
 
-  handleLineDraftPointDragStart = (pointIndex) => {
-    this.setState({ draggingMeasurePointIndex: pointIndex })
-  }
-
-  handleLineDraftPointDrag = (pointIndex, event) => {
-    const { projectStore } = this.props
-    handleLineMeasurePointDrag({
-      currentMode: TOOL_MODES.DRAW_LINE,
-      pointIndex,
-      clickedPoint: (() => {
-        const latitude = event?.latLng?.lat()
-        const longitude = event?.latLng?.lng()
-        return latitude === undefined || longitude === undefined ? null : { lat: latitude, lng: longitude }
-      })(),
-      state: { linePath: projectStore.linePath },
-      actions: { setLinePath: projectStore.setLinePath, lineSnapPointList: [...projectStore.linePath, ...projectStore.lines.flatMap((lineItem) => lineItem.points)] },
-    })
-  }
-
-  handleLineDraftPointDragEnd = (pointIndex, event) => {
-    this.handleLineDraftPointDrag(pointIndex, event)
-    this.setState({ draggingMeasurePointIndex: null })
-  }
-
-  handleMeasurePointDragStart = (pointIndex) => {
-    this.setState({ draggingMeasurePointIndex: pointIndex })
-  }
-
-  handleMeasurePointDrag = (pointIndex, event) => {
-    const { projectStore } = this.props
-    const latitude = event?.latLng?.lat()
-    const longitude = event?.latLng?.lng()
-    if (latitude === undefined || longitude === undefined) return
-    const nextMeasurePointList = projectStore.measurePath.map((measurePointItem, measurePointIndex) =>
-      measurePointIndex === pointIndex ? { lat: latitude, lng: longitude } : measurePointItem,
-    )
-    projectStore.setMeasurePath(nextMeasurePointList)
-  }
-
-  handleMeasurePointDragEnd = (pointIndex, event) => {
-    this.handleMeasurePointDrag(pointIndex, event)
-    this.setState({ draggingMeasurePointIndex: null })
-  }
-
   handleDeleteKeyDown = (event) => {
     const { projectStore } = this.props
     const eventTarget = event.target
@@ -570,7 +356,7 @@ class Map extends React.Component {
         || eventTarget.isContentEditable)
     if (isInputControlTarget && event.key !== 'Escape') return
 
-    if (event.key === 'Escape') this.triggerMeasureComplete('escape')
+    if (event.key === 'Escape') this.props.projectStore.resetToSelectMode()
     if (projectStore.currentMode !== TOOL_MODES.SELECT) return
 
     if (event.key === 'Delete' || event.key === 'Backspace') {
@@ -616,21 +402,17 @@ class Map extends React.Component {
           zoom={MAP_DEFAULT_ZOOM}
           onLoad={(loadedMap) => {
             this.mapInstance = loadedMap
-            this.syncMapContextMenuListener()
           }}
           onUnmount={() => {
-            this.detachMapContextMenuListener()
             this.mapInstance = null
           }}
           onClick={this.handleMapClick}
           onMouseUp={this.handleMapMouseUp}
           onMouseMove={this.handleMapMouseMove}
           onMouseDown={this.handleMapMouseDown}
-          onRightClick={this.handleMapRightClick}
           options={{
             ...MAP_OPTIONS,
-            clickableIcons: projectStore.currentMode !== TOOL_MODES.MEASURE_DISTANCE && projectStore.currentMode !== TOOL_MODES.ADD_MARKER,
-            disableDoubleClickZoom: projectStore.currentMode === TOOL_MODES.DRAW_LINE,
+            clickableIcons: projectStore.currentMode !== TOOL_MODES.ADD_MARKER,
           }}
         >
           <PinLayer
@@ -638,7 +420,7 @@ class Map extends React.Component {
             selectedPin={selectedPoiDetail ? null : selectedPin}
             selectedPinId={projectStore.selectedPinId}
             currentMode={projectStore.currentMode}
-            isPinInteractionBlocked={projectStore.currentMode === TOOL_MODES.MEASURE_DISTANCE}
+            isPinInteractionBlocked={false}
             draggingPinId={draggingPinId}
             onPinMouseDown={() => this.setState({ isPinClickInProgress: true })}
             onPinClick={this.handlePinClick}
@@ -653,26 +435,15 @@ class Map extends React.Component {
             lines={visibleLines}
             currentMode={projectStore.currentMode}
             selectedLineId={projectStore.selectedLineId}
-            linePath={projectStore.linePath}
-            previewLinePath={this.getLinePreviewPath(projectStore)}
+            linePath={[]}
+            previewLinePath={[]}
             onLineClick={this.handleLineClick}
-            onLinePointDragStart={this.handleLineDraftPointDragStart}
-            onLinePointDrag={this.handleLineDraftPointDrag}
-            onLinePointDragEnd={this.handleLineDraftPointDragEnd}
+            onLinePointDragStart={() => {}}
+            onLinePointDrag={() => {}}
+            onLinePointDragEnd={() => {}}
           />
 
           <RouteLayer routePaths={projectStore.routePaths} />
-
-          <MeasureLayer
-            currentMode={projectStore.currentMode}
-            measurePath={projectStore.measurePath}
-            previewMeasurePath={this.getPreviewMeasurePath(projectStore)}
-            measureSegmentLabelDataList={this.getMeasureSegmentLabelDataList(projectStore)}
-            measureTotalLabelData={this.getMeasureTotalLabelData(projectStore)}
-            onMeasurePointDragStart={this.handleMeasurePointDragStart}
-            onMeasurePointDrag={this.handleMeasurePointDrag}
-            onMeasurePointDragEnd={this.handleMeasurePointDragEnd}
-          />
         </GoogleMap>
 
         <MapOverlays

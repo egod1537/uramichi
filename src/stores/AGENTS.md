@@ -11,3 +11,6 @@
 
 [codex] 2026-02-27 store key config 연동 메모
 - Zustand persist storage key 하드코딩을 제거하고 `src/utils/config.js`의 `LOCAL_STORAGE_KEYS`를 사용하도록 통일함.
+[codex] 2026-02-28 선/거리 도구 상태 제거 메모
+- `useProjectStore` 스냅샷 구조에서 선/거리 드래프트 경로(`linePath`, `measurePath`)를 제외하고, 관련 draft 액션(`startDraft*`, `appendDraft*`, `cancelDraft*`, `appendLinePoint`, `setLinePath`, `appendMeasurePoint`, `setMeasurePath`)을 제거함.
+- 모드 전환/리셋 시 거리 측정 드래프트를 유지·초기화하던 분기를 제거해 Select/Add Marker/Add Route 중심 상태 전환만 남김.

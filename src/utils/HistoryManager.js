@@ -1,6 +1,6 @@
 class HistoryManager {
   static createEmptySnapshot() {
-    return { markers: [], lines: [], routes: [], linePath: [], routePaths: [], measurePath: [] }
+    return { markers: [], lines: [], routes: [], routePaths: [] }
   }
 
   static cloneSnapshot(snapshot) {
@@ -16,9 +16,7 @@ class HistoryManager {
         end: routeItem.end ? { ...routeItem.end } : null,
         path: (routeItem.path || []).map((point) => ({ ...point })),
       })),
-      linePath: snapshot.linePath.map((point) => ({ ...point })),
       routePaths: snapshot.routePaths.map((pathItem) => pathItem.map((point) => ({ ...point }))),
-      measurePath: snapshot.measurePath.map((point) => ({ ...point })),
     }
   }
 
