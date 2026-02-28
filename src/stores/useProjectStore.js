@@ -107,6 +107,48 @@ const reorderLinesByLayer = (lineList, layerId, sourceLineId, targetLineId, drop
   })
 }
 
+const reorderLayerObjectsByLayer = (pinList, lineList, layerId, sourceObject, targetObject, dropPosition = 'before') => {
+  if (!sourceObject?.id || !targetObject?.id) {
+    return { nextPins: pinList, nextLines: lineList }
+  }
+
+  const layerObjectList = [
+    ...pinList.filter((pinItem) => pinItem.layerId === layerId).map((pinItem) => ({ type: 'pin', id: pinItem.id })),
+    ...lineList.filter((lineItem) => lineItem.layerId === layerId).map((lineItem) => ({ type: 'line', id: lineItem.id })),
+  ]
+  const sourceIndex = layerObjectList.findIndex((objectItem) => objectItem.type === sourceObject.type && objectItem.id === sourceObject.id)
+  if (sourceIndex < 0) {
+    return { nextPins: pinList, nextLines: lineList }
+  }
+
+  const targetIndex = dropPosition === 'end'
+    ? layerObjectList.length - 1
+    : layerObjectList.findIndex((objectItem) => objectItem.type === targetObject.type && objectItem.id === targetObject.id)
+  if (targetIndex < 0) {
+    return { nextPins: pinList, nextLines: lineList }
+  }
+
+  const insertIndex = resolveReorderInsertIndex(sourceIndex, targetIndex, dropPosition, layerObjectList.length)
+  const reorderedLayerObjectList = reorderItemList(layerObjectList, sourceIndex, insertIndex)
+  const layerObjectOrderMap = new Map(reorderedLayerObjectList.map((objectItem, objectOrderIndex) => [`${objectItem.type}-${objectItem.id}`, objectOrderIndex]))
+
+  const nextPins = [...pinList].sort((firstPin, secondPin) => {
+    const firstPinOrder = layerObjectOrderMap.get(`pin-${firstPin.id}`)
+    const secondPinOrder = layerObjectOrderMap.get(`pin-${secondPin.id}`)
+    if (firstPinOrder == null || secondPinOrder == null) return 0
+    return firstPinOrder - secondPinOrder
+  })
+
+  const nextLines = [...lineList].sort((firstLine, secondLine) => {
+    const firstLineOrder = layerObjectOrderMap.get(`line-${firstLine.id}`)
+    const secondLineOrder = layerObjectOrderMap.get(`line-${secondLine.id}`)
+    if (firstLineOrder == null || secondLineOrder == null) return 0
+    return firstLineOrder - secondLineOrder
+  })
+
+  return { nextPins, nextLines }
+}
+
 const useProjectStore = create((set) => ({
   ...initialProjectState,
   selectedLineId: null,
@@ -299,6 +341,24 @@ const useProjectStore = create((set) => ({
       if (nextLines === state.lines) return state
       return {
         lines: nextLines,
+        lastEditedAt: new Date().toISOString(),
+      }
+    }),
+  reorderLayerObjectsInLayer: (layerId, sourceObject, targetObject, dropPosition = 'before') =>
+    set((state) => {
+      const { nextPins, nextLines } = reorderLayerObjectsByLayer(
+        state.pins,
+        state.lines,
+        layerId,
+        sourceObject,
+        targetObject,
+        dropPosition,
+      )
+      if (nextPins === state.pins && nextLines === state.lines) return state
+      return {
+        pins: nextPins,
+        lines: nextLines,
+        markers: createMarkersFromPins(nextPins),
         lastEditedAt: new Date().toISOString(),
       }
     }),
