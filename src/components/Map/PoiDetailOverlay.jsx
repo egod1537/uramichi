@@ -1,21 +1,21 @@
-import { OverlayView } from '@react-google-maps/api'
-import createGoogleMapsPlaceUrl from '../../utils/createGoogleMapsPlaceUrl'
+import { OverlayView } from '@react-google-maps/api';
+import createGoogleMapsPlaceUrl from '../../utils/createGoogleMapsPlaceUrl';
 
 const clampRatingValue = (ratingValue) => {
-  if (typeof ratingValue !== 'number') return 0
-  return Math.max(0, Math.min(5, ratingValue))
-}
+  if (typeof ratingValue !== 'number') return 0;
+  return Math.max(0, Math.min(5, ratingValue));
+};
 
 const createStarRatingLabel = (ratingValue) => {
-  const normalizedRating = clampRatingValue(ratingValue)
-  const filledStarCount = Math.round(normalizedRating)
-  return `★`.repeat(filledStarCount) + `☆`.repeat(5 - filledStarCount)
-}
+  const normalizedRating = clampRatingValue(ratingValue);
+  const filledStarCount = Math.round(normalizedRating);
+  return `★`.repeat(filledStarCount) + `☆`.repeat(5 - filledStarCount);
+};
 
 function PoiDetailOverlay({ poiDetail, onClose, onAddPoiToMap }) {
-  if (!poiDetail) return null
+  if (!poiDetail) return null;
 
-  const starRatingLabel = createStarRatingLabel(poiDetail.rating)
+  const starRatingLabel = createStarRatingLabel(poiDetail.rating);
 
   return (
     <OverlayView position={poiDetail.position} mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}>
@@ -36,7 +36,9 @@ function PoiDetailOverlay({ poiDetail, onClose, onAddPoiToMap }) {
         </div>
 
         {poiDetail.address ? <p className="text-sm text-slate-600">{poiDetail.address}</p> : null}
-        {poiDetail.phoneNumber ? <p className="mt-1 text-sm text-slate-600">{poiDetail.phoneNumber}</p> : null}
+        {poiDetail.phoneNumber ? (
+          <p className="mt-1 text-sm text-slate-600">{poiDetail.phoneNumber}</p>
+        ) : null}
         {poiDetail.rating !== null ? (
           <div className="mt-2 flex items-center gap-2 text-sm font-semibold text-amber-600">
             <span className="tracking-wide">{starRatingLabel}</span>
@@ -64,7 +66,13 @@ function PoiDetailOverlay({ poiDetail, onClose, onAddPoiToMap }) {
           </button>
           <button
             type="button"
-            onClick={() => window.open(createGoogleMapsPlaceUrl(poiDetail.placeId), '_blank', 'noopener,noreferrer')}
+            onClick={() =>
+              window.open(
+                createGoogleMapsPlaceUrl(poiDetail.placeId),
+                '_blank',
+                'noopener,noreferrer',
+              )
+            }
             className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700"
           >
             Google 지도에서 보기
@@ -72,7 +80,7 @@ function PoiDetailOverlay({ poiDetail, onClose, onAddPoiToMap }) {
         </div>
       </div>
     </OverlayView>
-  )
+  );
 }
 
-export default PoiDetailOverlay
+export default PoiDetailOverlay;

@@ -1,59 +1,84 @@
-import React from 'react'
+import React from 'react';
 
 const mockMaps = [
   { id: 'map-1', title: '제목없는 지도', lastEditedAt: '2026. 2. 27.', visibility: 'private' },
   { id: 'map-2', title: '일본여행지도', lastEditedAt: '2026. 2. 26.', visibility: 'public' },
-  { id: 'map-3', title: '2025.04.05 ~ 2025.04.07', lastEditedAt: '2026. 2. 22.', visibility: 'public' },
-  { id: 'map-4', title: '2025.05.10 ~ 2025.05.14', lastEditedAt: '2026. 2. 22.', visibility: 'public' },
-  { id: 'map-5', title: '도쿄 에어비앤비 후보지', lastEditedAt: '2026. 2. 16.', visibility: 'private' },
-  { id: 'map-6', title: '8/28 ~ 9/1 ~도쿄 여행~', lastEditedAt: '2026. 2. 14.', visibility: 'public' },
-  { id: 'map-7', title: '숭실대학교 일본캠퍼스', lastEditedAt: '2026. 2. 14.', visibility: 'public' },
+  {
+    id: 'map-3',
+    title: '2025.04.05 ~ 2025.04.07',
+    lastEditedAt: '2026. 2. 22.',
+    visibility: 'public',
+  },
+  {
+    id: 'map-4',
+    title: '2025.05.10 ~ 2025.05.14',
+    lastEditedAt: '2026. 2. 22.',
+    visibility: 'public',
+  },
+  {
+    id: 'map-5',
+    title: '도쿄 에어비앤비 후보지',
+    lastEditedAt: '2026. 2. 16.',
+    visibility: 'private',
+  },
+  {
+    id: 'map-6',
+    title: '8/28 ~ 9/1 ~도쿄 여행~',
+    lastEditedAt: '2026. 2. 14.',
+    visibility: 'public',
+  },
+  {
+    id: 'map-7',
+    title: '숭실대학교 일본캠퍼스',
+    lastEditedAt: '2026. 2. 14.',
+    visibility: 'public',
+  },
   { id: 'map-8', title: '도쿄 여행', lastEditedAt: '2025. 10. 19.', visibility: 'public' },
-]
+];
 
 class MyMapsModal extends React.Component {
   state = {
     searchKeyword: '',
-  }
+  };
 
   componentDidMount() {
-    window.addEventListener('keydown', this.handleWindowKeydown)
+    window.addEventListener('keydown', this.handleWindowKeydown);
   }
 
   componentWillUnmount() {
-    window.removeEventListener('keydown', this.handleWindowKeydown)
+    window.removeEventListener('keydown', this.handleWindowKeydown);
   }
 
   handleWindowKeydown = (event) => {
     if (!this.props.isOpen) {
-      return
+      return;
     }
     if (event.key === 'Escape') {
-      this.props.onClose()
+      this.props.onClose();
     }
-  }
+  };
 
   handleOverlayMouseDown = (event) => {
     if (event.target === event.currentTarget) {
-      this.props.onClose()
+      this.props.onClose();
     }
-  }
+  };
 
   handleSearchChange = (event) => {
-    this.setState({ searchKeyword: event.target.value })
-  }
+    this.setState({ searchKeyword: event.target.value });
+  };
 
   getFilteredMaps() {
-    const normalizedKeyword = this.state.searchKeyword.trim().toLowerCase()
+    const normalizedKeyword = this.state.searchKeyword.trim().toLowerCase();
     if (!normalizedKeyword) {
-      return mockMaps
+      return mockMaps;
     }
 
-    return mockMaps.filter((mapItem) => mapItem.title.toLowerCase().includes(normalizedKeyword))
+    return mockMaps.filter((mapItem) => mapItem.title.toLowerCase().includes(normalizedKeyword));
   }
 
   renderMapCard(mapItem) {
-    const visibilityIcon = mapItem.visibility === 'private' ? '🔒' : '🌐'
+    const visibilityIcon = mapItem.visibility === 'private' ? '🔒' : '🌐';
 
     return (
       <button
@@ -72,15 +97,15 @@ class MyMapsModal extends React.Component {
           </p>
         </div>
       </button>
-    )
+    );
   }
 
   render() {
     if (!this.props.isOpen) {
-      return null
+      return null;
     }
 
-    const filteredMaps = this.getFilteredMaps()
+    const filteredMaps = this.getFilteredMaps();
 
     return (
       <div
@@ -91,7 +116,9 @@ class MyMapsModal extends React.Component {
           <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
             <div className="flex items-center gap-4">
               <h2 className="text-lg font-semibold text-gray-900">내 지도 목록</h2>
-              <span className="rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-500">소유한 지도</span>
+              <span className="rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-500">
+                소유한 지도
+              </span>
             </div>
             <button
               type="button"
@@ -114,7 +141,11 @@ class MyMapsModal extends React.Component {
           </div>
 
           <div className="flex-1 overflow-y-auto p-5">
-            {filteredMaps.length > 0 && <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">{filteredMaps.map((mapItem) => this.renderMapCard(mapItem))}</div>}
+            {filteredMaps.length > 0 && (
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+                {filteredMaps.map((mapItem) => this.renderMapCard(mapItem))}
+              </div>
+            )}
             {filteredMaps.length === 0 && (
               <div className="flex h-40 items-center justify-center rounded-md border border-dashed border-gray-300 text-sm text-gray-500">
                 검색 결과가 없습니다.
@@ -123,8 +154,8 @@ class MyMapsModal extends React.Component {
           </div>
         </div>
       </div>
-    )
+    );
   }
 }
 
-export default MyMapsModal
+export default MyMapsModal;

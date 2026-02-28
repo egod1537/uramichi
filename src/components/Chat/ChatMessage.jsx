@@ -1,5 +1,5 @@
 function ChatMessage({ message }) {
-  const isUser = message.role === 'user'
+  const isUser = message.role === 'user';
 
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
@@ -11,7 +11,7 @@ function ChatMessage({ message }) {
         <p className="whitespace-pre-wrap break-words">{message.text}</p>
       </div>
     </div>
-  )
+  );
 }
 
-export default ChatMessage
+export default ChatMessage;

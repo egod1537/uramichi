@@ -1,24 +1,24 @@
-import TOOL_MODES from './toolModes'
-import HistoryManager from './HistoryManager'
+import TOOL_MODES from './toolModes';
+import HistoryManager from './HistoryManager';
 
 class ProjectManager {
   static createInitialLayers() {
-    return []
+    return [];
   }
 
   static createInitialPins() {
-    return []
+    return [];
   }
 
   static createDefaultLayer(layerIndex) {
-    const layerNumber = layerIndex + 1
+    const layerNumber = layerIndex + 1;
     return {
       id: `layer-${Date.now()}-${layerNumber}`,
       name: `Day ${layerNumber}`,
       visible: true,
       collapsed: false,
       routes: [],
-    }
+    };
   }
 
   static createInitialProjectState() {
@@ -40,7 +40,7 @@ class ProjectManager {
       selectedPinIds: [],
       activeLayerId: null,
       pinIconFilters: [],
-    }
+    };
   }
 
   static isValidProject(projectData) {
@@ -50,8 +50,8 @@ class ProjectManager {
       Array.isArray(projectData.layers) &&
       Array.isArray(projectData.history) &&
       typeof projectData.historyIndex === 'number'
-    )
+    );
   }
 }
 
-export default ProjectManager
+export default ProjectManager;
