@@ -1,5 +1,5 @@
 import TOOL_MODES from '../../utils/toolModes'
-import { ICON_FILTER_OPTIONS } from '../../utils/constants'
+import { ICON_FILTER_OPTIONS } from '../../utils/opts'
 import { convertTimeStringToMinutes } from '../../utils/time'
 import RouteSummaryPopup from './RouteSummaryPopup'
 

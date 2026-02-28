@@ -562,3 +562,9 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - DRAW_LINE 종료 시 생성되는 엔티티를 `lines`에 일관 저장하도록 `addLine`에서 layerId 보정/기본값 보강을 추가함.
 - 저장 선(`sourceType: line`)과 레거시 측정 선(`sourceType: measurement`)을 데이터 레벨에서 구분해 Sidebar 표기 분리에 사용함.
 - Select 모드 선 선택 시 하이라이트와 꼭짓점 노출이 함께 보이도록 선 꼭짓점 렌더 조건을 선택 상태 기준으로 조정함.
+
+[codex] 2026-02-27 리팩토링 규칙 갱신 메모
+- 컴포넌트 작성 원칙을 갱신함: 생명주기 훅(`useEffect`, `useLayoutEffect`, `useCallback`, `useMemo`)을 사용하는 컴포넌트는 클래스 컴포넌트 전환을 우선 검토함.
+- `useState`/`useRef`만 사용하는 단순 상태 컴포넌트와 props-only 프레젠테이션 컴포넌트는 함수형 유지 가능.
+- 클래스 컴포넌트에서 Zustand를 연결할 때 `src/utils/withStore.js` HOC를 사용해 store state/action을 props로 주입하는 패턴을 사용함.
+- 고정 상수는 `src/utils/config.js`, 사용자 선택 옵션은 `src/utils/opts.js`로 분리해 관리하고, 기존 `src/utils/constants.js`는 사용하지 않음.

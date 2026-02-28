@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { LOCAL_STORAGE_KEYS } from '../utils/config'
 
 const useUserStore = create(
   persist(
@@ -29,7 +30,7 @@ const useUserStore = create(
       setProjects: (projects) => set({ projects }),
     }),
     {
-      name: 'uramichi-user-store',
+      name: LOCAL_STORAGE_KEYS.userStore,
       partialize: (state) => ({
         currentUser: state.currentUser,
         isLoggedIn: state.isLoggedIn,

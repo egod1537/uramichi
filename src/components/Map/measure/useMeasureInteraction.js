@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react'
 import TOOL_MODES from '../../../utils/toolModes'
-import { COLOR_PRESETS } from '../../../utils/constants'
+import { COLOR_PRESETS } from '../../../utils/config'
 import { formatDistanceLabel, getHaversineDistance, getMidpoint, getPathDistanceInMeters } from '../../../utils/geo'
 import { handleLineDraftComplete, handleLineMeasurePointDrag } from '../controllers/lineController'
 

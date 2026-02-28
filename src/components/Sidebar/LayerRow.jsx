@@ -6,7 +6,7 @@ import {
   TRAVEL_PIN_ICON_PRESETS,
   getTravelPinIconKey,
   getTravelPinIconPreset,
-} from '../../utils/constants'
+} from '../../utils/opts'
 import useProjectStore from '../../stores/useProjectStore'
 
 function LayerRow({

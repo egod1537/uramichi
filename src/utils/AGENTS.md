@@ -17,3 +17,8 @@
 [codex] 2026-02-27 line 스타일/히스토리 정리 메모
 - 일반 선 기본 스타일 상수를 `src/utils/lineStyle.js`로 분리해 색상/굵기 기본값을 한 곳에서 재사용하도록 통일함.
 - `HistoryManager`/`ProjectManager`의 스냅샷·초기 상태에서 `measurements` 필드를 제거해 저장 데이터 모델을 `lines` 중심으로 정리함.
+
+[codex] 2026-02-27 config/opts/withStore 분리 메모
+- 전역 고정 상수는 `config.js`(지도 기본값, 언어 목록, localStorage 키, 제한값 등)로 관리함.
+- 사용자 선택 옵션/프리셋은 `opts.js`(아이콘, 색상, 정렬, 맵 스타일 등)로 관리함.
+- 클래스 컴포넌트의 Zustand 연결은 `withStore.js` HOC를 통해 subscribe/unsubscribe를 공통 처리함.
