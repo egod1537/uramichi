@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import TOOL_MODES from '../../utils/toolModes'
 import { ICON_FILTER_OPTIONS } from '../../utils/opts'
 import { convertTimeStringToMinutes } from '../../utils/time'
@@ -44,6 +44,9 @@ function MapOverlays({
   onCloseRouteSummary,
 }) {
   const [activeTimeSliderHandle, setActiveTimeSliderHandle] = useState('end')
+  const [isTimeRangeDragging, setIsTimeRangeDragging] = useState(false)
+  const [isTimeRangeInteracted, setIsTimeRangeInteracted] = useState(false)
+  const timeRangeDragStateRef = useRef(null)
   const activePinFilterItems = ICON_FILTER_OPTIONS.filter((filterItem) => pinIconFilters.includes(filterItem.key))
   const collapsedPreviewFilterItems = activePinFilterItems.slice(0, 2)
   const hiddenPreviewFilterCount = Math.max(activePinFilterItems.length - collapsedPreviewFilterItems.length, 0)
@@ -53,6 +56,38 @@ function MapOverlays({
   const sliderEndMinutes = Math.max(startMinutes, endMinutes)
   const sliderRangeWidthPercent = ((sliderEndMinutes - sliderStartMinutes) / TIME_SLIDER_MINUTES_MAX) * 100
   const sliderRangeLeftPercent = (sliderStartMinutes / TIME_SLIDER_MINUTES_MAX) * 100
+
+  useEffect(() => {
+    if (!isTimeRangeDragging) return undefined
+
+    const handleWindowPointerMove = (event) => {
+      const dragState = timeRangeDragStateRef.current
+      if (!dragState) return
+      const moveDistancePixels = event.clientX - dragState.startClientX
+      const minuteDeltaRaw = (moveDistancePixels / dragState.trackWidthPixels) * TIME_SLIDER_MINUTES_MAX
+      const minuteDeltaRounded = Math.round(minuteDeltaRaw / TIME_SLIDER_MINUTES_STEP) * TIME_SLIDER_MINUTES_STEP
+      if (!minuteDeltaRounded) return
+
+      const nextStartMinutes = Math.max(0, Math.min(dragState.maxStartMinutes, dragState.initialStartMinutes + minuteDeltaRounded))
+      const nextEndMinutes = nextStartMinutes + dragState.rangeSpanMinutes
+      onSetTimeFilterRange('start', convertMinutesToTimeText(nextStartMinutes))
+      onSetTimeFilterRange('end', convertMinutesToTimeText(nextEndMinutes))
+      setIsTimeRangeInteracted(true)
+    }
+
+    const handleWindowPointerUp = () => {
+      setIsTimeRangeDragging(false)
+      timeRangeDragStateRef.current = null
+    }
+
+    window.addEventListener('pointermove', handleWindowPointerMove)
+    window.addEventListener('pointerup', handleWindowPointerUp)
+
+    return () => {
+      window.removeEventListener('pointermove', handleWindowPointerMove)
+      window.removeEventListener('pointerup', handleWindowPointerUp)
+    }
+  }, [isTimeRangeDragging, onSetTimeFilterRange])
 
   const handleStartSliderChange = (nextStartMinutesText) => {
     const nextStartMinutes = normalizeSliderMinutes(Number(nextStartMinutesText), sliderStartMinutes)
@@ -64,6 +99,22 @@ function MapOverlays({
     const nextEndMinutes = normalizeSliderMinutes(Number(nextEndMinutesText), sliderEndMinutes)
     const resolvedEndMinutes = Math.max(nextEndMinutes, sliderStartMinutes)
     onSetTimeFilterRange('end', convertMinutesToTimeText(resolvedEndMinutes))
+  }
+
+  const handleTimeRangePointerDown = (event) => {
+    const trackRect = event.currentTarget.parentElement?.getBoundingClientRect()
+    if (!trackRect || !trackRect.width) return
+    event.preventDefault()
+
+    timeRangeDragStateRef.current = {
+      startClientX: event.clientX,
+      trackWidthPixels: trackRect.width,
+      initialStartMinutes: sliderStartMinutes,
+      rangeSpanMinutes: sliderEndMinutes - sliderStartMinutes,
+      maxStartMinutes: TIME_SLIDER_MINUTES_MAX - (sliderEndMinutes - sliderStartMinutes),
+    }
+    setIsTimeRangeDragging(true)
+    setIsTimeRangeInteracted(true)
   }
 
   return (
@@ -86,11 +137,14 @@ function MapOverlays({
               <div className="relative h-6">
                 <div className="absolute top-1/2 h-1 w-full -translate-y-1/2 rounded-full bg-gray-200" />
                 <div
-                  className="absolute top-1/2 h-1 -translate-y-1/2 rounded-full bg-orange-300"
+                  className={`absolute top-1/2 h-1 -translate-y-1/2 rounded-full transition-colors ${
+                    isTimeRangeDragging ? 'bg-orange-500' : isTimeRangeInteracted ? 'bg-orange-400' : 'bg-orange-300'
+                  }`}
                   style={{
                     left: `${sliderRangeLeftPercent}%`,
                     width: `${sliderRangeWidthPercent}%`,
                   }}
+                  onPointerDown={handleTimeRangePointerDown}
                 />
                 <input
                   type="range"
@@ -98,7 +152,10 @@ function MapOverlays({
                   max={TIME_SLIDER_MINUTES_MAX}
                   step={TIME_SLIDER_MINUTES_STEP}
                   value={sliderStartMinutes}
-                  onChange={(event) => handleStartSliderChange(event.target.value)}
+                  onChange={(event) => {
+                    handleStartSliderChange(event.target.value)
+                    setIsTimeRangeInteracted(true)
+                  }}
                   onMouseDown={() => setActiveTimeSliderHandle('start')}
                   onTouchStart={() => setActiveTimeSliderHandle('start')}
                   className={`map-time-range-slider absolute top-1/2 h-6 w-full -translate-y-1/2 appearance-none bg-transparent ${
@@ -111,7 +168,10 @@ function MapOverlays({
                   max={TIME_SLIDER_MINUTES_MAX}
                   step={TIME_SLIDER_MINUTES_STEP}
                   value={sliderEndMinutes}
-                  onChange={(event) => handleEndSliderChange(event.target.value)}
+                  onChange={(event) => {
+                    handleEndSliderChange(event.target.value)
+                    setIsTimeRangeInteracted(true)
+                  }}
                   onMouseDown={() => setActiveTimeSliderHandle('end')}
                   onTouchStart={() => setActiveTimeSliderHandle('end')}
                   className={`map-time-range-slider absolute top-1/2 h-6 w-full -translate-y-1/2 appearance-none bg-transparent ${
