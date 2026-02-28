@@ -1,12 +1,12 @@
-import { convertMinutesToTimelinePercent, normalizeOpeningHours } from '../../utils/time'
+import { convertMinutesToTimelinePercent, normalizeOpeningHours } from '../../utils/time';
 
-const tickLabelList = [0, 6, 12, 18, 24]
+const tickLabelList = [0, 6, 12, 18, 24];
 
 function TimelineBar({ openingHours }) {
-  const normalizedTimeRanges = normalizeOpeningHours(openingHours)
+  const normalizedTimeRanges = normalizeOpeningHours(openingHours);
 
   if (!normalizedTimeRanges.length) {
-    return null
+    return null;
   }
 
   return (
@@ -15,9 +15,9 @@ function TimelineBar({ openingHours }) {
         <div className="h-2 w-full rounded-full bg-gray-200" />
 
         {normalizedTimeRanges.map((timeRangeItem) => {
-          const startPercent = convertMinutesToTimelinePercent(timeRangeItem.startMinutes)
-          const endPercent = convertMinutesToTimelinePercent(timeRangeItem.endMinutes)
-          const segmentWidthPercent = Math.max(0, endPercent - startPercent)
+          const startPercent = convertMinutesToTimelinePercent(timeRangeItem.startMinutes);
+          const endPercent = convertMinutesToTimelinePercent(timeRangeItem.endMinutes);
+          const segmentWidthPercent = Math.max(0, endPercent - startPercent);
 
           return (
             <div key={timeRangeItem.id}>
@@ -38,7 +38,7 @@ function TimelineBar({ openingHours }) {
                 {timeRangeItem.end}
               </span>
             </div>
-          )
+          );
         })}
 
         <div className="absolute left-0 right-0 top-8">
@@ -54,7 +54,7 @@ function TimelineBar({ openingHours }) {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default TimelineBar
+export default TimelineBar;

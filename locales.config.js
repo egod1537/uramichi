@@ -3,4 +3,4 @@ export default {
   languages: ['ko', 'ja', 'en'],
   defaultLanguage: 'ko',
   outputDir: 'src/locales',
-}
+};

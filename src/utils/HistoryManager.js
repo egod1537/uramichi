@@ -1,6 +1,6 @@
 class HistoryManager {
   static createEmptySnapshot() {
-    return { markers: [], lines: [], routes: [], routePaths: [] }
+    return { markers: [], lines: [], routes: [], routePaths: [] };
   }
 
   static cloneSnapshot(snapshot) {
@@ -17,33 +17,33 @@ class HistoryManager {
         path: (routeItem.path || []).map((point) => ({ ...point })),
       })),
       routePaths: snapshot.routePaths.map((pathItem) => pathItem.map((point) => ({ ...point }))),
-    }
+    };
   }
 
   static commit(history, historyIndex, snapshot) {
-    const nextSnapshot = HistoryManager.cloneSnapshot(snapshot)
-    const trimmedHistory = history.slice(0, historyIndex + 1)
-    const nextHistory = [...trimmedHistory, nextSnapshot]
-    return { history: nextHistory, historyIndex: nextHistory.length - 1, snapshot: nextSnapshot }
+    const nextSnapshot = HistoryManager.cloneSnapshot(snapshot);
+    const trimmedHistory = history.slice(0, historyIndex + 1);
+    const nextHistory = [...trimmedHistory, nextSnapshot];
+    return { history: nextHistory, historyIndex: nextHistory.length - 1, snapshot: nextSnapshot };
   }
 
   static undo(history, historyIndex) {
-    if (historyIndex === 0) return null
-    const nextHistoryIndex = historyIndex - 1
+    if (historyIndex === 0) return null;
+    const nextHistoryIndex = historyIndex - 1;
     return {
       historyIndex: nextHistoryIndex,
       snapshot: HistoryManager.cloneSnapshot(history[nextHistoryIndex]),
-    }
+    };
   }
 
   static redo(history, historyIndex) {
-    if (historyIndex >= history.length - 1) return null
-    const nextHistoryIndex = historyIndex + 1
+    if (historyIndex >= history.length - 1) return null;
+    const nextHistoryIndex = historyIndex + 1;
     return {
       historyIndex: nextHistoryIndex,
       snapshot: HistoryManager.cloneSnapshot(history[nextHistoryIndex]),
-    }
+    };
   }
 }
 
-export default HistoryManager
+export default HistoryManager;

@@ -1,9 +1,9 @@
-import { useMemo, useState } from 'react'
-import { InfoWindow, Marker, Polygon, Polyline } from '@react-google-maps/api'
-import { LINE_DEFAULT_COLOR, LINE_DEFAULT_WIDTH } from '../../../utils/lineStyle'
-import TOOL_MODES from '../../../utils/toolModes'
+import { useMemo, useState } from 'react';
+import { InfoWindow, Marker, Polygon, Polyline } from '@react-google-maps/api';
+import { LINE_DEFAULT_COLOR, LINE_DEFAULT_WIDTH } from '../../../utils/lineStyle';
+import TOOL_MODES from '../../../utils/toolModes';
 
-const LINE_VERTEX_PIXEL_SIZE = 10
+const LINE_VERTEX_PIXEL_SIZE = 10;
 
 function LineLayer({
   lines,
@@ -23,12 +23,12 @@ function LineLayer({
   onLineDraftPointDrag,
   onLineDraftPointDragEnd,
 }) {
-  const [pressedHandleKey, setPressedHandleKey] = useState(null)
+  const [pressedHandleKey, setPressedHandleKey] = useState(null);
 
   const linePopupPosition = useMemo(() => {
-    if (!selectedLine?.points?.length) return null
-    return selectedLine.points[0]
-  }, [selectedLine])
+    if (!selectedLine?.points?.length) return null;
+    return selectedLine.points[0];
+  }, [selectedLine]);
 
   return (
     <>
@@ -90,8 +90,8 @@ function LineLayer({
 
       {currentMode === TOOL_MODES.DRAW_LINE
         ? linePath.map((linePoint, linePointIndex) => {
-            const handleKey = `draft-${linePointIndex}`
-            const isPressed = pressedHandleKey === handleKey
+            const handleKey = `draft-${linePointIndex}`;
+            const isPressed = pressedHandleKey === handleKey;
             return (
               <Marker
                 key={handleKey}
@@ -108,24 +108,24 @@ function LineLayer({
                 onMouseDown={() => setPressedHandleKey(handleKey)}
                 onMouseUp={() => setPressedHandleKey(null)}
                 onDragStart={() => {
-                  setPressedHandleKey(handleKey)
-                  onLineDraftPointDragStart(linePointIndex)
+                  setPressedHandleKey(handleKey);
+                  onLineDraftPointDragStart(linePointIndex);
                 }}
                 onDrag={(event) => onLineDraftPointDrag(linePointIndex, event)}
                 onDragEnd={(event) => {
-                  setPressedHandleKey(null)
-                  onLineDraftPointDragEnd(linePointIndex, event)
+                  setPressedHandleKey(null);
+                  onLineDraftPointDragEnd(linePointIndex, event);
                 }}
               />
-            )
+            );
           })
         : null}
 
       {lines.map((lineItem) =>
         currentMode === TOOL_MODES.SELECT && selectedLineId === lineItem.id
           ? lineItem.points.map((linePoint, linePointIndex) => {
-              const handleKey = `${lineItem.id}-${linePointIndex}`
-              const isPressed = pressedHandleKey === handleKey
+              const handleKey = `${lineItem.id}-${linePointIndex}`;
+              const isPressed = pressedHandleKey === handleKey;
               return (
                 <Marker
                   key={`line-vertex-${handleKey}`}
@@ -143,16 +143,16 @@ function LineLayer({
                   onMouseDown={() => setPressedHandleKey(handleKey)}
                   onMouseUp={() => setPressedHandleKey(null)}
                   onDragStart={() => {
-                    setPressedHandleKey(handleKey)
-                    onLinePointDragStart(lineItem.id, linePointIndex)
+                    setPressedHandleKey(handleKey);
+                    onLinePointDragStart(lineItem.id, linePointIndex);
                   }}
                   onDrag={(event) => onLinePointDrag(lineItem.id, linePointIndex, event)}
                   onDragEnd={(event) => {
-                    setPressedHandleKey(null)
-                    onLinePointDragEnd(lineItem.id, linePointIndex, event)
+                    setPressedHandleKey(null);
+                    onLinePointDragEnd(lineItem.id, linePointIndex, event);
                   }}
                 />
-              )
+              );
             })
           : null,
       )}
@@ -185,14 +185,18 @@ function LineLayer({
               <input
                 type="color"
                 value={selectedLine.color || LINE_DEFAULT_COLOR}
-                onChange={(event) => onLineStyleChange(selectedLine.id, { color: event.target.value })}
+                onChange={(event) =>
+                  onLineStyleChange(selectedLine.id, { color: event.target.value })
+                }
               />
               <input
                 type="range"
                 min={1}
                 max={12}
                 value={selectedLine.width || LINE_DEFAULT_WIDTH}
-                onChange={(event) => onLineStyleChange(selectedLine.id, { width: Number(event.target.value) })}
+                onChange={(event) =>
+                  onLineStyleChange(selectedLine.id, { width: Number(event.target.value) })
+                }
                 className="w-full"
               />
             </div>
@@ -200,7 +204,9 @@ function LineLayer({
               <input
                 type="color"
                 value={selectedLine.fillColor || selectedLine.color || LINE_DEFAULT_COLOR}
-                onChange={(event) => onLineStyleChange(selectedLine.id, { fillColor: event.target.value })}
+                onChange={(event) =>
+                  onLineStyleChange(selectedLine.id, { fillColor: event.target.value })
+                }
               />
             ) : null}
             <button
@@ -214,7 +220,7 @@ function LineLayer({
         </InfoWindow>
       ) : null}
     </>
-  )
+  );
 }
 
-export default LineLayer
+export default LineLayer;

@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useState } from 'react';
 
 const createLoadingPoiDetail = (placeId, position) => ({
   placeId,
@@ -8,7 +8,7 @@ const createLoadingPoiDetail = (placeId, position) => ({
   website: '',
   phoneNumber: '',
   rating: null,
-})
+});
 
 const createErrorPoiDetail = (placeId, position, fallbackData = {}) => ({
   placeId,
@@ -18,16 +18,16 @@ const createErrorPoiDetail = (placeId, position, fallbackData = {}) => ({
   website: '',
   phoneNumber: '',
   rating: null,
-})
+});
 
 function usePoiDetail({ mapInstanceRef }) {
-  const [selectedPoiDetail, setSelectedPoiDetail] = useState(null)
-  const [poiDetailStatus, setPoiDetailStatus] = useState('idle')
+  const [selectedPoiDetail, setSelectedPoiDetail] = useState(null);
+  const [poiDetailStatus, setPoiDetailStatus] = useState('idle');
 
   const clearPoiDetail = useCallback(() => {
-    setSelectedPoiDetail(null)
-    setPoiDetailStatus('idle')
-  }, [])
+    setSelectedPoiDetail(null);
+    setPoiDetailStatus('idle');
+  }, []);
 
   const requestPoiDetail = useCallback(
     (placeId, position, fallbackData = {}) => {
@@ -40,25 +40,34 @@ function usePoiDetail({ mapInstanceRef }) {
           website: '',
           phoneNumber: '',
           rating: typeof fallbackData.rating === 'number' ? fallbackData.rating : null,
-        })
-        setPoiDetailStatus('success')
-        return
+        });
+        setPoiDetailStatus('success');
+        return;
       }
 
-      setSelectedPoiDetail(createLoadingPoiDetail(placeId, position))
-      setPoiDetailStatus('loading')
+      setSelectedPoiDetail(createLoadingPoiDetail(placeId, position));
+      setPoiDetailStatus('loading');
 
-      const placeServiceInstance = new window.google.maps.places.PlacesService(mapInstanceRef.current)
+      const placeServiceInstance = new window.google.maps.places.PlacesService(
+        mapInstanceRef.current,
+      );
       placeServiceInstance.getDetails(
         {
           placeId,
-          fields: ['place_id', 'name', 'formatted_address', 'website', 'international_phone_number', 'rating'],
+          fields: [
+            'place_id',
+            'name',
+            'formatted_address',
+            'website',
+            'international_phone_number',
+            'rating',
+          ],
         },
         (placeResult, placeStatus) => {
           if (placeStatus !== window.google.maps.places.PlacesServiceStatus.OK || !placeResult) {
-            setSelectedPoiDetail(createErrorPoiDetail(placeId, position, fallbackData))
-            setPoiDetailStatus('error')
-            return
+            setSelectedPoiDetail(createErrorPoiDetail(placeId, position, fallbackData));
+            setPoiDetailStatus('error');
+            return;
           }
 
           setSelectedPoiDetail({
@@ -69,13 +78,13 @@ function usePoiDetail({ mapInstanceRef }) {
             website: placeResult.website || '',
             phoneNumber: placeResult.international_phone_number || '',
             rating: placeResult.rating ?? null,
-          })
-          setPoiDetailStatus('success')
+          });
+          setPoiDetailStatus('success');
         },
-      )
+      );
     },
     [mapInstanceRef],
-  )
+  );
 
   return {
     selectedPoiDetail,
@@ -85,7 +94,7 @@ function usePoiDetail({ mapInstanceRef }) {
     isPoiDetailSuccess: poiDetailStatus === 'success',
     requestPoiDetail,
     clearPoiDetail,
-  }
+  };
 }
 
-export default usePoiDetail
+export default usePoiDetail;

@@ -1,20 +1,20 @@
-import React from 'react'
-import LayerPanel from './LayerPanel'
-import MapPanel from './MapPanel'
-import useEditorStore from '../../stores/useEditorStore'
-import withStore from '../../utils/withStore'
+import React from 'react';
+import LayerPanel from './LayerPanel';
+import MapPanel from './MapPanel';
+import useEditorStore from '../../stores/useEditorStore';
+import withStore from '../../utils/withStore';
 
 class Sidebar extends React.Component {
   handleOpenSidebar = () => {
-    this.props.editorStore.setSidebarOpen(true)
-  }
+    this.props.editorStore.setSidebarOpen(true);
+  };
 
   handleCloseSidebar = () => {
-    this.props.editorStore.setSidebarOpen(false)
-  }
+    this.props.editorStore.setSidebarOpen(false);
+  };
 
   render() {
-    const { sidebarOpen } = this.props.editorStore
+    const { sidebarOpen } = this.props.editorStore;
 
     if (!sidebarOpen) {
       return (
@@ -26,7 +26,7 @@ class Sidebar extends React.Component {
         >
           <img src="/svg/sidebar-open-menu.svg" alt="" aria-hidden="true" className="h-5 w-5" />
         </button>
-      )
+      );
     }
 
     return (
@@ -34,8 +34,8 @@ class Sidebar extends React.Component {
         <MapPanel onCloseSidebar={this.handleCloseSidebar} />
         <LayerPanel />
       </aside>
-    )
+    );
   }
 }
 
-export default withStore(Sidebar, { editorStore: useEditorStore })
+export default withStore(Sidebar, { editorStore: useEditorStore });

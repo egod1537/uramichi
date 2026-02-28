@@ -1,2 +1,2 @@
-export const MEASURE_LINE_WIDTH = 4
-export const POLYGON_CLOSE_DISTANCE_METERS = 30
+export const MEASURE_LINE_WIDTH = 4;
+export const POLYGON_CLOSE_DISTANCE_METERS = 30;

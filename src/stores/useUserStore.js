@@ -1,6 +1,6 @@
-import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
-import { LOCAL_STORAGE_KEYS } from '../utils/config'
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import { LOCAL_STORAGE_KEYS } from '../utils/config';
 
 const useUserStore = create(
   persist(
@@ -40,6 +40,6 @@ const useUserStore = create(
       }),
     },
   ),
-)
+);
 
-export default useUserStore
+export default useUserStore;

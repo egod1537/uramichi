@@ -571,3 +571,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 [codex] 2026-02-28 Toolbar 가로 구분선 제거 메모
 - `src/components/Toolbar/Toolbar.jsx` 검색 행에서 하단 보더 클래스를 제거해 툴바 내부 가로 구분선을 제거함.
+
+[codex] 2026-02-28 세미콜론 규칙 업데이트 메모
+- JavaScript/JSX 코드 스타일 규칙을 갱신함: 모든 문장 라인 끝에 세미콜론(`;`)을 명시적으로 사용함.
+- 포매터 설정은 `.prettierrc`의 `semi: true`를 기준으로 유지함.

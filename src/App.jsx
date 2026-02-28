@@ -1,17 +1,17 @@
-import React from 'react'
-import { LoadScript } from '@react-google-maps/api'
-import Map from './components/Map/Map'
-import Sidebar from './components/Sidebar/Sidebar'
-import Toolbar from './components/Toolbar/Toolbar'
-import ChatButton from './components/Chat/ChatButton'
-import ChatPanel from './components/Chat/ChatPanel'
-import UserButton from './components/common/UserButton'
-import Testbed from './pages/Testbed'
-import { getRoute } from './route'
-import useProjectStore from './stores/useProjectStore'
-import { initializeLocalization } from './utils/L'
+import React from 'react';
+import { LoadScript } from '@react-google-maps/api';
+import Map from './components/Map/Map';
+import Sidebar from './components/Sidebar/Sidebar';
+import Toolbar from './components/Toolbar/Toolbar';
+import ChatButton from './components/Chat/ChatButton';
+import ChatPanel from './components/Chat/ChatPanel';
+import UserButton from './components/common/UserButton';
+import Testbed from './pages/Testbed';
+import { getRoute } from './route';
+import useProjectStore from './stores/useProjectStore';
+import { initializeLocalization } from './utils/L';
 
-const libraries = ['places', 'geometry']
+const libraries = ['places', 'geometry'];
 
 class App extends React.Component {
   state = {
@@ -19,43 +19,43 @@ class App extends React.Component {
     currentMode: useProjectStore.getState().currentMode,
     historyIndex: useProjectStore.getState().historyIndex,
     historyLength: useProjectStore.getState().history.length,
-  }
+  };
 
   componentDidMount() {
-    initializeLocalization()
-    window.addEventListener('keydown', this.handleWindowKeyDown)
+    initializeLocalization();
+    window.addEventListener('keydown', this.handleWindowKeyDown);
     this.unsubscribeProjectStore = useProjectStore.subscribe((state) => {
       this.setState({
         currentMode: state.currentMode,
         historyIndex: state.historyIndex,
         historyLength: state.history.length,
-      })
-    })
+      });
+    });
   }
 
   componentWillUnmount() {
-    window.removeEventListener('keydown', this.handleWindowKeyDown)
+    window.removeEventListener('keydown', this.handleWindowKeyDown);
     if (this.unsubscribeProjectStore) {
-      this.unsubscribeProjectStore()
+      this.unsubscribeProjectStore();
     }
   }
 
   handleWindowKeyDown = (event) => {
     if (event.key !== 'Tab') {
-      return
+      return;
     }
 
-    event.preventDefault()
-    this.setState((previousState) => ({ chatPanelOpen: !previousState.chatPanelOpen }))
-  }
+    event.preventDefault();
+    this.setState((previousState) => ({ chatPanelOpen: !previousState.chatPanelOpen }));
+  };
 
   handleOpenChatPanel = () => {
-    this.setState({ chatPanelOpen: true })
-  }
+    this.setState({ chatPanelOpen: true });
+  };
 
   handleCloseChatPanel = () => {
-    this.setState({ chatPanelOpen: false })
-  }
+    this.setState({ chatPanelOpen: false });
+  };
 
   renderTestbed() {
     return (
@@ -70,7 +70,7 @@ class App extends React.Component {
           historyLength={this.state.historyLength}
         />
       </LoadScript>
-    )
+    );
   }
 
   renderMainPage() {
@@ -93,16 +93,16 @@ class App extends React.Component {
           <ChatPanel isOpen={this.state.chatPanelOpen} onClose={this.handleCloseChatPanel} />
         </div>
       </LoadScript>
-    )
+    );
   }
 
   render() {
-    const currentRoute = getRoute()
+    const currentRoute = getRoute();
     if (currentRoute === 'testbed') {
-      return this.renderTestbed()
+      return this.renderTestbed();
     }
-    return this.renderMainPage()
+    return this.renderMainPage();
   }
 }
 
-export default App
+export default App;

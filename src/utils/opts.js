@@ -8,7 +8,7 @@ export const CATEGORY_PRESETS = {
   photo: { icon: '📷', label: 'Photo' },
   shopping: { icon: '🛍️', label: 'Shopping' },
   spot: { icon: '📍', label: 'Spot' },
-}
+};
 
 export const TRAVEL_PIN_ICON_PRESETS = [
   { key: 'default', icon: '📍', label: '기본 핀', svgPath: '/svg/pin-default.svg' },
@@ -17,16 +17,16 @@ export const TRAVEL_PIN_ICON_PRESETS = [
   { key: 'tour', icon: '🗼', label: '관광지', svgPath: '/svg/pin-tour.svg' },
   { key: 'hotel', icon: '🏨', label: '숙소', svgPath: '/svg/pin-hotel.svg' },
   { key: 'photo', icon: '📷', label: '포토스팟', svgPath: '/svg/pin-photo.svg' },
-]
+];
 
-export const DEFAULT_PIN_SVG_PATH = '/svg/pin-default.svg'
+export const DEFAULT_PIN_SVG_PATH = '/svg/pin-default.svg';
 
 export const TRANSPORT_PRESETS = {
   flight: { icon: '✈️', color: '#34a853' },
   train: { icon: '🚂', color: '#4285f4' },
   walk: { icon: '🚶', color: '#f9ab00' },
   car: { icon: '🚗', color: '#ea4335' },
-}
+};
 
 export const PIN_MARKER_COLOR_PRESETS = {
   default: { backgroundColor: '#5f6368', ringColor: '#d1d5db' },
@@ -37,7 +37,7 @@ export const PIN_MARKER_COLOR_PRESETS = {
   photo: { backgroundColor: '#db2777', ringColor: '#f9a8d4' },
   shopping: { backgroundColor: '#0d9488', ringColor: '#5eead4' },
   spot: { backgroundColor: '#dc2626', ringColor: '#fca5a5' },
-}
+};
 
 export const PIN_ICON_STYLE_PRESETS = {
   transit: { backgroundColor: '#2563eb', ringColor: '#93c5fd' },
@@ -45,41 +45,45 @@ export const PIN_ICON_STYLE_PRESETS = {
   tour: { backgroundColor: '#7c3aed', ringColor: '#c4b5fd' },
   hotel: { backgroundColor: '#0f766e', ringColor: '#5eead4' },
   photo: { backgroundColor: '#db2777', ringColor: '#f9a8d4' },
-}
+};
 
-export const ICON_FILTER_OPTIONS = TRAVEL_PIN_ICON_PRESETS
+export const ICON_FILTER_OPTIONS = TRAVEL_PIN_ICON_PRESETS;
 
 export const LANGUAGE_OPTIONS = [
   { value: 'ko', label: '한국어' },
   { value: 'ja', label: '日本語' },
   { value: 'en', label: 'English' },
-]
+];
 
 export const MAP_STYLE_OPTIONS = [
   { value: 'default', label: 'Default' },
   { value: 'light', label: 'Light' },
   { value: 'dark', label: 'Dark' },
   { value: 'retro', label: 'Retro' },
-]
+];
 
 export const SORT_OPTIONS = [
   { value: 'name', label: '이름순' },
   { value: 'date', label: '날짜순' },
   { value: 'distance', label: '거리순' },
-]
+];
 
 export const LINE_STYLE_OPTIONS = [
   { key: 'default', color: '#1f2937', width: 4, dashPattern: [] },
   { key: 'dashed', color: '#1a73e8', width: 4, dashPattern: [8, 4] },
   { key: 'heavy', color: '#111827', width: 6, dashPattern: [] },
-]
+];
 
 export const getTravelPinIconPreset = (iconValue) => {
-  if (!iconValue) return null
-  return TRAVEL_PIN_ICON_PRESETS.find((presetItem) => presetItem.key === iconValue || presetItem.icon === iconValue) || null
-}
+  if (!iconValue) return null;
+  return (
+    TRAVEL_PIN_ICON_PRESETS.find(
+      (presetItem) => presetItem.key === iconValue || presetItem.icon === iconValue,
+    ) || null
+  );
+};
 
 export const getTravelPinIconKey = (iconValue) => {
-  const matchedPreset = getTravelPinIconPreset(iconValue)
-  return matchedPreset?.key || ''
-}
+  const matchedPreset = getTravelPinIconPreset(iconValue);
+  return matchedPreset?.key || '';
+};

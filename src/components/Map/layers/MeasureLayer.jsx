@@ -1,5 +1,5 @@
-import BaseMeasureLayer from '../measure/MeasureLayer'
-import MeasureLabels from '../measure/MeasureLabels'
+import BaseMeasureLayer from '../measure/MeasureLayer';
+import MeasureLabels from '../measure/MeasureLabels';
 
 function MeasureLayer({
   currentMode,
@@ -26,7 +26,7 @@ function MeasureLayer({
         measureTotalLabelData={measureTotalLabelData}
       />
     </>
-  )
+  );
 }
 
-export default MeasureLayer
+export default MeasureLayer;
