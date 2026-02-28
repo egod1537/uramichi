@@ -31,13 +31,17 @@ class Sidebar extends React.Component {
 
     return (
       <aside className="absolute left-4 top-4 z-20 flex h-[calc(100vh-2rem)] w-[360px] flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg">
-        <div className="flex items-center justify-end border-b border-gray-200 px-2 py-1">
+        <div className="flex items-center justify-end gap-1 border-b border-gray-200 px-2 py-1">
+          <button type="button" className="rounded p-1 text-gray-500 hover:bg-gray-100" aria-label="사이드바 옵션">
+            ⋮
+          </button>
           <button
             type="button"
             onClick={this.handleCloseSidebar}
-            className="rounded px-2 py-1 text-xs text-gray-500 hover:bg-gray-100"
+            className="rounded p-1 text-gray-500 hover:bg-gray-100"
+            aria-label="패널 닫기"
           >
-            닫기
+            <img src="/svg/sidebar-close.svg" alt="" aria-hidden="true" className="h-5 w-5" />
           </button>
         </div>
         <MapPanel />

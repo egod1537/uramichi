@@ -127,3 +127,7 @@
 - Map 하위 config(`src/components/Map/config.js`)는 전역 `MAP_DEFAULT_CENTER`를 재사용하도록 연결함.
 [codex] 2026-02-28 클래스 래퍼 전환 메모
 - `Map.jsx`, `PinPopup.jsx`의 기본 export를 `React.Component` 기반 클래스 래퍼로 전환하고, 기존 훅 기반 렌더 로직은 `*View` 함수로 유지해 동작 변화 없이 클래스 컴포넌트 진입점을 맞춤.
+
+[codex] 2026-02-28 핀 추가 모드 POI 클릭 방해 차단 메모
+- `src/components/Map/Map.jsx`에서 `ADD_MARKER` 모드일 때 `event.placeId` 클릭을 `event.stop()` 후 즉시 반환하도록 처리해 커스텀 POI 오버레이가 열리지 않게 조정함.
+- 같은 파일의 GoogleMap 옵션에서 `ADD_MARKER` 모드에도 `clickableIcons: false`를 적용해 기본 랜드마크 클릭 이벤트 자체가 핀 추가를 방해하지 않도록 보강함.
