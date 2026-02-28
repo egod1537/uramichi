@@ -13,3 +13,7 @@
 [codex] 2026-02-28 LineLayer 꼭짓점 항상 렌더/선택 선 드래그 메모
 - Select 모드에서는 `LineLayer`가 모든 저장 선의 꼭짓점을 렌더하도록 조정해, 비선택 선도 꼭짓점이 보이게 맞춤.
 - 꼭짓점 드래그 가능 범위는 `selectedLineId` 대상 선으로 제한하고, 꼭짓점 클릭 시 해당 선 선택이 먼저 반영되도록 `onClick/onDrag*` 전달을 추가함.
+
+[codex] 2026-02-28 LineLayer 드래프트 렌더 제거 메모
+- `LineLayer.jsx`에서 draw line 드래프트 렌더 입력(`linePath`, `previewLinePath`)을 제거함.
+- 레이어 책임을 저장된 선/도형(`lines`) 및 Select 모드 꼭짓점 편집 렌더로 한정함.

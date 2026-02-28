@@ -27,3 +27,6 @@
 - `HistoryManager` 빈 스냅샷/clone 대상에서 `linePath`, `measurePath`를 제외해 선/거리 드래프트 히스토리 복원 로직을 제거함.
 [codex] 2026-02-28 툴 모드 상수 확장 메모
 - `toolModes.js`에 `DRAW_LINE: 'draw_line'` 모드를 추가해 Toolbar/Map에서 동일 키로 선 그리기 모드를 제어하도록 통합함.
+
+[codex] 2026-02-28 툴 모드 상수 Draw Line 제거 메모
+- `toolModes.js`에서 `DRAW_LINE` 상수를 제거해 선택 가능한 전역 툴 모드를 Select/Add Marker/Add Route로 정리함.

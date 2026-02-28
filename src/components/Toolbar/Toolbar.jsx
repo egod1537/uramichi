@@ -8,7 +8,6 @@ import useProjectStore from '../../stores/useProjectStore'
 const toolbarButtons = [
   { key: TOOL_MODES.SELECT, label: 'Select/Pan', icon: '🖐️', tooltip: '선택/이동 (Q)', shortcut: 'Q' },
   { key: TOOL_MODES.ADD_MARKER, label: 'Add Marker', icon: '📍', tooltip: '핀 추가 (W)', shortcut: 'W' },
-  { key: TOOL_MODES.DRAW_LINE, label: 'Draw Line', icon: '🧵', tooltip: '선 그리기 (E)', shortcut: 'E' },
   { key: TOOL_MODES.ADD_ROUTE, label: 'Add Route', icon: '🛤️', tooltip: '경로 추가 (R)', shortcut: 'R' },
   { key: 'shortcuts', label: 'Keyboard Shortcuts', icon: '⌨️', tooltip: '단축키 목록' },
 ]
@@ -57,16 +56,12 @@ class Toolbar extends React.Component {
     }
     if (loweredKey === 'q') projectStore.setMode(TOOL_MODES.SELECT)
     if (loweredKey === 'w') projectStore.setMode(TOOL_MODES.ADD_MARKER)
-    if (loweredKey === 'e') projectStore.setMode(projectStore.currentMode === TOOL_MODES.DRAW_LINE ? TOOL_MODES.SELECT : TOOL_MODES.DRAW_LINE)
     if (loweredKey === 'r') projectStore.setMode(TOOL_MODES.ADD_ROUTE)
   }
 
   handleToolbarButtonClick = (buttonKey) => {
     const projectStore = useProjectStore.getState()
     if (buttonKey === 'shortcuts') return useEditorStore.getState().setShortcutModalOpen(true)
-    if (buttonKey === TOOL_MODES.DRAW_LINE) {
-      return projectStore.setMode(projectStore.currentMode === TOOL_MODES.DRAW_LINE ? TOOL_MODES.SELECT : TOOL_MODES.DRAW_LINE)
-    }
     return projectStore.setMode(buttonKey)
   }
 
@@ -124,7 +119,6 @@ class Toolbar extends React.Component {
                 <li>Ctrl+R: Redo</li>
                 <li>Q: Select/Pan 모드</li>
                 <li>W: Add Marker 모드</li>
-                <li>E: Draw Line 모드</li>
                 <li>R: Add Route 모드</li>
               </ul>
               <div className="mt-4 flex justify-end">

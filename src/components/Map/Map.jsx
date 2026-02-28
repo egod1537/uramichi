@@ -2,8 +2,6 @@ import React from 'react'
 import { GoogleMap } from '@react-google-maps/api'
 import TOOL_MODES from '../../utils/toolModes'
 import { COLOR_PRESETS, MAP_DEFAULT_ZOOM, TIME_FILTER_DEFAULT_RANGE } from '../../utils/config'
-import { getHaversineDistance } from '../../utils/geo'
-import { LINE_DEFAULT_COLOR, LINE_DEFAULT_WIDTH } from '../../utils/lineStyle'
 import useProjectStore from '../../stores/useProjectStore'
 import withStore from '../../utils/withStore'
 import { handleMarkerMouseDown, handleMarkerMouseUp } from './controllers/markerController'
@@ -63,8 +61,6 @@ class Map extends React.Component {
       recentRouteInfo: null,
       selectedPoiDetail: null,
       poiDetailStatus: 'idle',
-      linePath: [],
-      previewLinePoint: null,
     }
     this.mapInstance = null
     this.addMarkerMouseDownPositionRef = { current: null }
@@ -89,12 +85,6 @@ class Map extends React.Component {
       this.handlePoiSearchRequest(currentStore)
     }
 
-    if (
-      currentStore.currentMode !== TOOL_MODES.DRAW_LINE
-      && (this.state.linePath.length || this.state.previewLinePoint)
-    ) {
-      this.setState({ linePath: [], previewLinePoint: null })
-    }
   }
 
   componentWillUnmount() {
@@ -119,54 +109,6 @@ class Map extends React.Component {
   getSelectedPin = (projectStore) => this.getVisiblePins(projectStore).find((pinItem) => pinItem.id === projectStore.selectedPinId) || null
 
   getSelectedLine = (projectStore) => this.getVisibleLines(projectStore).find((lineItem) => lineItem.id === projectStore.selectedLineId) || null
-
-  getDraftPreviewLinePath = () => {
-    const { linePath, previewLinePoint } = this.state
-    if (!linePath.length || !previewLinePoint) return []
-    return [...linePath, previewLinePoint]
-  }
-
-  resolveClosedLinePath = (linePath) => {
-    if (linePath.length < 3) return { isClosedShape: false, normalizedPath: linePath }
-    const firstLinePoint = linePath[0]
-    const lastLinePoint = linePath[linePath.length - 1]
-    const isClosedShape = getHaversineDistance(firstLinePoint, lastLinePoint) <= 30
-    if (!isClosedShape) return { isClosedShape: false, normalizedPath: linePath }
-    const isAlreadyClosed = firstLinePoint.lat === lastLinePoint.lat && firstLinePoint.lng === lastLinePoint.lng
-    return {
-      isClosedShape: true,
-      normalizedPath: isAlreadyClosed ? linePath : [...linePath, firstLinePoint],
-    }
-  }
-
-  completeLineDraft = () => {
-    const { projectStore } = this.props
-    const { linePath } = this.state
-    if (projectStore.currentMode !== TOOL_MODES.DRAW_LINE) return
-    if (linePath.length < 2) {
-      this.setState({ linePath: [], previewLinePoint: null })
-      projectStore.setMode(TOOL_MODES.SELECT)
-      return
-    }
-
-    const { isClosedShape, normalizedPath } = this.resolveClosedLinePath(linePath)
-    const shapeType = isClosedShape ? 'polygon' : 'line'
-    const sameShapeCount = projectStore.lines.filter((lineItem) => lineItem.shapeType === shapeType && lineItem.sourceType !== 'measurement').length
-    const defaultName = isClosedShape ? `도형 ${sameShapeCount + 1}` : `선 ${sameShapeCount + 1}`
-
-    projectStore.addLine({
-      id: `line-${Date.now()}-${projectStore.lines.length + 1}`,
-      shapeType,
-      name: defaultName,
-      points: normalizedPath,
-      layerId: projectStore.activeLayerId || projectStore.layers[0]?.id || null,
-      color: LINE_DEFAULT_COLOR,
-      width: LINE_DEFAULT_WIDTH,
-      sourceType: 'line',
-    })
-    this.setState({ linePath: [], previewLinePoint: null })
-    projectStore.setMode(TOOL_MODES.SELECT)
-  }
 
   clearPoiDetail = () => {
     this.setState({ selectedPoiDetail: null, poiDetailStatus: 'idle' })
@@ -309,17 +251,6 @@ class Map extends React.Component {
     const latitude = event?.latLng?.lat()
     const longitude = event?.latLng?.lng()
     const clickedPoint = latitude === undefined || longitude === undefined ? null : { lat: latitude, lng: longitude }
-
-    if (projectStore.currentMode === TOOL_MODES.DRAW_LINE) {
-      if (event.placeId) event.stop()
-      if (!clickedPoint) return
-      this.setState((previousState) => ({
-        linePath: [...previousState.linePath, clickedPoint],
-        previewLinePoint: null,
-      }))
-      return
-    }
-
     if (event.placeId) {
       event.stop()
       if (projectStore.currentMode === TOOL_MODES.ADD_MARKER) return
@@ -344,27 +275,7 @@ class Map extends React.Component {
     handleMarkerMouseUp(this.createModeEventContext(event))
   }
 
-  handleMapMouseMove = (event) => {
-    const { projectStore } = this.props
-    if (projectStore.currentMode !== TOOL_MODES.DRAW_LINE) return
-    if (!this.state.linePath.length) return
-    const latitude = event?.latLng?.lat()
-    const longitude = event?.latLng?.lng()
-    if (latitude === undefined || longitude === undefined) return
-    this.setState({ previewLinePoint: { lat: latitude, lng: longitude } })
-  }
 
-  handleMapRightClick = (event) => {
-    if (event?.stop) event.stop()
-    this.completeLineDraft()
-    this.shouldIgnoreNextMapClick = true
-  }
-
-  handleMapDoubleClick = (event) => {
-    if (event?.stop) event.stop()
-    this.completeLineDraft()
-    this.shouldIgnoreNextMapClick = true
-  }
 
   handlePinClick = (pinId, event) => {
     const { projectStore } = this.props
@@ -492,9 +403,6 @@ class Map extends React.Component {
     if (isInputControlTarget && event.key !== 'Escape') return
 
     if (event.key === 'Escape') {
-      if (projectStore.currentMode === TOOL_MODES.DRAW_LINE) {
-        this.setState({ linePath: [], previewLinePoint: null })
-      }
       this.props.projectStore.resetToSelectMode()
       return
     }
@@ -534,7 +442,6 @@ class Map extends React.Component {
     const visiblePins = this.getVisiblePins(projectStore)
     const visibleLines = this.getVisibleLines(projectStore)
     const selectedPin = this.getSelectedPin(projectStore)
-    const previewLinePath = this.getDraftPreviewLinePath()
 
     return (
       <>
@@ -550,14 +457,10 @@ class Map extends React.Component {
           }}
           onClick={this.handleMapClick}
           onMouseUp={this.handleMapMouseUp}
-          onMouseMove={this.handleMapMouseMove}
           onMouseDown={this.handleMapMouseDown}
-          onRightClick={this.handleMapRightClick}
-          onDblClick={this.handleMapDoubleClick}
           options={{
             ...MAP_OPTIONS,
-            clickableIcons: ![TOOL_MODES.ADD_MARKER, TOOL_MODES.DRAW_LINE].includes(projectStore.currentMode),
-            draggableCursor: projectStore.currentMode === TOOL_MODES.DRAW_LINE ? 'crosshair' : undefined,
+            clickableIcons: projectStore.currentMode !== TOOL_MODES.ADD_MARKER,
           }}
         >
           <PinLayer
@@ -580,8 +483,6 @@ class Map extends React.Component {
             lines={visibleLines}
             currentMode={projectStore.currentMode}
             selectedLineId={projectStore.selectedLineId}
-            linePath={this.state.linePath}
-            previewLinePath={previewLinePath}
             onLineClick={this.handleLineClick}
             onLinePointDragStart={this.handleLinePointDragStart}
             onLinePointDrag={this.handleLinePointDrag}
