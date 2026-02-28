@@ -15,3 +15,7 @@
 [codex] 2026-02-27 내 지도 목록 팝업 레이아웃 메모
 - `src/components/common/MyMapsModal.jsx`를 추가해 프로필 메뉴의 `내 지도 목록`에서 열리는 전체 화면 모달 UI(검색 입력, 지도 프리뷰 카드 그리드, 이름/마지막 편집일/공개 아이콘)를 구현함.
 - `src/components/common/UserButton.jsx`의 `내 지도 목록` 메뉴 버튼을 모달 오픈 액션으로 연결하고, 모달 열림/닫힘 상태를 UserButton 로컬 state로 관리하도록 추가함.
+[codex] 2026-02-28 클래스 래퍼 전환 메모
+- `ColorPalette.jsx`의 기본 export를 클래스 컴포넌트 래퍼로 전환하고, 색상/슬라이더 내부 상태 로직은 `ColorPaletteView` 함수에서 그대로 유지함.
+[codex] 2026-02-28 ColorPalette 클래스 본전환 메모
+- `ColorPalette.jsx`에서 훅 기반 `ColorPaletteView`를 제거하고, 내부 상태(`internalSelectedColor/internalOpacity/internalBorderWidth`)를 클래스 state로 직접 관리하도록 전환함.

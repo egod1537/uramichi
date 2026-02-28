@@ -26,3 +26,8 @@
 [codex] 2026-02-27 Sidebar 클래스 전환 메모
 - `Sidebar.jsx`는 클래스 컴포넌트로 전환했고, `withStore(Sidebar, { editorStore: useEditorStore })` 패턴으로 store 값을 props로 주입함.
 - 사이드바 열기/닫기 이벤트 핸들러는 `handleOpenSidebar`, `handleCloseSidebar` 네이밍으로 통일함.
+[codex] 2026-02-28 클래스 래퍼 전환 메모
+- `LayerPanel.jsx`, `LayerRow.jsx`의 기본 export를 클래스 컴포넌트로 전환하고, 기존 훅 기반 로직은 `*View` 함수에 유지해 기존 기능을 보존함.
+[codex] 2026-02-28 LayerPanel 클래스 본전환 메모
+- `LayerPanel.jsx`에서 훅 기반 `LayerPanelView`를 제거하고, `withStore`로 주입된 `projectStore`를 사용하는 단일 클래스 컴포넌트로 전환함.
+- F2 이름변경 진입 로직은 클래스 생명주기(`componentDidMount/componentWillUnmount`)에서 전역 keydown 리스너로 유지함.

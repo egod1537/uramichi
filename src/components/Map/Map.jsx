@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, { Component, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { GoogleMap } from '@react-google-maps/api'
 import TOOL_MODES from '../../utils/toolModes'
 import { COLOR_PRESETS, MAP_DEFAULT_ZOOM, TIME_FILTER_DEFAULT_RANGE } from '../../utils/config'
@@ -35,7 +35,7 @@ const getNextLineColor = (currentColor) => {
   return lineColorSequence[(currentColorIndex + 1) % lineColorSequence.length]
 }
 
-function Map() {
+function MapView() {
   const mapInstanceRef = useRef(null)
   const addMarkerMouseDownPositionRef = useRef(null)
   const shouldIgnoreNextMapClickRef = useRef(false)
@@ -666,6 +666,12 @@ function Map() {
       />
     </>
   )
+}
+
+class Map extends Component {
+  render() {
+    return <MapView {...this.props} />
+  }
 }
 
 export default Map

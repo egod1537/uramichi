@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import React, { Component, useEffect, useMemo, useRef, useState } from 'react'
 import {
   CATEGORY_PRESETS,
   DEFAULT_PIN_SVG_PATH,
@@ -9,7 +9,7 @@ import {
 } from '../../utils/opts'
 import useProjectStore from '../../stores/useProjectStore'
 
-function LayerRow({
+function LayerRowView({
   layer,
   filteredPins,
   lines,
@@ -481,6 +481,12 @@ function LayerRow({
       {isLayerDropPreviewAfter && <div className="mx-2 mt-1 h-1 rounded bg-blue-500" />}
     </div>
   )
+}
+
+class LayerRow extends Component {
+  render() {
+    return <LayerRowView {...this.props} />
+  }
 }
 
 export default LayerRow

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import React, { Component, useEffect, useMemo, useRef, useState } from 'react'
 import { OverlayView } from '@react-google-maps/api'
 import useProjectStore from '../../stores/useProjectStore'
 import { CATEGORY_PRESETS, DEFAULT_PIN_SVG_PATH, PIN_MARKER_COLOR_PRESETS, TRAVEL_PIN_ICON_PRESETS, getTravelPinIconKey, getTravelPinIconPreset } from '../../utils/opts'
@@ -21,7 +21,7 @@ const stayDurationOptionList = ['30분', '1시간', '1.5시간', '2시간', '3�
 
 const colorPresetList = Object.values(PIN_MARKER_COLOR_PRESETS).slice(0, 8).map((colorPreset) => colorPreset.backgroundColor)
 
-function PinPopup({ pin }) {
+function PinPopupView({ pin }) {
   const popupContainerRef = useRef(null)
   const imageInputRef = useRef(null)
   const selectedPinId = useProjectStore((state) => state.selectedPinId)
@@ -475,6 +475,12 @@ function PinPopup({ pin }) {
       </div>
     </OverlayView>
   )
+}
+
+class PinPopup extends Component {
+  render() {
+    return <PinPopupView {...this.props} />
+  }
 }
 
 export default PinPopup
