@@ -127,3 +127,12 @@
 - Map 하위 config(`src/components/Map/config.js`)는 전역 `MAP_DEFAULT_CENTER`를 재사용하도록 연결함.
 [codex] 2026-02-28 클래스 래퍼 전환 메모
 - `Map.jsx`, `PinPopup.jsx`의 기본 export를 `React.Component` 기반 클래스 래퍼로 전환하고, 기존 훅 기반 렌더 로직은 `*View` 함수로 유지해 동작 변화 없이 클래스 컴포넌트 진입점을 맞춤.
+
+[codex] 2026-02-28 Map/PinPopup 클래스 본전환 메모
+- `Map.jsx`에서 `MapView`를 제거하고 `withStore` 주입 기반 단일 클래스 구현으로 전환함.
+- 지도 컨텍스트 메뉴/키다운 리스너 등록·해제를 클래스 생명주기(`componentDidMount`/`componentWillUnmount`)로 옮김.
+- POI 상세/거리측정/드래프트 상호작용의 로컬 상태를 `this.state`와 인스턴스 메서드로 통합함.
+
+[codex] 2026-02-28 PinPopup 클래스 본전환 메모
+- `PinPopup.jsx`에서 `PinPopupView`를 제거하고 단일 클래스 + `withStore` 구조로 정리함.
+- 바깥 클릭/ESC 닫기 리스너를 클래스 생명주기로 이동하고 로컬 편집 상태를 `this.state`로 관리함.

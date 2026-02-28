@@ -31,3 +31,7 @@
 [codex] 2026-02-28 LayerPanel 클래스 본전환 메모
 - `LayerPanel.jsx`에서 훅 기반 `LayerPanelView`를 제거하고, `withStore`로 주입된 `projectStore`를 사용하는 단일 클래스 컴포넌트로 전환함.
 - F2 이름변경 진입 로직은 클래스 생명주기(`componentDidMount/componentWillUnmount`)에서 전역 keydown 리스너로 유지함.
+
+[codex] 2026-02-28 LayerRow 클래스 본전환 메모
+- `LayerRow.jsx`에서 `LayerRowView`를 제거하고 단일 클래스 + `withStore` 주입 구조로 전환함.
+- 이름 변경 입력 포커스/드래프트 동기화를 `componentDidUpdate`와 인스턴스 필드(ref 맵)로 처리함.
