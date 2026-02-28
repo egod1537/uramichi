@@ -81,7 +81,7 @@ class Toolbar extends React.Component {
       <>
         <div className="absolute top-3 left-1/2 z-20 w-[min(95vw,580px)] -translate-x-1/2">
           <div className="rounded-md bg-white shadow-[0_2px_8px_rgba(60,64,67,0.3)]">
-            <div className="flex items-center gap-2 border-b border-gray-200 p-1.5">
+            <div className="flex items-center gap-2 p-1.5">
               <Search />
               <button
                 type="button"

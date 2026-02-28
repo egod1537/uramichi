@@ -568,3 +568,6 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `useState`/`useRef`만 사용하는 단순 상태 컴포넌트와 props-only 프레젠테이션 컴포넌트는 함수형 유지 가능.
 - 클래스 컴포넌트에서 Zustand를 연결할 때 `src/utils/withStore.js` HOC를 사용해 store state/action을 props로 주입하는 패턴을 사용함.
 - 고정 상수는 `src/utils/config.js`, 사용자 선택 옵션은 `src/utils/opts.js`로 분리해 관리하고, 기존 `src/utils/constants.js`는 사용하지 않음.
+
+[codex] 2026-02-28 Toolbar 가로 구분선 제거 메모
+- `src/components/Toolbar/Toolbar.jsx` 검색 행에서 하단 보더 클래스를 제거해 툴바 내부 가로 구분선을 제거함.
