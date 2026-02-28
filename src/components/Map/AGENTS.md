@@ -136,3 +136,7 @@
 - `Map.jsx`, `PinPopup.jsx`에서 `*View` 함수 래퍼를 제거하고, default export를 실제 구현 클래스 + `withStore` 주입 구조로 통일함.
 - `Map.jsx`의 로컬 상태/이펙트 로직(`useState/useEffect/useMemo/useRef/useCallback`)을 클래스 `state`, 생명주기(`componentDidMount/componentDidUpdate/componentWillUnmount`), 인스턴스 필드로 이관함.
 - POI 상세 조회/거리·선분 드래프트 프리뷰 계산도 클래스 메서드로 옮겨 Hook 호출 없이 동작하도록 정리함.
+
+[codex] 2026-02-28 핀 추가 도구 미동작 원인/수정 메모
+- `Map.jsx` 클래스 전환 이후 `addMarkerMouseDownPositionRef` 초기화가 누락되어 ADD_MARKER 마우스업 경로에서 `.current` 접근 시 런타임 오류로 핀 추가가 중단되던 문제를 확인함.
+- `constructor`에서 `this.addMarkerMouseDownPositionRef = { current: null }`를 명시적으로 초기화해 markerController의 mousedown/mouseup 드래그 판별 로직이 정상 동작하도록 복구함.
