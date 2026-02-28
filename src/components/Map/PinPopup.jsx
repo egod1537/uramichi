@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { OverlayView } from '@react-google-maps/api'
 import useProjectStore from '../../stores/useProjectStore'
-import { CATEGORY_PRESETS, DEFAULT_PIN_SVG_PATH, PIN_MARKER_COLOR_PRESETS, TRAVEL_PIN_ICON_PRESETS, getTravelPinIconKey, getTravelPinIconPreset } from '../../utils/constants'
+import { CATEGORY_PRESETS, DEFAULT_PIN_SVG_PATH, PIN_MARKER_COLOR_PRESETS, TRAVEL_PIN_ICON_PRESETS, getTravelPinIconKey, getTravelPinIconPreset } from '../../utils/opts'
 import { convertFileToDataUrl } from '../../utils/file'
 import TimelineBar from './TimelineBar'
 

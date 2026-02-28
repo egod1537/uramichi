@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { Marker } from '@react-google-maps/api'
 import useProjectStore from '../../stores/useProjectStore'
-import { CATEGORY_PRESETS, DEFAULT_PIN_SVG_PATH, getTravelPinIconPreset } from '../../utils/constants'
+import { CATEGORY_PRESETS, DEFAULT_PIN_SVG_PATH, getTravelPinIconPreset } from '../../utils/opts'
 
 function PinMarker({
   pin,

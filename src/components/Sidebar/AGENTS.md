@@ -22,3 +22,7 @@
 [codex] 2026-02-27 Sidebar 선/측정 목록 분리 표기 메모
 - `LayerRow`에서 레이어 하위 선 목록을 `sourceType` 기준으로 일반 선/도형(`line`)과 측정(`measurement`)으로 분리 렌더링함.
 - 일반 선은 기존 `선분 N`/`도형 N` 라벨을 유지하고, 측정 항목은 `측정 N`으로 별도 표시해 의미를 구분함.
+
+[codex] 2026-02-27 Sidebar 클래스 전환 메모
+- `Sidebar.jsx`는 클래스 컴포넌트로 전환했고, `withStore(Sidebar, { editorStore: useEditorStore })` 패턴으로 store 값을 props로 주입함.
+- 사이드바 열기/닫기 이벤트 핸들러는 `handleOpenSidebar`, `handleCloseSidebar` 네이밍으로 통일함.

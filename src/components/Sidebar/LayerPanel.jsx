@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import LayerRow from './LayerRow'
 import useProjectStore from '../../stores/useProjectStore'
-import { ICON_FILTER_OPTIONS, getTravelPinIconKey } from '../../utils/constants'
+import { ICON_FILTER_OPTIONS, getTravelPinIconKey } from '../../utils/opts'
 
 const findPinNameByPosition = (pinList, targetPosition) => {
   if (!targetPosition) return 'Unknown'

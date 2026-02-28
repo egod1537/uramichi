@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { GoogleMap } from '@react-google-maps/api'
 import TOOL_MODES from '../../utils/toolModes'
-import { COLOR_PRESETS } from '../../utils/constants'
+import { COLOR_PRESETS, MAP_DEFAULT_ZOOM, TIME_FILTER_DEFAULT_RANGE } from '../../utils/config'
 import useProjectStore from '../../stores/useProjectStore'
 import { handleLineMapClick, handleLineMapMouseMove } from './controllers/lineController'
 import { handleMarkerMouseDown, handleMarkerMouseUp } from './controllers/markerController'
@@ -9,7 +9,7 @@ import { handleMeasureMapClick } from './controllers/measureController'
 import { handleRouteMapClick } from './controllers/routeController'
 import { handleSelectMapClick } from './controllers/selectController'
 import { syncDraftByMode } from './controllers/syncDraftByMode'
-import { ICON_FILTER_OPTIONS, getTravelPinIconKey } from '../../utils/constants'
+import { ICON_FILTER_OPTIONS, getTravelPinIconKey } from '../../utils/opts'
 import RouteService from '../../utils/RouteService'
 import useLineInteraction from './measure/useLineInteraction'
 import useDistanceMeasureInteraction from './measure/useDistanceMeasureInteraction'
@@ -85,7 +85,7 @@ function Map() {
   const [draggingMeasurePointIndex, setDraggingMeasurePointIndex] = useState(null)
   const [isPinFilterExpanded, setIsPinFilterExpanded] = useState(false)
   const [isTimeFilterExpanded, setIsTimeFilterExpanded] = useState(false)
-  const [timeFilterRange, setTimeFilterRange] = useState({ start: '09:00', end: '18:00' })
+  const [timeFilterRange, setTimeFilterRange] = useState(TIME_FILTER_DEFAULT_RANGE)
   const [recentRouteInfo, setRecentRouteInfo] = useState(null)
   const {
     selectedPoiDetail,
@@ -583,7 +583,7 @@ function Map() {
       <GoogleMap
         mapContainerStyle={MAP_CONTAINER_STYLE}
         center={MAP_DEFAULT_CENTER}
-        zoom={12}
+        zoom={MAP_DEFAULT_ZOOM}
         onLoad={(loadedMap) => {
           mapInstanceRef.current = loadedMap
         }}

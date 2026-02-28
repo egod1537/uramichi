@@ -8,3 +8,6 @@
 - `addLine`에서 입력 lineData의 `layerId`가 비어있거나 유효하지 않을 때 기본 레이어를 생성/선택해 `lines` 적재가 누락되지 않도록 보강함.
 - 신규 line 저장 시 `sourceType` 기본값을 `line`으로 채워 Sidebar에서 measurement와 구분 표기가 가능하도록 통일함.
 - 레거시 `measurements` 변환 시 `sourceType: measurement`를 부여해 기존 데이터도 동일한 분류 규칙으로 처리되도록 맞춤.
+
+[codex] 2026-02-27 store key config 연동 메모
+- Zustand persist storage key 하드코딩을 제거하고 `src/utils/config.js`의 `LOCAL_STORAGE_KEYS`를 사용하도록 통일함.

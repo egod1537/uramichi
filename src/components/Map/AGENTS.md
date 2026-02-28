@@ -121,3 +121,7 @@
 - 두 모드에서는 `event?.domEvent?.button !== 0`일 때 즉시 반환해 좌클릭(버튼 0)만 클릭 핸들러로 전달되도록 제한함.
 [codex] 2026-02-27 거리 측정 종료 안내 오버레이 문구 메모
 - `MapOverlays.jsx`에 `MEASURE_DISTANCE` 모드 전용 안내 배너를 추가해 "우클릭 시 측정 종료 (저장 안 됨)" 문구를 지도 상단에 명시함.
+
+[codex] 2026-02-27 Map 전역 config 연동 메모
+- `Map.jsx`의 기본 줌/시간 필터 기본값은 `src/utils/config.js`에서 import해 사용함.
+- Map 하위 config(`src/components/Map/config.js`)는 전역 `MAP_DEFAULT_CENTER`를 재사용하도록 연결함.

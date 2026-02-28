@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { LOCAL_STORAGE_KEYS } from '../utils/config'
 
 const useEditorStore = create(
   persist(
@@ -14,7 +15,7 @@ const useEditorStore = create(
       setTestbedSelectedComponentKey: (componentKey) => set({ testbedSelectedComponentKey: componentKey }),
       setLanguage: (language) => set({ language }),
     }),
-    { name: 'uramichi-editor-store' },
+    { name: LOCAL_STORAGE_KEYS.editorStore },
   ),
 )
 
