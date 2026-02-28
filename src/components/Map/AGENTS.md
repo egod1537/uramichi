@@ -180,3 +180,6 @@
 - draw line 모드에서 기존 핀/선 꼭짓점 및 첫 점 대상으로 스냅 후보를 계산하고, 스냅 시 하이라이트 마커를 표시하도록 렌더 입력(`snapTargetPoint`)을 추가함.
 - draw line 완료 시 폐합 거리 조건을 만족하면 polygon으로 저장하고, 완료 직후 Select 모드 복귀 동작을 유지함.
 - draw line 모드에서는 `clickableIcons`를 비활성화해 POI 클릭이 선 입력으로 소비되도록 유지함.
+[codex] 2026-02-28 PinPopup 위치 보정 메모
+- `src/components/Map/PinPopup.jsx`의 팝업 컨테이너에 `-translate-x-1/2 -translate-y-[calc(100%+14px)]`를 적용해 Overlay 기준점(핀 좌표) 대비 중앙 정렬 + 핀 위쪽 배치가 되도록 수정함.
+- 기존 말풍선 꼬리(`top-full` 삼각형)와 간격(14px)을 유지해 팝업 본문과 앵커 위치가 어긋나 보이던 문제를 완화함.

@@ -150,7 +150,7 @@ class PinPopup extends React.Component {
           ref={this.popupContainerRef}
           onMouseDown={(event) => event.stopPropagation()}
           onClick={(event) => event.stopPropagation()}
-          className="relative w-[360px] rounded-xl border border-gray-200 bg-white p-3 shadow-2xl"
+          className="relative w-[360px] -translate-x-1/2 -translate-y-[calc(100%+14px)] rounded-xl border border-gray-200 bg-white p-3 shadow-2xl"
         >
           <div className="mb-2 flex items-start gap-2">
             <button
