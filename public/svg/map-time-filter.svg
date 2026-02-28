@@ -3,7 +3,4 @@
   <circle cx="12" cy="10" r="4.5" stroke="#475569" stroke-width="1.5"/>
   <path d="M12 7.5V10L14 11.5" stroke="#475569" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
   <rect x="10.5" y="3.5" width="3" height="1.5" rx="0.75" fill="#475569"/>
-  <path d="M23 7H67" stroke="#CBD5E1" stroke-width="1.5" stroke-linecap="round"/>
-  <path d="M23 10H59" stroke="#94A3B8" stroke-width="1.5" stroke-linecap="round"/>
-  <path d="M23 13H52" stroke="#CBD5E1" stroke-width="1.5" stroke-linecap="round"/>
 </svg>
