@@ -17,7 +17,6 @@ class LayerPanel extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      targetLayerId: '',
       dragLayerId: null,
       layerDropPreview: null,
       focusedRenameTarget: null,
@@ -48,18 +47,13 @@ class LayerPanel extends React.Component {
       pins,
       routes,
       lines,
-      selectedPinIds,
-      removePins,
-      movePinsToLayer,
       reorderLayers,
       pinIconFilters,
       togglePinIconFilter,
       clearPinIconFilter,
     } = projectStore
 
-    const { targetLayerId, dragLayerId, layerDropPreview, focusedRenameTarget, editingRenameTarget } = this.state
-
-    const selectedPinCount = selectedPinIds.length
+    const { dragLayerId, layerDropPreview, focusedRenameTarget, editingRenameTarget } = this.state
     const filteredPins = !pinIconFilters.length
       ? pins
       : pins.filter((pinItem) => {
@@ -67,13 +61,6 @@ class LayerPanel extends React.Component {
           ICON_FILTER_OPTIONS.filter((filterItem) => pinIconFilters.includes(filterItem.key)).map((filterItem) => filterItem.key),
         )
         return activeIconSet.has(getTravelPinIconKey(pinItem.icon))
-      })
-
-    const movableLayerOptions = !selectedPinIds.length
-      ? layers
-      : layers.filter((layerItem) => {
-        const selectedLayerIdSet = new Set(pins.filter((pinItem) => selectedPinIds.includes(pinItem.id)).map((pinItem) => pinItem.layerId))
-        return !selectedLayerIdSet.has(layerItem.id)
       })
 
     const routeSummaryList = routes.map((routeItem) => ({
@@ -113,44 +100,6 @@ class LayerPanel extends React.Component {
               aria-label="필터 초기화"
             >
               <img src="/svg/filter-reset.svg" alt="필터 초기화" className="h-5 w-5" />
-            </button>
-          </div>
-        </div>
-
-        <div className="mb-2 space-y-2 rounded-md border border-gray-200 bg-gray-50 p-2">
-          <p className="text-sm text-gray-700">선택된 핀 {selectedPinCount}개</p>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              disabled={!selectedPinCount}
-              onClick={() => removePins(selectedPinIds)}
-              className="rounded border border-red-300 px-2 py-1 text-xs text-red-600 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              일괄 삭제
-            </button>
-            <select
-              value={targetLayerId}
-              disabled={!selectedPinCount}
-              onChange={(event) => this.setState({ targetLayerId: event.target.value })}
-              className="min-w-0 flex-1 rounded border border-gray-300 bg-white px-2 py-1 text-xs text-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              <option value="">이동할 레이어 선택</option>
-              {movableLayerOptions.map((layerItem) => (
-                <option key={layerItem.id} value={layerItem.id}>
-                  {layerItem.name}
-                </option>
-              ))}
-            </select>
-            <button
-              type="button"
-              disabled={!selectedPinCount || !targetLayerId}
-              onClick={() => {
-                movePinsToLayer(selectedPinIds, targetLayerId)
-                this.setState({ targetLayerId: '' })
-              }}
-              className="rounded border border-blue-300 px-2 py-1 text-xs text-blue-600 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              일괄 이동
             </button>
           </div>
         </div>
