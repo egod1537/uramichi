@@ -152,3 +152,6 @@
 - draw line 완료 트리거를 우클릭(`onRightClick`)과 더블클릭(`onDblClick`) 모두 지원하도록 추가하고, 완료 시 2점 미만은 저장하지 않고 Select 모드로 복귀하도록 처리함.
 - 첫 점/마지막 점 거리(30m) 기준으로 폐쇄 여부를 판정해 Polygon 자동 전환 및 폐쇄 경로(마지막 점=첫 점) 저장을 적용함.
 - draw line 모드에서 `clickableIcons`를 비활성화해 POI 클릭 이벤트를 억제하고, 커서를 `crosshair`로 변경함.
+[codex] 2026-02-28 핀 아이콘 필터 축약 상태 표시 보강 메모
+- `MapOverlays.jsx`에서 핀 필터가 접힌 상태일 때도 현재 활성 필터 아이콘(최대 2개)과 나머지 개수(`+N`)가 보이도록 프리뷰 UI를 추가함.
+- 핀 필터 패널의 초기화 텍스트 버튼을 SVG 아이콘 버튼(`/svg/filter-reset-alt.svg`)으로 교체하고, 기존 clear 액션 경로(`onClearPinIconFilter`)는 유지함.
