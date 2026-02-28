@@ -161,3 +161,6 @@
 [codex] 2026-02-28 선 오브젝트 선택/편집 동작 보강 메모
 - `Map.jsx`에서 선 꼭짓점 드래그 핸들러(`handleLinePointDrag*`)를 연결해, Select 모드에서 선택된 선의 점 좌표를 직접 이동할 수 있도록 `updateLine(points)` 경로를 추가함.
 - draw line 드래프트는 기존처럼 `currentMode`가 `DRAW_LINE`에서 벗어나는 즉시 `linePath/previewLinePoint`를 비워 파기하도록 유지함.
+[codex] 2026-02-28 시간 필터 슬라이더 포인터 충돌 수정 메모
+- `src/components/Map/MapOverlays.jsx`의 시간 필터 양방향 range input에 `map-time-range-slider` 클래스를 적용함.
+- thumb만 포인터 이벤트를 받도록 CSS를 분리해, 좌/우 슬라이더가 겹치는 구간에서도 핸들이 안정적으로 드래그되도록 정리함.
