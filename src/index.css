@@ -11,3 +11,41 @@ body,
 body {
   overflow: hidden;
 }
+
+.map-time-range-slider {
+  pointer-events: none;
+}
+
+.map-time-range-slider::-webkit-slider-runnable-track {
+  height: 4px;
+  background: transparent;
+}
+
+.map-time-range-slider::-webkit-slider-thumb {
+  pointer-events: auto;
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  border: 2px solid #f59e0b;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.2);
+  margin-top: -5px;
+  cursor: pointer;
+}
+
+.map-time-range-slider::-moz-range-track {
+  height: 4px;
+  background: transparent;
+}
+
+.map-time-range-slider::-moz-range-thumb {
+  pointer-events: auto;
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  border: 2px solid #f59e0b;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.2);
+  cursor: pointer;
+}
