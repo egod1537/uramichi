@@ -164,3 +164,6 @@
 [codex] 2026-02-28 시간 필터 슬라이더 포인터 충돌 수정 메모
 - `src/components/Map/MapOverlays.jsx`의 시간 필터 양방향 range input에 `map-time-range-slider` 클래스를 적용함.
 - thumb만 포인터 이벤트를 받도록 CSS를 분리해, 좌/우 슬라이더가 겹치는 구간에서도 핸들이 안정적으로 드래그되도록 정리함.
+[codex] 2026-02-28 선 도구 잔상 버그 수정 메모
+- `Map.jsx`의 모드 변경 감지 조건을 보강해, draw line 모드에서 다른 툴로 이동한 직후에도 로컬 드래프트(`linePath`, `previewLinePoint`)가 즉시 비워지도록 정리함.
+- 폐쇄 polygon의 첫/마지막 꼭짓점이 동일 좌표를 공유하도록 `updateLinePointByIndex`를 보강해, Select 모드 꼭짓점 이동 시 기존 선분 잔상이 남는 문제를 방지함.
