@@ -175,3 +175,6 @@
 - `Map.jsx`에서 draw line 전용 로컬 state(`linePath`, `previewLinePoint`)와 완료 처리(`completeLineDraft`)를 제거함.
 - 지도 이벤트에서 draw line 분기(`onClick/onMouseMove/onRightClick/onDblClick`)를 제거하고, 라인 레이어에는 저장된 `lines`만 전달하도록 정리함.
 - GoogleMap 옵션도 draw line 커서/아이콘 예외를 제거해 Add Marker 모드만 `clickableIcons`를 비활성화하도록 단순화함.
+[codex] 2026-02-28 PinPopup 위치 보정 메모
+- `src/components/Map/PinPopup.jsx`의 팝업 컨테이너에 `-translate-x-1/2 -translate-y-[calc(100%+14px)]`를 적용해 Overlay 기준점(핀 좌표) 대비 중앙 정렬 + 핀 위쪽 배치가 되도록 수정함.
+- 기존 말풍선 꼬리(`top-full` 삼각형)와 간격(14px)을 유지해 팝업 본문과 앵커 위치가 어긋나 보이던 문제를 완화함.
