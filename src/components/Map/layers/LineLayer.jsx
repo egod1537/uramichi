@@ -8,8 +8,6 @@ function LineLayer({
   lines,
   currentMode,
   selectedLineId,
-  linePath,
-  previewLinePath,
   onLineClick,
   onLinePointDragStart,
   onLinePointDrag,
@@ -73,48 +71,6 @@ function LineLayer({
           : null,
       )}
 
-      {linePath.length > 1 ? (
-        <Polyline
-          path={linePath}
-          options={{
-            strokeColor: LINE_DEFAULT_COLOR,
-            strokeWeight: LINE_DEFAULT_WIDTH,
-            clickable: false,
-            strokeOpacity: 0.95,
-          }}
-        />
-      ) : null}
-
-      {previewLinePath.length > 1 ? (
-        <Polyline
-          path={previewLinePath}
-          options={{
-            strokeColor: LINE_DEFAULT_COLOR,
-            strokeWeight: Math.max(2, LINE_DEFAULT_WIDTH - 1),
-            clickable: false,
-            strokeOpacity: 0.45,
-          }}
-        />
-      ) : null}
-
-      {linePath.map((linePointItem, linePointIndex) => (
-        <Marker
-          key={`line-point-${linePointIndex}`}
-          position={linePointItem}
-          icon={{
-            path: window.google.maps.SymbolPath.CIRCLE,
-            scale: LINE_VERTEX_PIXEL_SIZE / 2,
-            fillColor: '#ffffff',
-            fillOpacity: 1,
-            strokeColor: LINE_DEFAULT_COLOR,
-            strokeWeight: 2,
-          }}
-          draggable={false}
-          onDragStart={() => onLinePointDragStart(linePointIndex)}
-          onDrag={(event) => onLinePointDrag(linePointIndex, event)}
-          onDragEnd={(event) => onLinePointDragEnd(linePointIndex, event)}
-        />
-      ))}
     </>
   )
 }

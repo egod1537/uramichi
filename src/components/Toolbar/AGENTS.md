@@ -19,3 +19,7 @@
 
 [codex] 2026-02-28 Toolbar 가로 구분선 제거 메모
 - `Toolbar.jsx` 검색 행 컨테이너의 `border-b border-gray-200` 클래스를 제거해 상단 입력줄과 하단 아이콘줄 사이 가로줄이 보이지 않도록 조정함.
+
+[codex] 2026-02-28 Draw Line 툴 제거 메모
+- `Toolbar.jsx`에서 Draw Line 버튼(E)과 관련 토글 처리 로직을 제거함.
+- 키다운 단축키 및 단축키 모달 목록에서도 Draw Line 항목을 제거해 툴바 노출 모드와 일치시킴.

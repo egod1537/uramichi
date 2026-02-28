@@ -170,3 +170,8 @@
 [codex] 2026-02-28 시간 필터 슬라이더 핸들 우선순위 개선 메모
 - `src/components/Map/MapOverlays.jsx`에 `activeTimeSliderHandle` 로컬 상태를 추가해 현재 잡고 있는 핸들의 z-index를 최상단으로 올리도록 조정함.
 - 시작/종료 range input에 `onMouseDown`/`onTouchStart`를 연결해 핸들을 잡는 순간 해당 슬라이더를 앞으로 가져오고, 겹치는 구간에서 커서 X가 뜨며 미세 이동만 되던 드래그 이슈를 완화함.
+
+[codex] 2026-02-28 Draw Line 지도 입력 로직 제거 메모
+- `Map.jsx`에서 draw line 전용 로컬 state(`linePath`, `previewLinePoint`)와 완료 처리(`completeLineDraft`)를 제거함.
+- 지도 이벤트에서 draw line 분기(`onClick/onMouseMove/onRightClick/onDblClick`)를 제거하고, 라인 레이어에는 저장된 `lines`만 전달하도록 정리함.
+- GoogleMap 옵션도 draw line 커서/아이콘 예외를 제거해 Add Marker 모드만 `clickableIcons`를 비활성화하도록 단순화함.
