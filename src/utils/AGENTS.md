@@ -32,3 +32,5 @@
 - `toolModes.js`에서 `DRAW_LINE` 상수를 제거해 선택 가능한 전역 툴 모드를 Select/Add Marker/Add Route로 정리함.
 [codex] 2026-02-28 toolModes Draw Line 재추가 메모
 - `toolModes.js`에 `DRAW_LINE: 'draw_line'` 모드를 재추가해 Toolbar/Map이 동일 모드 키를 공유하도록 맞춤.
+[codex] 2026-02-28 프로젝트 초기 상태 시간 필터 메모
+- `ProjectManager.createInitialProjectState()`에 `timeFilterRange` 기본값(`TIME_FILTER_DEFAULT_RANGE`)을 포함해 새 세션에서도 시간 필터 상태가 일관되게 초기화되도록 맞춤.

@@ -204,6 +204,13 @@ const useProjectStore = create((set) => ({
         : [...state.pinIconFilters, iconKey],
     })),
   clearPinIconFilter: () => set({ pinIconFilters: [] }),
+  setTimeFilterRange: (timeFieldKey, nextTimeValue) =>
+    set((state) => ({
+      timeFilterRange: {
+        ...state.timeFilterRange,
+        [timeFieldKey]: nextTimeValue,
+      },
+    })),
   updatePin: (pinId, patchData) =>
     set((state) => {
       const nextPins = state.pins.map((pinItem) => (pinItem.id === pinId ? { ...pinItem, ...patchData } : pinItem))

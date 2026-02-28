@@ -19,3 +19,5 @@
 [codex] 2026-02-28 line 레이어 내 순서 변경 액션 추가 메모
 - `useProjectStore`에 `reorderLinesInLayer(layerId, sourceLineId, targetLineId, dropPosition)` 액션을 추가함.
 - 내부 구현은 `reorderPinsByLayer`와 동일 패턴의 `reorderLinesByLayer` 헬퍼로 구성해 같은 레이어의 선(line) 순서를 before/after/end 기준으로 재배치함.
+[codex] 2026-02-28 프로젝트 스토어 시간 필터 상태 메모
+- `useProjectStore`에 `setTimeFilterRange(timeFieldKey, nextTimeValue)` 액션을 추가해 시간 필터 범위를 스토어 단일 소스로 갱신하도록 정리함.

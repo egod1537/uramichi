@@ -1,13 +1,14 @@
 import React from 'react'
 import { GoogleMap } from '@react-google-maps/api'
 import TOOL_MODES from '../../utils/toolModes'
-import { COLOR_PRESETS, MAP_DEFAULT_ZOOM, TIME_FILTER_DEFAULT_RANGE } from '../../utils/config'
+import { COLOR_PRESETS, MAP_DEFAULT_ZOOM } from '../../utils/config'
 import useProjectStore from '../../stores/useProjectStore'
 import withStore from '../../utils/withStore'
 import { handleMarkerMouseDown, handleMarkerMouseUp } from './controllers/markerController'
 import { handleRouteMapClick } from './controllers/routeController'
 import { handleSelectMapClick } from './controllers/selectController'
 import { ICON_FILTER_OPTIONS, getTravelPinIconKey } from '../../utils/opts'
+import { convertTimeStringToMinutes, normalizeOpeningHours } from '../../utils/time'
 import RouteService from '../../utils/RouteService'
 import PoiDetailOverlay from './PoiDetailOverlay'
 import PinLayer from './layers/PinLayer'
@@ -58,9 +59,6 @@ class Map extends React.Component {
     this.state = {
       isPinClickInProgress: false,
       draggingPinId: null,
-      isPinFilterExpanded: false,
-      isTimeFilterExpanded: false,
-      timeFilterRange: TIME_FILTER_DEFAULT_RANGE,
       recentRouteInfo: null,
       selectedPoiDetail: null,
       poiDetailStatus: 'idle',
@@ -108,9 +106,21 @@ class Map extends React.Component {
   getVisiblePins = (projectStore) => {
     const visibleLayerIdSet = this.getVisibleLayerIdSet(projectStore)
     const layerVisiblePins = projectStore.pins.filter((pinItem) => visibleLayerIdSet.has(pinItem.layerId))
-    if (!projectStore.pinIconFilters.length) return layerVisiblePins
+    const timeFilterStartMinutes = convertTimeStringToMinutes(projectStore.timeFilterRange?.start)
+    const timeFilterEndMinutes = convertTimeStringToMinutes(projectStore.timeFilterRange?.end)
+    const hasTimeFilter = timeFilterStartMinutes !== null && timeFilterEndMinutes !== null
+    const hasIconFilter = projectStore.pinIconFilters.length > 0
+    if (!hasTimeFilter && !hasIconFilter) return layerVisiblePins
+
     const activeIconSet = new Set(ICON_FILTER_OPTIONS.filter((filterItem) => projectStore.pinIconFilters.includes(filterItem.key)).map((filterItem) => filterItem.key))
-    return layerVisiblePins.filter((pinItem) => activeIconSet.has(getTravelPinIconKey(pinItem.icon)))
+    return layerVisiblePins.filter((pinItem) => {
+      const passesIconFilter = !hasIconFilter || activeIconSet.has(getTravelPinIconKey(pinItem.icon))
+      if (!passesIconFilter) return false
+      if (!hasTimeFilter) return true
+      const normalizedOpeningHours = normalizeOpeningHours(pinItem.openingHours || [])
+      if (!normalizedOpeningHours.length) return true
+      return normalizedOpeningHours.some((openingHoursItem) => openingHoursItem.startMinutes < timeFilterEndMinutes && openingHoursItem.endMinutes > timeFilterStartMinutes)
+    })
   }
 
   getVisibleLines = (projectStore) => {
@@ -628,9 +638,6 @@ class Map extends React.Component {
   render() {
     const { projectStore } = this.props
     const {
-      isTimeFilterExpanded,
-      isPinFilterExpanded,
-      timeFilterRange,
       recentRouteInfo,
       draggingPinId,
       selectedPoiDetail,
@@ -709,24 +716,8 @@ class Map extends React.Component {
 
         <MapOverlays
           currentMode={projectStore.currentMode}
-          isTimeFilterExpanded={isTimeFilterExpanded}
-          isPinFilterExpanded={isPinFilterExpanded}
-          pinIconFilters={projectStore.pinIconFilters}
           routeDraft={projectStore.routeDraft}
           recentRouteInfo={recentRouteInfo}
-          timeFilterRange={timeFilterRange}
-          onSetTimeFilterExpanded={(nextValue) => this.setState({ isTimeFilterExpanded: nextValue })}
-          onSetTimeFilterRange={(timeFieldKey, nextTimeValue) => {
-            this.setState((previousState) => ({
-              timeFilterRange: {
-                ...previousState.timeFilterRange,
-                [timeFieldKey]: nextTimeValue,
-              },
-            }))
-          }}
-          onClearPinIconFilter={projectStore.clearPinIconFilter}
-          onTogglePinIconFilter={projectStore.togglePinIconFilter}
-          onSetPinFilterExpanded={(nextValue) => this.setState({ isPinFilterExpanded: nextValue })}
           onSetRouteTravelMode={projectStore.setRouteTravelMode}
           onCloseRouteSummary={() => this.setState({ recentRouteInfo: null })}
         />
