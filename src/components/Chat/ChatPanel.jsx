@@ -158,29 +158,19 @@ class ChatPanel extends React.Component {
               value={this.state.draftMessage}
               onChange={this.handleDraftMessageChange}
               onKeyDown={this.handleTextareaKeyDown}
-              placeholder="우즈지"
-              className="min-h-[28px] w-full resize-none bg-transparent text-[15px] text-gray-800 outline-none placeholder:text-gray-700"
+              placeholder="우즈지가 뭐냐 질문을 입력하세요"
+              className="min-h-[28px] w-full resize-none bg-transparent text-[15px] text-gray-800 outline-none placeholder:text-gray-400"
             />
-            <div className="mt-2 flex items-center justify-between">
+            <div className="mt-2 flex justify-end">
               <button
                 type="button"
-                className="flex h-8 w-8 items-center justify-center rounded-full text-2xl leading-none text-gray-500 transition hover:bg-gray-200"
-                aria-label="첨부"
+                onClick={this.handleSendMessage}
+                disabled={this.state.isSubmitting}
+                className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#C86F42] text-lg text-white transition hover:bg-[#ad5e37] disabled:cursor-not-allowed disabled:bg-[#d9a186]"
+                aria-label={this.state.isSubmitting ? '전송 중' : '전송'}
               >
-                +
+                ↑
               </button>
-              <div className="flex items-center gap-3">
-                <span className="text-sm text-gray-500">Opus 4.6 확장</span>
-                <button
-                  type="button"
-                  onClick={this.handleSendMessage}
-                  disabled={this.state.isSubmitting}
-                  className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#C86F42] text-lg text-white transition hover:bg-[#ad5e37] disabled:cursor-not-allowed disabled:bg-[#d9a186]"
-                  aria-label={this.state.isSubmitting ? '전송 중' : '전송'}
-                >
-                  ↑
-                </button>
-              </div>
             </div>
           </div>
         </div>
