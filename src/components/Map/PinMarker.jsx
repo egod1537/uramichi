@@ -1,7 +1,7 @@
-import { useMemo } from 'react'
-import { Marker } from '@react-google-maps/api'
-import useProjectStore from '../../stores/useProjectStore'
-import { CATEGORY_PRESETS, DEFAULT_PIN_SVG_PATH, getTravelPinIconPreset } from '../../utils/opts'
+import { useMemo } from 'react';
+import { Marker } from '@react-google-maps/api';
+import useProjectStore from '../../stores/useProjectStore';
+import { CATEGORY_PRESETS, DEFAULT_PIN_SVG_PATH, getTravelPinIconPreset } from '../../utils/opts';
 
 function PinMarker({
   pin,
@@ -15,27 +15,27 @@ function PinMarker({
   onDrag,
   onDragEnd,
 }) {
-  const selectedPinId = useProjectStore((state) => state.selectedPinId)
+  const selectedPinId = useProjectStore((state) => state.selectedPinId);
 
   const markerPreset = useMemo(() => {
-    const categoryKey = pin.category || 'default'
-    const categoryInfo = CATEGORY_PRESETS[categoryKey] || CATEGORY_PRESETS.default
-    const pinIcon = pin.icon || categoryInfo.icon
-    const iconPreset = getTravelPinIconPreset(pinIcon)
+    const categoryKey = pin.category || 'default';
+    const categoryInfo = CATEGORY_PRESETS[categoryKey] || CATEGORY_PRESETS.default;
+    const pinIcon = pin.icon || categoryInfo.icon;
+    const iconPreset = getTravelPinIconPreset(pinIcon);
 
     return {
       svgPath: iconPreset?.svgPath || DEFAULT_PIN_SVG_PATH,
-    }
-  }, [pin.category, pin.icon])
+    };
+  }, [pin.category, pin.icon]);
 
-  const isSelected = selectedPinId === pin.id
+  const isSelected = selectedPinId === pin.id;
 
   const markerIcon = useMemo(() => {
-    const markerSize = isSelected ? 44 : 40
-    const mapsApi = window.google?.maps
+    const markerSize = isSelected ? 44 : 40;
+    const mapsApi = window.google?.maps;
 
     if (!mapsApi?.Size || !mapsApi?.Point) {
-      return { url: markerPreset.svgPath }
+      return { url: markerPreset.svgPath };
     }
 
     return {
@@ -43,12 +43,12 @@ function PinMarker({
       scaledSize: new mapsApi.Size(markerSize, markerSize),
       anchor: new mapsApi.Point(markerSize / 2, markerSize),
       labelOrigin: new mapsApi.Point(markerSize / 2, markerSize / 2.15),
-    }
-  }, [isSelected, markerPreset.svgPath])
+    };
+  }, [isSelected, markerPreset.svgPath]);
 
   const markerLabel = useMemo(() => {
     if (!indexLabel) {
-      return undefined
+      return undefined;
     }
 
     return {
@@ -56,20 +56,20 @@ function PinMarker({
       color: '#ffffff',
       fontSize: '12px',
       fontWeight: '700',
-    }
-  }, [indexLabel])
+    };
+  }, [indexLabel]);
 
   const handlePinClick = (event) => {
-    if (isInteractionBlocked) return
-    event?.domEvent?.stopPropagation?.()
-    onClick(event)
-  }
+    if (isInteractionBlocked) return;
+    event?.domEvent?.stopPropagation?.();
+    onClick(event);
+  };
 
   const handlePinMouseDown = (event) => {
-    if (isInteractionBlocked) return
-    event?.domEvent?.stopPropagation?.()
-    onMouseDown?.()
-  }
+    if (isInteractionBlocked) return;
+    event?.domEvent?.stopPropagation?.();
+    onMouseDown?.();
+  };
 
   return (
     <Marker
@@ -86,7 +86,7 @@ function PinMarker({
       onDrag={onDrag}
       onDragEnd={onDragEnd}
     />
-  )
+  );
 }
 
-export default PinMarker
+export default PinMarker;

@@ -1,11 +1,11 @@
-import Map from '../components/Map/Map'
-import Toolbar from '../components/Toolbar/Toolbar'
-import Search from '../components/Toolbar/Search'
-import Sidebar from '../components/Sidebar/Sidebar'
-import MapPanel from '../components/Sidebar/MapPanel'
-import LayerPanel from '../components/Sidebar/LayerPanel'
-import ColorPalette from '../components/common/ColorPalette'
-import useEditorStore from '../stores/useEditorStore'
+import Map from '../components/Map/Map';
+import Toolbar from '../components/Toolbar/Toolbar';
+import Search from '../components/Toolbar/Search';
+import Sidebar from '../components/Sidebar/Sidebar';
+import MapPanel from '../components/Sidebar/MapPanel';
+import LayerPanel from '../components/Sidebar/LayerPanel';
+import ColorPalette from '../components/common/ColorPalette';
+import useEditorStore from '../stores/useEditorStore';
 
 const componentLabelMap = {
   map: 'Map',
@@ -15,11 +15,11 @@ const componentLabelMap = {
   mapPanel: 'MapPanel',
   layerPanel: 'LayerPanel',
   colorPalette: 'ColorPalette',
-}
+};
 
 function Testbed({ currentMode, historyIndex, historyLength }) {
-  const selectedComponentKey = useEditorStore((state) => state.testbedSelectedComponentKey)
-  const setSelectedComponentKey = useEditorStore((state) => state.setTestbedSelectedComponentKey)
+  const selectedComponentKey = useEditorStore((state) => state.testbedSelectedComponentKey);
+  const setSelectedComponentKey = useEditorStore((state) => state.setTestbedSelectedComponentKey);
 
   if (!selectedComponentKey) {
     return (
@@ -40,7 +40,7 @@ function Testbed({ currentMode, historyIndex, historyLength }) {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -53,13 +53,19 @@ function Testbed({ currentMode, historyIndex, historyLength }) {
         >
           뒤로가기
         </button>
-        <h1 className="text-lg font-semibold text-slate-800">{componentLabelMap[selectedComponentKey]}</h1>
+        <h1 className="text-lg font-semibold text-slate-800">
+          {componentLabelMap[selectedComponentKey]}
+        </h1>
       </div>
 
       <div className="relative min-h-[70vh] overflow-hidden rounded-lg border border-slate-200 bg-white">
         {selectedComponentKey === 'map' && <Map />}
         {selectedComponentKey === 'toolbar' && (
-          <Toolbar currentMode={currentMode} historyIndex={historyIndex} historyLength={historyLength} />
+          <Toolbar
+            currentMode={currentMode}
+            historyIndex={historyIndex}
+            historyLength={historyLength}
+          />
         )}
         {selectedComponentKey === 'search' && (
           <div className="p-4">
@@ -76,7 +82,7 @@ function Testbed({ currentMode, historyIndex, historyLength }) {
         )}
       </div>
     </div>
-  )
+  );
 }
 
-export default Testbed
+export default Testbed;

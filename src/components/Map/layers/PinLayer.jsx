@@ -1,6 +1,6 @@
-import PinMarker from '../PinMarker'
-import PinPopup from '../PinPopup'
-import TOOL_MODES from '../../../utils/toolModes'
+import PinMarker from '../PinMarker';
+import PinPopup from '../PinPopup';
+import TOOL_MODES from '../../../utils/toolModes';
 
 function PinLayer({
   pins,
@@ -35,7 +35,7 @@ function PinLayer({
 
       {selectedPin ? <PinPopup key={selectedPin.id} pin={selectedPin} /> : null}
     </>
-  )
+  );
 }
 
-export default PinLayer
+export default PinLayer;

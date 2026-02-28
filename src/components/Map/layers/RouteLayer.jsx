@@ -1,5 +1,5 @@
-import { Polyline } from '@react-google-maps/api'
-import { COLOR_PRESETS } from '../../../utils/config'
+import { Polyline } from '@react-google-maps/api';
+import { COLOR_PRESETS } from '../../../utils/config';
 
 function RouteLayer({ routePaths }) {
   return (
@@ -12,7 +12,7 @@ function RouteLayer({ routePaths }) {
         />
       ))}
     </>
-  )
+  );
 }
 
-export default RouteLayer
+export default RouteLayer;

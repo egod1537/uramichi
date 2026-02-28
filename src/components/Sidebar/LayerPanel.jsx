@@ -1,26 +1,27 @@
-import React from 'react'
-import LayerRow from './LayerRow'
-import useProjectStore from '../../stores/useProjectStore'
-import withStore from '../../utils/withStore'
-import { ICON_FILTER_OPTIONS, getTravelPinIconKey } from '../../utils/opts'
-import { convertTimeStringToMinutes, normalizeOpeningHours } from '../../utils/time'
+import React from 'react';
+import LayerRow from './LayerRow';
+import useProjectStore from '../../stores/useProjectStore';
+import withStore from '../../utils/withStore';
+import { ICON_FILTER_OPTIONS, getTravelPinIconKey } from '../../utils/opts';
+import { convertTimeStringToMinutes, normalizeOpeningHours } from '../../utils/time';
 
-const TIME_SLIDER_MINUTES_STEP = 30
-const TIME_SLIDER_MINUTES_MAX = 24 * 60
-const FILTER_TIME_DEFAULT_RANGE = { start: '09:00', end: '18:00' }
+const TIME_SLIDER_MINUTES_STEP = 30;
+const TIME_SLIDER_MINUTES_MAX = 24 * 60;
+const FILTER_TIME_DEFAULT_RANGE = { start: '09:00', end: '18:00' };
 
 const findPinNameByPosition = (pinList, targetPosition) => {
-  if (!targetPosition) return 'Unknown'
+  if (!targetPosition) return 'Unknown';
   const matchedPin = pinList.find(
     (pinItem) =>
-      Math.abs(pinItem.position.lat - targetPosition.lat) < 0.000001 && Math.abs(pinItem.position.lng - targetPosition.lng) < 0.000001,
-  )
-  return matchedPin?.name || `${targetPosition.lat.toFixed(3)}, ${targetPosition.lng.toFixed(3)}`
-}
+      Math.abs(pinItem.position.lat - targetPosition.lat) < 0.000001 &&
+      Math.abs(pinItem.position.lng - targetPosition.lng) < 0.000001,
+  );
+  return matchedPin?.name || `${targetPosition.lat.toFixed(3)}, ${targetPosition.lng.toFixed(3)}`;
+};
 
 class LayerPanel extends React.Component {
   constructor(props) {
-    super(props)
+    super(props);
     this.state = {
       dragLayerId: null,
       layerDropPreview: null,
@@ -30,93 +31,113 @@ class LayerPanel extends React.Component {
       isTimeFilterEnabled: false,
       filterTimeRange: FILTER_TIME_DEFAULT_RANGE,
       activeTimeSliderHandle: 'end',
-    }
-    this.filterPopupRef = React.createRef()
+    };
+    this.filterPopupRef = React.createRef();
   }
 
   componentDidMount() {
-    window.addEventListener('keydown', this.handleF2Keydown)
-    window.addEventListener('mousedown', this.handleOutsideClick)
+    window.addEventListener('keydown', this.handleF2Keydown);
+    window.addEventListener('mousedown', this.handleOutsideClick);
   }
 
   componentWillUnmount() {
-    window.removeEventListener('keydown', this.handleF2Keydown)
-    window.removeEventListener('mousedown', this.handleOutsideClick)
+    window.removeEventListener('keydown', this.handleF2Keydown);
+    window.removeEventListener('mousedown', this.handleOutsideClick);
   }
 
   getNormalizedSliderMinutes = (minutesValue, fallbackMinutes) => {
-    if (typeof minutesValue !== 'number' || Number.isNaN(minutesValue)) return fallbackMinutes
-    const boundedMinutes = Math.max(0, Math.min(TIME_SLIDER_MINUTES_MAX, minutesValue))
-    return Math.round(boundedMinutes / TIME_SLIDER_MINUTES_STEP) * TIME_SLIDER_MINUTES_STEP
-  }
+    if (typeof minutesValue !== 'number' || Number.isNaN(minutesValue)) return fallbackMinutes;
+    const boundedMinutes = Math.max(0, Math.min(TIME_SLIDER_MINUTES_MAX, minutesValue));
+    return Math.round(boundedMinutes / TIME_SLIDER_MINUTES_STEP) * TIME_SLIDER_MINUTES_STEP;
+  };
 
   convertMinutesToTimeText = (minutesValue) => {
-    const boundedMinutes = Math.max(0, Math.min(TIME_SLIDER_MINUTES_MAX, minutesValue))
-    if (boundedMinutes === TIME_SLIDER_MINUTES_MAX) return '24:00'
-    const hourValue = Math.floor(boundedMinutes / 60)
-    const minuteValue = boundedMinutes % 60
-    return `${String(hourValue).padStart(2, '0')}:${String(minuteValue).padStart(2, '0')}`
-  }
+    const boundedMinutes = Math.max(0, Math.min(TIME_SLIDER_MINUTES_MAX, minutesValue));
+    if (boundedMinutes === TIME_SLIDER_MINUTES_MAX) return '24:00';
+    const hourValue = Math.floor(boundedMinutes / 60);
+    const minuteValue = boundedMinutes % 60;
+    return `${String(hourValue).padStart(2, '0')}:${String(minuteValue).padStart(2, '0')}`;
+  };
 
   doesPinMatchTimeFilter = (pinItem, filterStartMinutes, filterEndMinutes) => {
-    const openingHoursRangeList = normalizeOpeningHours(pinItem.openingHours)
-    if (!openingHoursRangeList.length) return false
+    const openingHoursRangeList = normalizeOpeningHours(pinItem.openingHours);
+    if (!openingHoursRangeList.length) return false;
     return openingHoursRangeList.some((openingHoursRangeItem) => {
-      const isTimeRangeOverlapped = openingHoursRangeItem.startMinutes < filterEndMinutes && openingHoursRangeItem.endMinutes > filterStartMinutes
-      return isTimeRangeOverlapped
-    })
-  }
+      const isTimeRangeOverlapped =
+        openingHoursRangeItem.startMinutes < filterEndMinutes &&
+        openingHoursRangeItem.endMinutes > filterStartMinutes;
+      return isTimeRangeOverlapped;
+    });
+  };
 
   handleOutsideClick = (event) => {
-    if (!this.state.isFilterPopupOpen) return
-    if (this.filterPopupRef.current?.contains(event.target)) return
-    this.setState({ isFilterPopupOpen: false })
-  }
+    if (!this.state.isFilterPopupOpen) return;
+    if (this.filterPopupRef.current?.contains(event.target)) return;
+    this.setState({ isFilterPopupOpen: false });
+  };
 
   handleStartSliderChange = (nextStartMinutesText) => {
     this.setState((previousState) => {
-      const startMinutes = this.getNormalizedSliderMinutes(convertTimeStringToMinutes(previousState.filterTimeRange.start), 9 * 60)
-      const endMinutes = this.getNormalizedSliderMinutes(convertTimeStringToMinutes(previousState.filterTimeRange.end), 18 * 60)
-      const sliderEndMinutes = Math.max(startMinutes, endMinutes)
-      const nextStartMinutes = this.getNormalizedSliderMinutes(Number(nextStartMinutesText), startMinutes)
-      const resolvedStartMinutes = Math.min(nextStartMinutes, sliderEndMinutes)
+      const startMinutes = this.getNormalizedSliderMinutes(
+        convertTimeStringToMinutes(previousState.filterTimeRange.start),
+        9 * 60,
+      );
+      const endMinutes = this.getNormalizedSliderMinutes(
+        convertTimeStringToMinutes(previousState.filterTimeRange.end),
+        18 * 60,
+      );
+      const sliderEndMinutes = Math.max(startMinutes, endMinutes);
+      const nextStartMinutes = this.getNormalizedSliderMinutes(
+        Number(nextStartMinutesText),
+        startMinutes,
+      );
+      const resolvedStartMinutes = Math.min(nextStartMinutes, sliderEndMinutes);
 
       return {
         filterTimeRange: {
           ...previousState.filterTimeRange,
           start: this.convertMinutesToTimeText(resolvedStartMinutes),
         },
-      }
-    })
-  }
+      };
+    });
+  };
 
   handleEndSliderChange = (nextEndMinutesText) => {
     this.setState((previousState) => {
-      const startMinutes = this.getNormalizedSliderMinutes(convertTimeStringToMinutes(previousState.filterTimeRange.start), 9 * 60)
-      const endMinutes = this.getNormalizedSliderMinutes(convertTimeStringToMinutes(previousState.filterTimeRange.end), 18 * 60)
-      const sliderStartMinutes = Math.min(startMinutes, endMinutes)
-      const nextEndMinutes = this.getNormalizedSliderMinutes(Number(nextEndMinutesText), endMinutes)
-      const resolvedEndMinutes = Math.max(nextEndMinutes, sliderStartMinutes)
+      const startMinutes = this.getNormalizedSliderMinutes(
+        convertTimeStringToMinutes(previousState.filterTimeRange.start),
+        9 * 60,
+      );
+      const endMinutes = this.getNormalizedSliderMinutes(
+        convertTimeStringToMinutes(previousState.filterTimeRange.end),
+        18 * 60,
+      );
+      const sliderStartMinutes = Math.min(startMinutes, endMinutes);
+      const nextEndMinutes = this.getNormalizedSliderMinutes(
+        Number(nextEndMinutesText),
+        endMinutes,
+      );
+      const resolvedEndMinutes = Math.max(nextEndMinutes, sliderStartMinutes);
 
       return {
         filterTimeRange: {
           ...previousState.filterTimeRange,
           end: this.convertMinutesToTimeText(resolvedEndMinutes),
         },
-      }
-    })
-  }
+      };
+    });
+  };
 
   handleF2Keydown = (event) => {
-    const { focusedRenameTarget } = this.state
-    if (event.key !== 'F2') return
-    if (!focusedRenameTarget?.id) return
-    event.preventDefault()
-    this.setState({ editingRenameTarget: focusedRenameTarget })
-  }
+    const { focusedRenameTarget } = this.state;
+    if (event.key !== 'F2') return;
+    if (!focusedRenameTarget?.id) return;
+    event.preventDefault();
+    this.setState({ editingRenameTarget: focusedRenameTarget });
+  };
 
   render() {
-    const { projectStore } = this.props
+    const { projectStore } = this.props;
     const {
       layers,
       pins,
@@ -126,7 +147,7 @@ class LayerPanel extends React.Component {
       pinIconFilters,
       togglePinIconFilter,
       clearPinIconFilter,
-    } = projectStore
+    } = projectStore;
 
     const {
       dragLayerId,
@@ -137,51 +158,75 @@ class LayerPanel extends React.Component {
       isTimeFilterEnabled,
       filterTimeRange,
       activeTimeSliderHandle,
-    } = this.state
+    } = this.state;
 
     const activeIconSet = new Set(
-      ICON_FILTER_OPTIONS.filter((filterItem) => pinIconFilters.includes(filterItem.key)).map((filterItem) => filterItem.key),
-    )
+      ICON_FILTER_OPTIONS.filter((filterItem) => pinIconFilters.includes(filterItem.key)).map(
+        (filterItem) => filterItem.key,
+      ),
+    );
 
-    const startMinutes = this.getNormalizedSliderMinutes(convertTimeStringToMinutes(filterTimeRange.start), 9 * 60)
-    const endMinutes = this.getNormalizedSliderMinutes(convertTimeStringToMinutes(filterTimeRange.end), 18 * 60)
-    const sliderStartMinutes = Math.min(startMinutes, endMinutes)
-    const sliderEndMinutes = Math.max(startMinutes, endMinutes)
-    const sliderRangeWidthPercent = ((sliderEndMinutes - sliderStartMinutes) / TIME_SLIDER_MINUTES_MAX) * 100
-    const sliderRangeLeftPercent = (sliderStartMinutes / TIME_SLIDER_MINUTES_MAX) * 100
+    const startMinutes = this.getNormalizedSliderMinutes(
+      convertTimeStringToMinutes(filterTimeRange.start),
+      9 * 60,
+    );
+    const endMinutes = this.getNormalizedSliderMinutes(
+      convertTimeStringToMinutes(filterTimeRange.end),
+      18 * 60,
+    );
+    const sliderStartMinutes = Math.min(startMinutes, endMinutes);
+    const sliderEndMinutes = Math.max(startMinutes, endMinutes);
+    const sliderRangeWidthPercent =
+      ((sliderEndMinutes - sliderStartMinutes) / TIME_SLIDER_MINUTES_MAX) * 100;
+    const sliderRangeLeftPercent = (sliderStartMinutes / TIME_SLIDER_MINUTES_MAX) * 100;
 
     const filteredPins = pins.filter((pinItem) => {
-      const isIconMatched = !pinIconFilters.length || activeIconSet.has(getTravelPinIconKey(pinItem.icon))
-      if (!isIconMatched) return false
-      if (!isTimeFilterEnabled) return true
-      return this.doesPinMatchTimeFilter(pinItem, sliderStartMinutes, sliderEndMinutes)
-    })
+      const isIconMatched =
+        !pinIconFilters.length || activeIconSet.has(getTravelPinIconKey(pinItem.icon));
+      if (!isIconMatched) return false;
+      if (!isTimeFilterEnabled) return true;
+      return this.doesPinMatchTimeFilter(pinItem, sliderStartMinutes, sliderEndMinutes);
+    });
 
-    const activeFilterSummaryList = []
-    if (pinIconFilters.length) activeFilterSummaryList.push(`아이콘 ${pinIconFilters.length}개`)
-    if (isTimeFilterEnabled) activeFilterSummaryList.push(`시간 ${filterTimeRange.start}~${filterTimeRange.end}`)
+    const activeFilterSummaryList = [];
+    if (pinIconFilters.length) activeFilterSummaryList.push(`아이콘 ${pinIconFilters.length}개`);
+    if (isTimeFilterEnabled)
+      activeFilterSummaryList.push(`시간 ${filterTimeRange.start}~${filterTimeRange.end}`);
 
     const routeSummaryList = routes.map((routeItem) => ({
       id: routeItem.id,
       label: `${findPinNameByPosition(pins, routeItem.start)} → ${findPinNameByPosition(pins, routeItem.end)}`,
-    }))
+    }));
 
     if (!layers.length) {
-      return <div className="flex-1 overflow-y-auto p-4 text-sm text-gray-500">레이어가 없습니다.</div>
+      return (
+        <div className="flex-1 overflow-y-auto p-4 text-sm text-gray-500">레이어가 없습니다.</div>
+      );
     }
 
     return (
       <div className="flex-1 overflow-y-auto px-2 py-2">
-        <div className="relative mb-2 rounded-md border border-gray-200 bg-white p-2" ref={this.filterPopupRef}>
+        <div
+          className="relative mb-2 rounded-md border border-gray-200 bg-white p-2"
+          ref={this.filterPopupRef}
+        >
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => this.setState((previousState) => ({ isFilterPopupOpen: !previousState.isFilterPopupOpen }))}
+              onClick={() =>
+                this.setState((previousState) => ({
+                  isFilterPopupOpen: !previousState.isFilterPopupOpen,
+                }))
+              }
               className="rounded-md border border-gray-200 px-2 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-50"
             >
               필터
             </button>
-            <p className="truncate text-xs text-gray-500">{activeFilterSummaryList.length ? activeFilterSummaryList.join(' · ') : '적용된 필터 없음'}</p>
+            <p className="truncate text-xs text-gray-500">
+              {activeFilterSummaryList.length
+                ? activeFilterSummaryList.join(' · ')
+                : '적용된 필터 없음'}
+            </p>
           </div>
 
           {isFilterPopupOpen && (
@@ -191,8 +236,11 @@ class LayerPanel extends React.Component {
                 <button
                   type="button"
                   onClick={() => {
-                    clearPinIconFilter()
-                    this.setState({ isTimeFilterEnabled: false, filterTimeRange: FILTER_TIME_DEFAULT_RANGE })
+                    clearPinIconFilter();
+                    this.setState({
+                      isTimeFilterEnabled: false,
+                      filterTimeRange: FILTER_TIME_DEFAULT_RANGE,
+                    });
                   }}
                   className="rounded-md border border-gray-200 px-2 py-1 text-xs text-gray-600 hover:bg-gray-50"
                 >
@@ -204,7 +252,7 @@ class LayerPanel extends React.Component {
                 <p className="mb-1 text-xs font-semibold text-gray-500">핀 아이콘</p>
                 <div className="flex flex-wrap items-center gap-1">
                   {ICON_FILTER_OPTIONS.map((filterItem) => {
-                    const isActive = pinIconFilters.includes(filterItem.key)
+                    const isActive = pinIconFilters.includes(filterItem.key);
                     return (
                       <button
                         key={filterItem.key}
@@ -216,7 +264,7 @@ class LayerPanel extends React.Component {
                       >
                         <img src={filterItem.svgPath} alt={filterItem.label} className="h-4 w-4" />
                       </button>
-                    )
+                    );
                   })}
                 </div>
               </div>
@@ -226,7 +274,9 @@ class LayerPanel extends React.Component {
                   <input
                     type="checkbox"
                     checked={isTimeFilterEnabled}
-                    onChange={(event) => this.setState({ isTimeFilterEnabled: event.target.checked })}
+                    onChange={(event) =>
+                      this.setState({ isTimeFilterEnabled: event.target.checked })
+                    }
                   />
                   시간 필터 적용
                 </label>
@@ -303,25 +353,30 @@ class LayerPanel extends React.Component {
             layerDropPreview={layerDropPreview}
             onLayerDragStart={(layerId) => this.setState({ dragLayerId: layerId })}
             onLayerDragEnd={() => {
-              this.setState({ dragLayerId: null, layerDropPreview: null })
+              this.setState({ dragLayerId: null, layerDropPreview: null });
             }}
             onLayerDragOver={(nextTargetLayerId, dropPosition) => {
               if (!dragLayerId || dragLayerId === nextTargetLayerId) {
-                this.setState({ layerDropPreview: null })
-                return
+                this.setState({ layerDropPreview: null });
+                return;
               }
-              this.setState({ layerDropPreview: { targetLayerId: nextTargetLayerId, dropPosition } })
+              this.setState({
+                layerDropPreview: { targetLayerId: nextTargetLayerId, dropPosition },
+              });
             }}
             onLayerDrop={(nextTargetLayerId, dropPosition) => {
-              if (!dragLayerId) return
-              reorderLayers(dragLayerId, nextTargetLayerId, dropPosition)
-              this.setState({ dragLayerId: null, layerDropPreview: null })
+              if (!dragLayerId) return;
+              reorderLayers(dragLayerId, nextTargetLayerId, dropPosition);
+              this.setState({ dragLayerId: null, layerDropPreview: null });
             }}
             focusedRenameTarget={focusedRenameTarget}
             editingRenameTarget={editingRenameTarget}
             onFocusRenameTarget={(nextTarget) => this.setState({ focusedRenameTarget: nextTarget })}
             onStartRename={(renameTarget) => {
-              this.setState({ focusedRenameTarget: renameTarget, editingRenameTarget: renameTarget })
+              this.setState({
+                focusedRenameTarget: renameTarget,
+                editingRenameTarget: renameTarget,
+              });
             }}
             onFinishRename={() => this.setState({ editingRenameTarget: null })}
           />
@@ -329,22 +384,24 @@ class LayerPanel extends React.Component {
         <div
           className={`h-1 rounded bg-blue-500 transition-opacity ${layerDropPreview?.targetLayerId === '__end__' ? 'opacity-100' : 'opacity-0'}`}
           onDragOver={(event) => {
-            event.preventDefault()
-            event.stopPropagation()
-            if (!dragLayerId) return
-            this.setState({ layerDropPreview: { targetLayerId: '__end__', dropPosition: 'end' } })
+            event.preventDefault();
+            event.stopPropagation();
+            if (!dragLayerId) return;
+            this.setState({ layerDropPreview: { targetLayerId: '__end__', dropPosition: 'end' } });
           }}
           onDrop={(event) => {
-            event.preventDefault()
-            event.stopPropagation()
-            if (!dragLayerId || !layers.length) return
-            reorderLayers(dragLayerId, layers[layers.length - 1].id, 'end')
-            this.setState({ dragLayerId: null, layerDropPreview: null })
+            event.preventDefault();
+            event.stopPropagation();
+            if (!dragLayerId || !layers.length) return;
+            reorderLayers(dragLayerId, layers[layers.length - 1].id, 'end');
+            this.setState({ dragLayerId: null, layerDropPreview: null });
           }}
         />
       </div>
-    )
+    );
   }
 }
 
-export default withStore(LayerPanel, { projectStore: useProjectStore })
+const LayerPanelContainer = withStore(LayerPanel, { projectStore: useProjectStore });
+
+export default LayerPanelContainer;

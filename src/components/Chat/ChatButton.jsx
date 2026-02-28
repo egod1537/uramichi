@@ -8,7 +8,7 @@ function ChatButton({ onClick }) {
     >
       <img src="/claude.svg" alt="Claude" className="h-6 w-6" aria-hidden="true" />
     </button>
-  )
+  );
 }
 
-export default ChatButton
+export default ChatButton;
