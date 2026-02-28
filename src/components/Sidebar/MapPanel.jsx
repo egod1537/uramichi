@@ -57,9 +57,6 @@ function MapPanel() {
             {mapTitle}
           </button>
         )}
-        <button type="button" className="rounded p-1 text-gray-500 hover:bg-gray-100" aria-label="지도 옵션">
-          ⋮
-        </button>
       </div>
       <p className="mt-1 text-sm text-gray-500">{formatLastEdited(lastEditedAt)} 마지막으로 수정됨</p>
       <div className="mt-3 flex items-center gap-2 border-t border-gray-200 pt-3 text-sm">
