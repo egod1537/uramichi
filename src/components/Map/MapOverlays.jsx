@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import TOOL_MODES from '../../utils/toolModes'
 import { ICON_FILTER_OPTIONS } from '../../utils/opts'
 import { convertTimeStringToMinutes } from '../../utils/time'
@@ -42,6 +43,7 @@ function MapOverlays({
   onSetRouteTravelMode,
   onCloseRouteSummary,
 }) {
+  const [activeTimeSliderHandle, setActiveTimeSliderHandle] = useState('end')
   const activePinFilterItems = ICON_FILTER_OPTIONS.filter((filterItem) => pinIconFilters.includes(filterItem.key))
   const collapsedPreviewFilterItems = activePinFilterItems.slice(0, 2)
   const hiddenPreviewFilterCount = Math.max(activePinFilterItems.length - collapsedPreviewFilterItems.length, 0)
@@ -97,7 +99,11 @@ function MapOverlays({
                   step={TIME_SLIDER_MINUTES_STEP}
                   value={sliderStartMinutes}
                   onChange={(event) => handleStartSliderChange(event.target.value)}
-                  className="map-time-range-slider absolute top-1/2 z-20 h-6 w-full -translate-y-1/2 appearance-none bg-transparent"
+                  onMouseDown={() => setActiveTimeSliderHandle('start')}
+                  onTouchStart={() => setActiveTimeSliderHandle('start')}
+                  className={`map-time-range-slider absolute top-1/2 h-6 w-full -translate-y-1/2 appearance-none bg-transparent ${
+                    activeTimeSliderHandle === 'start' ? 'z-40' : 'z-20'
+                  }`}
                 />
                 <input
                   type="range"
@@ -106,7 +112,11 @@ function MapOverlays({
                   step={TIME_SLIDER_MINUTES_STEP}
                   value={sliderEndMinutes}
                   onChange={(event) => handleEndSliderChange(event.target.value)}
-                  className="map-time-range-slider absolute top-1/2 z-30 h-6 w-full -translate-y-1/2 appearance-none bg-transparent"
+                  onMouseDown={() => setActiveTimeSliderHandle('end')}
+                  onTouchStart={() => setActiveTimeSliderHandle('end')}
+                  className={`map-time-range-slider absolute top-1/2 h-6 w-full -translate-y-1/2 appearance-none bg-transparent ${
+                    activeTimeSliderHandle === 'end' ? 'z-40' : 'z-30'
+                  }`}
                 />
               </div>
             </div>
