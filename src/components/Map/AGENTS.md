@@ -167,3 +167,6 @@
 [codex] 2026-02-28 선 도구 잔상 버그 수정 메모
 - `Map.jsx`의 모드 변경 감지 조건을 보강해, draw line 모드에서 다른 툴로 이동한 직후에도 로컬 드래프트(`linePath`, `previewLinePoint`)가 즉시 비워지도록 정리함.
 - 폐쇄 polygon의 첫/마지막 꼭짓점이 동일 좌표를 공유하도록 `updateLinePointByIndex`를 보강해, Select 모드 꼭짓점 이동 시 기존 선분 잔상이 남는 문제를 방지함.
+[codex] 2026-02-28 시간 필터 슬라이더 핸들 우선순위 개선 메모
+- `src/components/Map/MapOverlays.jsx`에 `activeTimeSliderHandle` 로컬 상태를 추가해 현재 잡고 있는 핸들의 z-index를 최상단으로 올리도록 조정함.
+- 시작/종료 range input에 `onMouseDown`/`onTouchStart`를 연결해 핸들을 잡는 순간 해당 슬라이더를 앞으로 가져오고, 겹치는 구간에서 커서 X가 뜨며 미세 이동만 되던 드래그 이슈를 완화함.
