@@ -1,6 +1,5 @@
 import TOOL_MODES from './toolModes'
 import HistoryManager from './HistoryManager'
-import { TIME_FILTER_DEFAULT_RANGE } from './config'
 
 class ProjectManager {
   static createInitialLayers() {
@@ -41,7 +40,6 @@ class ProjectManager {
       selectedPinIds: [],
       activeLayerId: null,
       pinIconFilters: [],
-      timeFilterRange: TIME_FILTER_DEFAULT_RANGE,
     }
   }
 
