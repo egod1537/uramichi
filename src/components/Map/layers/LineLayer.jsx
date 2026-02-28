@@ -105,7 +105,7 @@ function LineLayer({
             strokeColor: LINE_DEFAULT_COLOR,
             strokeWeight: 2,
           }}
-          draggable={currentMode === TOOL_MODES.DRAW_LINE}
+          draggable={false}
           onDragStart={() => onLinePointDragStart(linePointIndex)}
           onDrag={(event) => onLinePointDrag(linePointIndex, event)}
           onDragEnd={(event) => onLinePointDragEnd(linePointIndex, event)}

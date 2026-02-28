@@ -8,9 +8,7 @@ import useProjectStore from '../../stores/useProjectStore'
 const toolbarButtons = [
   { key: TOOL_MODES.SELECT, label: 'Select/Pan', icon: '🖐️', tooltip: '선택/이동 (Q)', shortcut: 'Q' },
   { key: TOOL_MODES.ADD_MARKER, label: 'Add Marker', icon: '📍', tooltip: '핀 추가 (W)', shortcut: 'W' },
-  { key: TOOL_MODES.DRAW_LINE, label: 'Draw Line', icon: '✏️', tooltip: '선 그리기 (E)', shortcut: 'E' },
   { key: TOOL_MODES.ADD_ROUTE, label: 'Add Route', icon: '🛤️', tooltip: '경로 추가 (R)', shortcut: 'R' },
-  { key: TOOL_MODES.MEASURE_DISTANCE, label: 'Measure Distance', icon: '📐', tooltip: '거리 측정 (T, 우클릭 종료·저장 안 됨)', shortcut: 'T' },
   { key: 'shortcuts', label: 'Keyboard Shortcuts', icon: '⌨️', tooltip: '단축키 목록' },
 ]
 
@@ -45,7 +43,7 @@ class Toolbar extends React.Component {
 
     const projectStore = useProjectStore.getState()
     const loweredKey = event.key.toLowerCase()
-    if (event.key === 'Escape' && projectStore.currentMode !== TOOL_MODES.DRAW_LINE) projectStore.resetToSelectMode()
+    if (event.key === 'Escape') projectStore.resetToSelectMode()
     if ((event.ctrlKey || event.metaKey) && loweredKey === 'z') {
       event.preventDefault()
       projectStore.undo()
@@ -58,9 +56,7 @@ class Toolbar extends React.Component {
     }
     if (loweredKey === 'q') projectStore.setMode(TOOL_MODES.SELECT)
     if (loweredKey === 'w') projectStore.setMode(TOOL_MODES.ADD_MARKER)
-    if (loweredKey === 'e') projectStore.setMode(TOOL_MODES.DRAW_LINE)
     if (loweredKey === 'r') projectStore.setMode(TOOL_MODES.ADD_ROUTE)
-    if (loweredKey === 't') projectStore.setMode(TOOL_MODES.MEASURE_DISTANCE)
   }
 
   handleToolbarButtonClick = (buttonKey) => {
@@ -118,14 +114,12 @@ class Toolbar extends React.Component {
             <div className="w-full max-w-sm rounded-lg bg-white p-4 shadow-xl">
               <h2 className="text-base font-semibold">Keyboard Shortcuts</h2>
               <ul className="mt-3 space-y-2 text-sm text-gray-700">
-                <li>ESC: Select/Pan 모드로 복귀 (선 그리기 모드 제외)</li>
+                <li>ESC: Select/Pan 모드로 복귀</li>
                 <li>Ctrl+Z: Undo</li>
                 <li>Ctrl+R: Redo</li>
                 <li>Q: Select/Pan 모드</li>
                 <li>W: Add Marker 모드</li>
-                <li>E: Draw Line 모드</li>
                 <li>R: Add Route 모드</li>
-                <li>T: Measure Distance 모드 (우클릭 종료, 저장 안 됨)</li>
               </ul>
               <div className="mt-4 flex justify-end">
                 <button

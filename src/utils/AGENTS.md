@@ -22,3 +22,6 @@
 - 전역 고정 상수는 `config.js`(지도 기본값, 언어 목록, localStorage 키, 제한값 등)로 관리함.
 - 사용자 선택 옵션/프리셋은 `opts.js`(아이콘, 색상, 정렬, 맵 스타일 등)로 관리함.
 - 클래스 컴포넌트의 Zustand 연결은 `withStore.js` HOC를 통해 subscribe/unsubscribe를 공통 처리함.
+[codex] 2026-02-28 프로젝트/히스토리 기본 상태 정리 메모
+- `ProjectManager.createInitialProjectState()`에서 선/거리 드래프트 상태(`linePath`, `measurePath`, `draftLinePoints`, `draftMeasurePoints`) 기본값을 제거함.
+- `HistoryManager` 빈 스냅샷/clone 대상에서 `linePath`, `measurePath`를 제외해 선/거리 드래프트 히스토리 복원 로직을 제거함.

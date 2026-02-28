@@ -136,3 +136,6 @@
 - `Map.jsx`, `PinPopup.jsx`에서 `*View` 함수 래퍼를 제거하고, default export를 실제 구현 클래스 + `withStore` 주입 구조로 통일함.
 - `Map.jsx`의 로컬 상태/이펙트 로직(`useState/useEffect/useMemo/useRef/useCallback`)을 클래스 `state`, 생명주기(`componentDidMount/componentDidUpdate/componentWillUnmount`), 인스턴스 필드로 이관함.
 - POI 상세 조회/거리·선분 드래프트 프리뷰 계산도 클래스 메서드로 옮겨 Hook 호출 없이 동작하도록 정리함.
+[codex] 2026-02-28 선/거리 도구 제거 메모
+- `Map.jsx`에서 선 그리기(`DRAW_LINE`)·거리 측정(`MEASURE_DISTANCE`) 모드 분기 및 우클릭 종료/드래프트 처리 로직을 제거하고, 지도 클릭은 Select/Add Marker/Add Route 흐름만 유지하도록 정리함.
+- 거리 측정 레이어(`MeasureLayer`) 렌더 연결을 제거해 지도에서 거리 측정 드래프트/라벨이 더 이상 표시되지 않게 정리함.

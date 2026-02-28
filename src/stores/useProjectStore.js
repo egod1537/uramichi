@@ -28,9 +28,7 @@ const createSnapshotFromState = (state) => ({
   markers: state.markers,
   lines: state.lines,
   routes: state.routes,
-  linePath: state.linePath,
   routePaths: state.routePaths,
-  measurePath: state.measurePath,
 })
 
 const createMarkersFromPins = (pinList) => pinList.map((pinItem) => pinItem.position)
@@ -102,16 +100,12 @@ const useProjectStore = create((set) => ({
         nextMode === TOOL_MODES.ADD_ROUTE
           ? { start: state.routeDraft.start, travelMode: state.routeDraft.travelMode || defaultTravelMode }
           : { start: null, travelMode: state.routeDraft.travelMode || defaultTravelMode },
-      draftMeasurePoints: nextMode === TOOL_MODES.MEASURE_DISTANCE ? state.draftMeasurePoints : [],
-      measurePath: nextMode === TOOL_MODES.MEASURE_DISTANCE ? state.measurePath : [],
       selectedLineId: nextMode === TOOL_MODES.SELECT ? state.selectedLineId : null,
     })),
   resetToSelectMode: () =>
     set({
       currentMode: TOOL_MODES.SELECT,
       routeDraft: { start: null, travelMode: defaultTravelMode },
-      draftMeasurePoints: [],
-      measurePath: [],
       selectedLineId: null,
     }),
   commitSnapshot: (nextSnapshot) =>
@@ -125,9 +119,7 @@ const useProjectStore = create((set) => ({
         markers: committedHistory.snapshot.markers,
         lines: committedHistory.snapshot.lines,
         routes: committedHistory.snapshot.routes,
-        linePath: committedHistory.snapshot.linePath,
         routePaths: committedHistory.snapshot.routePaths,
-        measurePath: committedHistory.snapshot.measurePath,
         routeDraft: { start: null, travelMode: state.routeDraft.travelMode || defaultTravelMode },
         history: committedHistory.history,
         historyIndex: committedHistory.historyIndex,
@@ -307,7 +299,6 @@ const useProjectStore = create((set) => ({
       const committedHistory = HistoryManager.commit(state.history, state.historyIndex, {
         ...createSnapshotFromState(state),
         lines: [...state.lines, normalizedLineData],
-        linePath: [],
       })
       return {
         ...committedHistory.snapshot,
@@ -374,39 +365,6 @@ const useProjectStore = create((set) => ({
         lastEditedAt: new Date().toISOString(),
       }
     }),
-  startDraftLine: (startPoint) => set({ draftLinePoints: [startPoint], linePath: [startPoint] }),
-  appendDraftLinePoint: (point) =>
-    set((state) => ({
-      draftLinePoints: [...state.draftLinePoints, point],
-      linePath: [...state.draftLinePoints, point],
-    })),
-  commitDraftLine: (lineData) =>
-    set((state) => {
-      if (state.draftLinePoints.length < 2) {
-        return { draftLinePoints: [], linePath: [] }
-      }
-      const committedHistory = HistoryManager.commit(state.history, state.historyIndex, {
-        ...createSnapshotFromState(state),
-        lines: [...state.lines, lineData],
-        linePath: [],
-      })
-      return {
-        ...committedHistory.snapshot,
-        draftLinePoints: [],
-        history: committedHistory.history,
-        historyIndex: committedHistory.historyIndex,
-        lastEditedAt: new Date().toISOString(),
-      }
-    }),
-  cancelDraftLine: () => set({ draftLinePoints: [], linePath: [] }),
-  startDraftMeasure: (startPoint) => set({ draftMeasurePoints: [startPoint], measurePath: [startPoint] }),
-  appendDraftMeasurePoint: (point) =>
-    set((state) => ({
-      draftMeasurePoints: [...state.draftMeasurePoints, point],
-      measurePath: [...state.draftMeasurePoints, point],
-    })),
-  completeDraftMeasure: () => set({ draftMeasurePoints: [], measurePath: [] }),
-  cancelDraftMeasure: () => set({ draftMeasurePoints: [], measurePath: [] }),
   commitMarkerDrag: () =>
     set((state) => {
       const committedHistory = HistoryManager.commit(state.history, state.historyIndex, {
@@ -530,26 +488,6 @@ const useProjectStore = create((set) => ({
       layers: state.layers.map((layerItem) => (layerItem.id === layerId ? { ...layerItem, collapsed: !layerItem.collapsed } : layerItem)),
     })),
   setMapTitle: (mapTitle) => set({ mapTitle, lastEditedAt: new Date().toISOString() }),
-  appendLinePoint: (point) =>
-    set((state) => ({
-      draftLinePoints: [...state.draftLinePoints, point],
-      linePath: [...state.draftLinePoints, point],
-    })),
-  setLinePath: (linePointList) =>
-    set({
-      draftLinePoints: linePointList,
-      linePath: linePointList,
-    }),
-  appendMeasurePoint: (point) =>
-    set((state) => ({
-      draftMeasurePoints: [...state.draftMeasurePoints, point],
-      measurePath: [...state.draftMeasurePoints, point],
-    })),
-  setMeasurePath: (measurePointList) =>
-    set({
-      draftMeasurePoints: measurePointList,
-      measurePath: measurePointList,
-    }),
 }))
 
 export default useProjectStore
