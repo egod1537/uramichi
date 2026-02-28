@@ -139,3 +139,11 @@
 [codex] 2026-02-28 선/거리 도구 제거 메모
 - `Map.jsx`에서 선 그리기(`DRAW_LINE`)·거리 측정(`MEASURE_DISTANCE`) 모드 분기 및 우클릭 종료/드래프트 처리 로직을 제거하고, 지도 클릭은 Select/Add Marker/Add Route 흐름만 유지하도록 정리함.
 - 거리 측정 레이어(`MeasureLayer`) 렌더 연결을 제거해 지도에서 거리 측정 드래프트/라벨이 더 이상 표시되지 않게 정리함.
+[codex] 2026-02-28 지도 필터 바 가로 정렬 및 SVG 라벨 교체 메모
+- `src/components/Map/MapOverlays.jsx`에서 시간 필터/핀 아이콘 필터 오버레이를 세로 2줄 배치에서 단일 가로 행 배치로 변경함.
+- 두 필터 라벨 텍스트(`지도 시간 필터`, `지도 핀 아이콘 필터`)를 각각 `/svg/map-time-filter.svg`, `/svg/map-pin-filter.svg` 이미지로 교체함.
+- 축약 상태/펼침 상태 토글(`+`, `−`)과 기존 필터 동작은 유지한 채, 확장 시 최대 폭을 각 카드 단위로 제한해 한 줄 레이아웃을 유지하도록 조정함.
+
+[codex] 2026-02-28 핀 추가 도구 미동작 원인/수정 메모
+- `Map.jsx` 클래스 전환 이후 `addMarkerMouseDownPositionRef` 초기화가 누락되어 ADD_MARKER 마우스업 경로에서 `.current` 접근 시 런타임 오류로 핀 추가가 중단되던 문제를 확인함.
+- `constructor`에서 `this.addMarkerMouseDownPositionRef = { current: null }`를 명시적으로 초기화해 markerController의 mousedown/mouseup 드래그 판별 로직이 정상 동작하도록 복구함.

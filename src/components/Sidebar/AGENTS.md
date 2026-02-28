@@ -43,3 +43,6 @@
 - `LayerRow.jsx`에서 `LayerRowView` 함수와 패스스루 클래스를 제거하고, 단일 클래스 구현 + `withStore` 주입으로 정리함.
 - 기존 훅 기반 로컬 UI 상태(메뉴/아이콘피커/드래그 프리뷰/이름변경 draft)와 ref 포커스 처리를 클래스 `state`/`createRef`/`componentDidUpdate`로 이관함.
 - 파일 내 Hook import/use 호출을 제거해 클래스 컴포넌트 경로만 남김.
+[codex] 2026-02-28 LayerPanel 필터 헤더 한줄 정리 메모
+- `LayerPanel.jsx` 핀 아이콘 필터 영역을 단일 행으로 정리하고, 제목 텍스트(`핀 아이콘 필터`)를 제거함.
+- 우측 `초기화` 텍스트 버튼을 아이콘 버튼으로 교체해 필터 버튼들과 동일한 시각 밀도로 맞춤.
