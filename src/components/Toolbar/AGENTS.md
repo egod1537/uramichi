@@ -16,3 +16,6 @@
 [codex] 2026-02-28 Draw Line 툴바 연동 메모
 - `Toolbar.jsx` 툴바 버튼 목록에 Draw Line 버튼(`TOOL_MODES.DRAW_LINE`, 단축키 E)을 추가함.
 - 키다운 핸들러에 `E` 단축키 모드 전환을 연결하고, 단축키 모달 안내 문구에도 Draw Line 항목을 추가함.
+
+[codex] 2026-02-28 Toolbar 가로 구분선 제거 메모
+- `Toolbar.jsx` 검색 행 컨테이너의 `border-b border-gray-200` 클래스를 제거해 상단 입력줄과 하단 아이콘줄 사이 가로줄이 보이지 않도록 조정함.
