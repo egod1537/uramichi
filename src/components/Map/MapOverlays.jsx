@@ -63,12 +63,13 @@ function MapOverlays({
 
   return (
     <>
-      <div
-        className={`absolute bottom-16 left-1/2 z-20 -translate-x-1/2 rounded-xl border border-gray-200 bg-white/95 px-3 py-2 shadow-lg transition-all duration-200 ${
-          isTimeFilterExpanded ? 'inline-flex max-w-[92vw] items-center gap-3' : 'inline-flex w-auto items-center gap-2'
-        }`}
-      >
-        <p className="shrink-0 text-xs font-semibold text-gray-600">지도 시간 필터</p>
+      <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 items-end gap-2">
+        <div
+          className={`rounded-xl border border-gray-200 bg-white/95 px-3 py-2 shadow-lg transition-all duration-200 ${
+            isTimeFilterExpanded ? 'inline-flex max-w-[58vw] items-center gap-3' : 'inline-flex w-auto items-center gap-2'
+          }`}
+        >
+          <img src="/svg/map-time-filter.svg" alt="지도 시간 필터" className="h-5 w-auto shrink-0" />
 
         {isTimeFilterExpanded ? (
           <>
@@ -129,14 +130,14 @@ function MapOverlays({
             +
           </button>
         )}
-      </div>
+        </div>
 
-      <div
-        className={`absolute bottom-4 left-1/2 z-20 -translate-x-1/2 rounded-xl border border-gray-200 bg-white/95 px-3 py-2 shadow-lg transition-all duration-200 ${
-          isPinFilterExpanded ? 'inline-flex max-w-[92vw] items-center gap-3' : 'inline-flex w-auto items-center gap-2'
-        }`}
-      >
-        <p className="shrink-0 text-xs font-semibold text-gray-600">지도 핀 아이콘 필터</p>
+        <div
+          className={`rounded-xl border border-gray-200 bg-white/95 px-3 py-2 shadow-lg transition-all duration-200 ${
+            isPinFilterExpanded ? 'inline-flex max-w-[58vw] items-center gap-3' : 'inline-flex w-auto items-center gap-2'
+          }`}
+        >
+          <img src="/svg/map-pin-filter.svg" alt="지도 핀 아이콘 필터" className="h-5 w-auto shrink-0" />
 
         {isPinFilterExpanded ? (
           <>
@@ -184,6 +185,7 @@ function MapOverlays({
             +
           </button>
         )}
+        </div>
       </div>
 
       {currentMode === TOOL_MODES.MEASURE_DISTANCE && (

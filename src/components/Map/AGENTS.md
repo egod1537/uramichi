@@ -136,6 +136,10 @@
 - `Map.jsx`, `PinPopup.jsx`에서 `*View` 함수 래퍼를 제거하고, default export를 실제 구현 클래스 + `withStore` 주입 구조로 통일함.
 - `Map.jsx`의 로컬 상태/이펙트 로직(`useState/useEffect/useMemo/useRef/useCallback`)을 클래스 `state`, 생명주기(`componentDidMount/componentDidUpdate/componentWillUnmount`), 인스턴스 필드로 이관함.
 - POI 상세 조회/거리·선분 드래프트 프리뷰 계산도 클래스 메서드로 옮겨 Hook 호출 없이 동작하도록 정리함.
+[codex] 2026-02-28 지도 필터 바 가로 정렬 및 SVG 라벨 교체 메모
+- `src/components/Map/MapOverlays.jsx`에서 시간 필터/핀 아이콘 필터 오버레이를 세로 2줄 배치에서 단일 가로 행 배치로 변경함.
+- 두 필터 라벨 텍스트(`지도 시간 필터`, `지도 핀 아이콘 필터`)를 각각 `/svg/map-time-filter.svg`, `/svg/map-pin-filter.svg` 이미지로 교체함.
+- 축약 상태/펼침 상태 토글(`+`, `−`)과 기존 필터 동작은 유지한 채, 확장 시 최대 폭을 각 카드 단위로 제한해 한 줄 레이아웃을 유지하도록 조정함.
 
 [codex] 2026-02-28 핀 추가 도구 미동작 원인/수정 메모
 - `Map.jsx` 클래스 전환 이후 `addMarkerMouseDownPositionRef` 초기화가 누락되어 ADD_MARKER 마우스업 경로에서 `.current` 접근 시 런타임 오류로 핀 추가가 중단되던 문제를 확인함.
