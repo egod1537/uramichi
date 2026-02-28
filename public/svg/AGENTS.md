@@ -8,3 +8,6 @@
 [codex] 2026-02-28 SVG 자산 메모
 - 핀 아이콘 필터 초기화 버튼용 `filter-reset.svg`를 추가함.
 - 아이콘은 `currentColor` stroke 기반으로 작성해 버튼 색상 클래스 상속이 가능하도록 맞춤.
+[codex] 2026-02-28 SVG 자산 메모
+- 핀 아이콘 필터 초기화 버튼 대체용 `filter-reset-alt.svg`를 추가함.
+- 아이콘은 회전 화살표 + 슬라이더 라인 조합으로 제작했고 `currentColor` stroke를 사용해 버튼 색상 클래스를 그대로 상속하도록 맞춤.

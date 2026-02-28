@@ -42,6 +42,9 @@ function MapOverlays({
   onSetRouteTravelMode,
   onCloseRouteSummary,
 }) {
+  const activePinFilterItems = ICON_FILTER_OPTIONS.filter((filterItem) => pinIconFilters.includes(filterItem.key))
+  const collapsedPreviewFilterItems = activePinFilterItems.slice(0, 2)
+  const hiddenPreviewFilterCount = Math.max(activePinFilterItems.length - collapsedPreviewFilterItems.length, 0)
   const startMinutes = normalizeSliderMinutes(convertTimeStringToMinutes(timeFilterRange.start), 9 * 60)
   const endMinutes = normalizeSliderMinutes(convertTimeStringToMinutes(timeFilterRange.end), 18 * 60)
   const sliderStartMinutes = Math.min(startMinutes, endMinutes)
@@ -145,9 +148,11 @@ function MapOverlays({
               type="button"
               onClick={onClearPinIconFilter}
               disabled={!pinIconFilters.length}
-              className="shrink-0 text-xs text-gray-500 hover:text-gray-700 disabled:opacity-40"
+              className="shrink-0 rounded-full border border-gray-200 p-1 text-gray-500 transition hover:bg-gray-100 hover:text-gray-700 disabled:opacity-40"
+              aria-label="핀 아이콘 필터 초기화"
+              title="핀 아이콘 필터 초기화"
             >
-              초기화
+              <img src="/svg/filter-reset-alt.svg" alt="" className="h-4 w-4" />
             </button>
             <div className="flex max-w-[56vw] items-center gap-1 overflow-x-auto">
               {ICON_FILTER_OPTIONS.map((filterItem) => {
@@ -175,15 +180,31 @@ function MapOverlays({
             </button>
           </>
         ) : (
-          <button
-            type="button"
-            onClick={() => onSetPinFilterExpanded(true)}
-            className="shrink-0 rounded-full border border-gray-200 px-2 py-0.5 text-lg font-semibold leading-none text-gray-700 transition hover:bg-gray-100"
-            aria-label="핀 아이콘 필터 펼치기"
-            title="핀 아이콘 필터 펼치기"
-          >
-            +
-          </button>
+          <>
+            {activePinFilterItems.length > 0 && (
+              <div className="flex items-center gap-1">
+                {collapsedPreviewFilterItems.map((filterItem) => (
+                  <span
+                    key={`map-filter-collapsed-${filterItem.key}`}
+                    className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-blue-200 bg-blue-50"
+                    title={filterItem.label}
+                  >
+                    <img src={filterItem.svgPath} alt={filterItem.label} className="h-3.5 w-3.5" />
+                  </span>
+                ))}
+                {hiddenPreviewFilterCount > 0 && <span className="text-xs font-medium text-blue-700">+{hiddenPreviewFilterCount}</span>}
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={() => onSetPinFilterExpanded(true)}
+              className="shrink-0 rounded-full border border-gray-200 px-2 py-0.5 text-lg font-semibold leading-none text-gray-700 transition hover:bg-gray-100"
+              aria-label="핀 아이콘 필터 펼치기"
+              title="핀 아이콘 필터 펼치기"
+            >
+              +
+            </button>
+          </>
         )}
         </div>
       </div>
