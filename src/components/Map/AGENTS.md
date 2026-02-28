@@ -164,3 +164,6 @@
 [codex] 2026-02-28 시간 필터 슬라이더 포인터 충돌 수정 메모
 - `src/components/Map/MapOverlays.jsx`의 시간 필터 양방향 range input에 `map-time-range-slider` 클래스를 적용함.
 - thumb만 포인터 이벤트를 받도록 CSS를 분리해, 좌/우 슬라이더가 겹치는 구간에서도 핸들이 안정적으로 드래그되도록 정리함.
+[codex] 2026-02-28 시간 필터 슬라이더 핸들 우선순위 개선 메모
+- `src/components/Map/MapOverlays.jsx`에 `activeTimeSliderHandle` 로컬 상태를 추가해 현재 잡고 있는 핸들의 z-index를 최상단으로 올리도록 조정함.
+- 시작/종료 range input에 `onMouseDown`/`onTouchStart`를 연결해 핸들을 잡는 순간 해당 슬라이더를 앞으로 가져오고, 겹치는 구간에서 커서 X가 뜨며 미세 이동만 되던 드래그 이슈를 완화함.
