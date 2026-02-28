@@ -16,3 +16,6 @@
 - 모드 전환/리셋 시 거리 측정 드래프트를 유지·초기화하던 분기를 제거해 Select/Add Marker/Add Route 중심 상태 전환만 남김.
 [codex] 2026-02-28 line 기본 이름 정규화 메모
 - `useProjectStore.addLine`에서 입력 `shapeType/name`이 누락된 경우를 보정해, 선은 `선 N`, 도형은 `도형 N` 기본 이름을 자동 부여하도록 정규화함.
+[codex] 2026-02-28 line 레이어 내 순서 변경 액션 추가 메모
+- `useProjectStore`에 `reorderLinesInLayer(layerId, sourceLineId, targetLineId, dropPosition)` 액션을 추가함.
+- 내부 구현은 `reorderPinsByLayer`와 동일 패턴의 `reorderLinesByLayer` 헬퍼로 구성해 같은 레이어의 선(line) 순서를 before/after/end 기준으로 재배치함.

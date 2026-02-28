@@ -89,6 +89,24 @@ const reorderPinsByLayer = (pinList, layerId, sourcePinId, targetPinId, dropPosi
   })
 }
 
+const reorderLinesByLayer = (lineList, layerId, sourceLineId, targetLineId, dropPosition = 'before') => {
+  if (!sourceLineId) return lineList
+  const layerLineIdList = lineList.filter((lineItem) => lineItem.layerId === layerId).map((lineItem) => lineItem.id)
+  const sourceIndex = layerLineIdList.indexOf(sourceLineId)
+  if (sourceIndex < 0) return lineList
+  const targetIndex = dropPosition === 'end' ? layerLineIdList.length - 1 : layerLineIdList.indexOf(targetLineId)
+  if (targetIndex < 0) return lineList
+  const insertIndex = resolveReorderInsertIndex(sourceIndex, targetIndex, dropPosition, layerLineIdList.length)
+  const reorderedLayerLineIdList = reorderItemList(layerLineIdList, sourceIndex, insertIndex)
+  const lineOrderMap = new Map(reorderedLayerLineIdList.map((lineId, lineOrderIndex) => [lineId, lineOrderIndex]))
+  return [...lineList].sort((firstLine, secondLine) => {
+    const isFirstLineInLayer = firstLine.layerId === layerId
+    const isSecondLineInLayer = secondLine.layerId === layerId
+    if (!isFirstLineInLayer || !isSecondLineInLayer) return 0
+    return (lineOrderMap.get(firstLine.id) ?? 0) - (lineOrderMap.get(secondLine.id) ?? 0)
+  })
+}
+
 const useProjectStore = create((set) => ({
   ...initialProjectState,
   selectedLineId: null,
@@ -272,6 +290,15 @@ const useProjectStore = create((set) => ({
       return {
         pins: nextPins,
         markers: createMarkersFromPins(nextPins),
+        lastEditedAt: new Date().toISOString(),
+      }
+    }),
+  reorderLinesInLayer: (layerId, sourceLineId, targetLineId, dropPosition = 'before') =>
+    set((state) => {
+      const nextLines = reorderLinesByLayer(state.lines, layerId, sourceLineId, targetLineId, dropPosition)
+      if (nextLines === state.lines) return state
+      return {
+        lines: nextLines,
         lastEditedAt: new Date().toISOString(),
       }
     }),

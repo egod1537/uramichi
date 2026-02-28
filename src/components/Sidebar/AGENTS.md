@@ -54,3 +54,7 @@
 [codex] 2026-02-28 레이어 패널 선택 핀 일괄 액션 제거 메모
 - `LayerPanel.jsx`에서 `선택된 핀 N개` 박스와 `일괄 삭제/이동` UI를 제거함.
 - 관련 로컬 상태(`targetLayerId`)와 미사용 스토어 참조(`selectedPinIds`, `removePins`, `movePinsToLayer`)를 함께 정리함.
+[codex] 2026-02-28 레이어 패널 오브젝트 통합 렌더링 메모
+- `LayerRow.jsx`에서 레이어 하위 항목 렌더링을 pin 전용 목록 + line 전용 목록 분리 구조에서 `layerObjectList`(pin/line 통합) 기반 단일 목록 구조로 전환함.
+- 선(line) 항목도 핀과 동일하게 드래그 정렬, 이름 더블클릭/F2 변경, `⋯` 옵션(이름 변경/삭제)을 제공하도록 공통 row 인터랙션으로 맞춤.
+- 하단 drop zone도 오브젝트 타입별(pin/line) 마지막 항목 기준 reorder를 수행하도록 통일함.

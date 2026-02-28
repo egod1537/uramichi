@@ -8,15 +8,15 @@ class LayerRow extends React.Component {
     super(props)
     this.state = {
       isMenuOpen: false,
-      pinOptionsPinId: null,
+      objectOptionsTargetId: null,
       iconPickerPinId: null,
-      dragPinId: null,
-      pinDropPreview: null,
+      dragObject: null,
+      objectDropPreview: null,
       layerRenameDraft: props.layer.name,
-      pinRenameDraftsById: {},
+      renameDraftsByTargetId: {},
     }
     this.layerRenameInputRef = React.createRef()
-    this.pinRenameInputRefsById = {}
+    this.renameInputRefsByTargetId = {}
   }
 
   componentDidUpdate(previousProps, previousState) {
@@ -30,25 +30,238 @@ class LayerRow extends React.Component {
       if (currentEditingTarget?.type === 'layer' && currentEditingTarget.id === `layer-${this.props.layer.id}`) {
         window.setTimeout(() => this.layerRenameInputRef.current?.focus(), 0)
       }
-      if (currentEditingTarget?.type === 'pin' && currentEditingTarget.layerId === this.props.layer.id) {
-        window.setTimeout(() => this.pinRenameInputRefsById[currentEditingTarget.id]?.focus?.(), 0)
+      if ((currentEditingTarget?.type === 'pin' || currentEditingTarget?.type === 'line') && currentEditingTarget.layerId === this.props.layer.id) {
+        window.setTimeout(() => this.renameInputRefsByTargetId[currentEditingTarget.id]?.focus?.(), 0)
       }
     }
 
-    if (previousState.pinOptionsPinId !== this.state.pinOptionsPinId && this.state.pinOptionsPinId) {
-      window.addEventListener('click', this.handleOutsidePinOptionsClick)
+    if (previousState.objectOptionsTargetId !== this.state.objectOptionsTargetId && this.state.objectOptionsTargetId) {
+      window.addEventListener('click', this.handleOutsideObjectOptionsClick)
     }
-    if (previousState.pinOptionsPinId && !this.state.pinOptionsPinId) {
-      window.removeEventListener('click', this.handleOutsidePinOptionsClick)
+    if (previousState.objectOptionsTargetId && !this.state.objectOptionsTargetId) {
+      window.removeEventListener('click', this.handleOutsideObjectOptionsClick)
     }
   }
 
   componentWillUnmount() {
-    window.removeEventListener('click', this.handleOutsidePinOptionsClick)
+    window.removeEventListener('click', this.handleOutsideObjectOptionsClick)
   }
 
-  handleOutsidePinOptionsClick = () => {
-    this.setState({ pinOptionsPinId: null })
+  handleOutsideObjectOptionsClick = () => {
+    this.setState({ objectOptionsTargetId: null })
+  }
+
+  createLayerObjectList = (layerPins, layerLines) => {
+    const pinObjectList = layerPins.map((pinItem) => ({ type: 'pin', data: pinItem }))
+    const lineObjectList = layerLines.map((lineItem) => ({ type: 'line', data: lineItem }))
+    return [...pinObjectList, ...lineObjectList]
+  }
+
+  handleObjectDrop = (layerId, objectItem, dropPosition) => {
+    const { projectStore } = this.props
+    const { dragObject } = this.state
+    if (!dragObject) return
+    if (dragObject.type !== objectItem.type) return
+
+    if (dragObject.type === 'pin') {
+      projectStore.reorderPinsInLayer(layerId, dragObject.id, objectItem.data.id, dropPosition)
+    }
+    if (dragObject.type === 'line') {
+      projectStore.reorderLinesInLayer(layerId, dragObject.id, objectItem.data.id, dropPosition)
+    }
+
+    this.setState({ dragObject: null, objectDropPreview: null })
+  }
+
+  renderObjectRow = (layer, objectItem, objectIndex, layerObjectList, focusedRenameTarget, editingRenameTarget, onFocusRenameTarget, onStartRename, onFinishRename, projectStore, pinNameMap, renameDraftsByTargetId, objectOptionsTargetId, iconPickerPinId, objectDropPreview) => {
+    const objectData = objectItem.data
+    const objectType = objectItem.type
+    const objectRenameTargetId = `${objectType}-${objectData.id}`
+    const isObjectRenameEditing = editingRenameTarget?.id === objectRenameTargetId
+    const routeItem = objectType === 'pin'
+      ? layer.routes.find((routeData) => routeData.fromPinId === objectData.id && routeData.toPinId === layerObjectList[objectIndex + 1]?.data?.id)
+      : null
+
+    return (
+      <div
+        key={objectRenameTargetId}
+        className="space-y-1"
+        draggable
+        onDragStart={(event) => {
+          event.stopPropagation()
+          this.setState({ dragObject: { type: objectType, id: objectData.id } })
+        }}
+        onDragOver={(event) => {
+          event.preventDefault()
+          event.stopPropagation()
+          const targetRect = event.currentTarget.getBoundingClientRect()
+          const isUpperHalf = event.clientY < targetRect.top + targetRect.height / 2
+          this.setState({ objectDropPreview: { targetObjectId: objectRenameTargetId, dropPosition: isUpperHalf ? 'before' : 'after' } })
+        }}
+        onDrop={(event) => {
+          event.preventDefault()
+          event.stopPropagation()
+          const targetRect = event.currentTarget.getBoundingClientRect()
+          const isUpperHalf = event.clientY < targetRect.top + targetRect.height / 2
+          this.handleObjectDrop(layer.id, objectItem, isUpperHalf ? 'before' : 'after')
+        }}
+        onDragEnd={() => this.setState({ dragObject: null, objectDropPreview: null })}
+      >
+        {objectDropPreview?.targetObjectId === objectRenameTargetId && objectDropPreview.dropPosition === 'before' && <div className="mx-2 h-1 rounded bg-blue-500" />}
+
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => {
+              if (objectType === 'pin') {
+                projectStore.selectPin(objectData.id)
+                return
+              }
+              projectStore.selectLine(objectData.id)
+            }}
+            className="flex min-w-0 flex-1 items-center gap-2 rounded px-2 py-1 text-sm text-gray-700 hover:bg-gray-100"
+          >
+            {objectType === 'pin' ? (
+              <span className="relative" onClick={(event) => event.stopPropagation()}>
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    this.setState({ iconPickerPinId: iconPickerPinId === objectData.id ? null : objectData.id })
+                  }}
+                  className="rounded p-1 hover:bg-gray-200"
+                >
+                  <img
+                    src={getTravelPinIconPreset(getTravelPinIconKey(objectData.icon || CATEGORY_PRESETS[objectData.category]?.icon || CATEGORY_PRESETS.default.icon))?.svgPath || DEFAULT_PIN_SVG_PATH}
+                    alt={objectData.name}
+                    className="h-4 w-4"
+                  />
+                </button>
+                {iconPickerPinId === objectData.id ? (
+                  <div className="absolute left-0 top-7 z-20 w-44 rounded-lg border border-gray-200 bg-white p-2 shadow-xl" onClick={(event) => event.stopPropagation()}>
+                    <div className="grid grid-cols-5 gap-1">
+                      {TRAVEL_PIN_ICON_PRESETS.map((iconPreset) => {
+                        const isSelectedIcon = getTravelPinIconKey(objectData.icon || CATEGORY_PRESETS[objectData.category]?.icon || CATEGORY_PRESETS.default.icon) === iconPreset.key
+                        return (
+                          <button
+                            key={iconPreset.key}
+                            type="button"
+                            onClick={() => {
+                              projectStore.updatePin(objectData.id, { icon: iconPreset.key })
+                              this.setState({ iconPickerPinId: null })
+                            }}
+                            className={`rounded-md px-1 py-1 text-lg hover:bg-gray-100 ${isSelectedIcon ? 'bg-blue-50 ring-1 ring-blue-300' : ''}`}
+                          >
+                            <img src={iconPreset.svgPath} alt={iconPreset.label} className="h-5 w-5" />
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ) : null}
+              </span>
+            ) : (
+              <span>{objectData.sourceType === 'measurement' ? '📏' : '🧵'}</span>
+            )}
+
+            {isObjectRenameEditing ? (
+              <input
+                ref={(node) => {
+                  this.renameInputRefsByTargetId[objectRenameTargetId] = node
+                }}
+                value={renameDraftsByTargetId[objectRenameTargetId] ?? objectData.name}
+                onChange={(event) => {
+                  const nextRenameDraft = event.target.value
+                  this.setState((previousState) => ({
+                    renameDraftsByTargetId: { ...previousState.renameDraftsByTargetId, [objectRenameTargetId]: nextRenameDraft },
+                  }))
+                }}
+                onBlur={() => {
+                  const renamedValue = renameDraftsByTargetId[objectRenameTargetId] ?? objectData.name
+                  if (objectType === 'pin') {
+                    projectStore.updatePin(objectData.id, { name: renamedValue })
+                  } else {
+                    projectStore.updateLine(objectData.id, { name: renamedValue })
+                  }
+                  onFinishRename()
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    const renamedValue = renameDraftsByTargetId[objectRenameTargetId] ?? objectData.name
+                    if (objectType === 'pin') {
+                      projectStore.updatePin(objectData.id, { name: renamedValue })
+                    } else {
+                      projectStore.updateLine(objectData.id, { name: renamedValue })
+                    }
+                    onFinishRename()
+                  }
+                  if (event.key === 'Escape') {
+                    onFinishRename()
+                  }
+                }}
+                className="w-full rounded border border-gray-300 px-2 py-1 text-sm"
+              />
+            ) : (
+              <span
+                className="truncate"
+                tabIndex={0}
+                onFocus={() => onFocusRenameTarget({ type: objectType, id: objectRenameTargetId, layerId: layer.id })}
+                onDoubleClick={(event) => {
+                  event.stopPropagation()
+                  onStartRename({ type: objectType, id: objectRenameTargetId, layerId: layer.id })
+                }}
+              >
+                {objectData.name}
+              </span>
+            )}
+          </button>
+
+          <div className="relative" onClick={(event) => event.stopPropagation()}>
+            <button type="button" className="rounded p-1 text-gray-500 hover:bg-gray-100" onClick={() => this.setState({ objectOptionsTargetId: objectOptionsTargetId === objectRenameTargetId ? null : objectRenameTargetId })}>⋯</button>
+            {objectOptionsTargetId === objectRenameTargetId && (
+              <div className="absolute right-0 top-7 z-20 w-28 rounded border border-gray-200 bg-white py-1 shadow">
+                <button
+                  type="button"
+                  onClick={() => {
+                    onStartRename({ type: objectType, id: objectRenameTargetId, layerId: layer.id })
+                    this.setState({ objectOptionsTargetId: null })
+                  }}
+                  className="block w-full px-3 py-1 text-left text-xs text-gray-700 hover:bg-gray-100"
+                >
+                  이름 변경
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (objectType === 'pin') {
+                      projectStore.removePin(objectData.id)
+                    } else {
+                      projectStore.removeLine(objectData.id)
+                    }
+                  }}
+                  className="block w-full px-3 py-1 text-left text-xs text-red-500 hover:bg-gray-100"
+                >
+                  삭제
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {routeItem && (
+          <div className="flex items-center gap-2 px-2 py-1 text-xs text-gray-500">
+            <span>{TRANSPORT_PRESETS[routeItem.transport]?.icon ?? TRANSPORT_PRESETS.walk.icon}</span>
+            <span className="truncate">{pinNameMap[routeItem.fromPinId]} → {pinNameMap[routeItem.toPinId]}</span>
+          </div>
+        )}
+
+        {objectType === 'line' && (
+          <div className="px-2 text-xs text-gray-500">{(objectData.points || []).length}점</div>
+        )}
+
+        {objectDropPreview?.targetObjectId === objectRenameTargetId && objectDropPreview.dropPosition === 'after' && <div className="mx-2 h-1 rounded bg-blue-500" />}
+      </div>
+    )
   }
 
   render() {
@@ -72,18 +285,17 @@ class LayerRow extends React.Component {
 
     const {
       isMenuOpen,
-      pinOptionsPinId,
+      objectOptionsTargetId,
       iconPickerPinId,
-      dragPinId,
-      pinDropPreview,
+      dragObject,
+      objectDropPreview,
       layerRenameDraft,
-      pinRenameDraftsById,
+      renameDraftsByTargetId,
     } = this.state
 
     const layerPins = filteredPins.filter((pinItem) => pinItem.layerId === layer.id)
     const layerLines = lines.filter((lineItem) => lineItem.layerId === layer.id)
-    const layerMeasurementLines = layerLines.filter((lineItem) => lineItem.sourceType === 'measurement')
-    const layerDrawnLines = layerLines.filter((lineItem) => lineItem.sourceType !== 'measurement')
+    const layerObjectList = this.createLayerObjectList(layerPins, layerLines)
     const layerRenameTargetId = `layer-${layer.id}`
     const isLayerRenameEditing = editingRenameTarget?.id === layerRenameTargetId
     const isLayerFocused = focusedRenameTarget?.id === layerRenameTargetId
@@ -178,194 +390,42 @@ class LayerRow extends React.Component {
 
         {!layer.collapsed && (
           <div className="relative mt-2 space-y-1 pl-8 pr-2">
-            {layerPins.map((pinItem, pinIndex) => {
-              const nextPin = layerPins[pinIndex + 1]
-              const routeItem = layer.routes.find((routeData) => routeData.fromPinId === pinItem.id && routeData.toPinId === nextPin?.id)
-              const pinRenameTargetId = `pin-${pinItem.id}`
-              const isPinRenameEditing = editingRenameTarget?.id === pinRenameTargetId
-
-              return (
-                <div
-                  key={pinItem.id}
-                  className="space-y-1"
-                  draggable
-                  onDragStart={(event) => {
-                    event.stopPropagation()
-                    this.setState({ dragPinId: pinItem.id })
-                  }}
-                  onDragOver={(event) => {
-                    event.preventDefault()
-                    event.stopPropagation()
-                    const targetRect = event.currentTarget.getBoundingClientRect()
-                    const isUpperHalf = event.clientY < targetRect.top + targetRect.height / 2
-                    this.setState({ pinDropPreview: { targetPinId: pinItem.id, dropPosition: isUpperHalf ? 'before' : 'after' } })
-                  }}
-                  onDrop={(event) => {
-                    event.preventDefault()
-                    event.stopPropagation()
-                    if (!dragPinId) return
-                    const targetRect = event.currentTarget.getBoundingClientRect()
-                    const isUpperHalf = event.clientY < targetRect.top + targetRect.height / 2
-                    projectStore.reorderPinsInLayer(layer.id, dragPinId, pinItem.id, isUpperHalf ? 'before' : 'after')
-                    this.setState({ dragPinId: null, pinDropPreview: null })
-                  }}
-                  onDragEnd={() => this.setState({ dragPinId: null, pinDropPreview: null })}
-                >
-                  {pinDropPreview?.targetPinId === pinItem.id && pinDropPreview.dropPosition === 'before' && <div className="mx-2 h-1 rounded bg-blue-500" />}
-
-                  <div className="flex items-center gap-1">
-                    <button type="button" onClick={() => projectStore.selectPin(pinItem.id)} className="flex min-w-0 flex-1 items-center gap-2 rounded px-2 py-1 text-sm text-gray-700 hover:bg-gray-100">
-                      <span className="relative" onClick={(event) => event.stopPropagation()}>
-                        <button
-                          type="button"
-                          className="rounded px-1 text-base hover:bg-gray-200"
-                          onClick={() => this.setState((previousState) => ({ iconPickerPinId: previousState.iconPickerPinId === pinItem.id ? null : pinItem.id }))}
-                        >
-                          {(() => {
-                            const currentIconPreset = getTravelPinIconPreset(pinItem.icon || CATEGORY_PRESETS[pinItem.category]?.icon || CATEGORY_PRESETS.default.icon)
-                            return <img src={currentIconPreset?.svgPath || DEFAULT_PIN_SVG_PATH} alt={currentIconPreset?.label || '기본 아이콘'} className="h-5 w-5" />
-                          })()}
-                        </button>
-                        {iconPickerPinId === pinItem.id ? (
-                          <div className="absolute left-0 top-7 z-30 w-40 rounded-xl border border-gray-200 bg-white p-2 shadow-xl" onClick={(event) => event.stopPropagation()}>
-                            <div className="grid grid-cols-5 gap-1">
-                              {TRAVEL_PIN_ICON_PRESETS.map((iconPreset) => {
-                                const isSelectedIcon = getTravelPinIconKey(pinItem.icon || CATEGORY_PRESETS[pinItem.category]?.icon || CATEGORY_PRESETS.default.icon) === iconPreset.key
-                                return (
-                                  <button
-                                    key={iconPreset.key}
-                                    type="button"
-                                    onClick={() => {
-                                      projectStore.updatePin(pinItem.id, { icon: iconPreset.key })
-                                      this.setState({ iconPickerPinId: null })
-                                    }}
-                                    className={`rounded-md px-1 py-1 text-lg hover:bg-gray-100 ${isSelectedIcon ? 'bg-blue-50 ring-1 ring-blue-300' : ''}`}
-                                  >
-                                    <img src={iconPreset.svgPath} alt={iconPreset.label} className="h-5 w-5" />
-                                  </button>
-                                )
-                              })}
-                            </div>
-                          </div>
-                        ) : null}
-                      </span>
-
-                      {isPinRenameEditing ? (
-                        <input
-                          ref={(node) => {
-                            this.pinRenameInputRefsById[pinRenameTargetId] = node
-                          }}
-                          value={pinRenameDraftsById[pinItem.id] ?? pinItem.name}
-                          onChange={(event) => {
-                            const nextPinRenameDraft = event.target.value
-                            this.setState((previousState) => ({
-                              pinRenameDraftsById: { ...previousState.pinRenameDraftsById, [pinItem.id]: nextPinRenameDraft },
-                            }))
-                          }}
-                          onBlur={() => {
-                            projectStore.updatePin(pinItem.id, { name: pinRenameDraftsById[pinItem.id] ?? pinItem.name })
-                            onFinishRename()
-                          }}
-                          onKeyDown={(event) => {
-                            if (event.key === 'Enter') {
-                              projectStore.updatePin(pinItem.id, { name: pinRenameDraftsById[pinItem.id] ?? pinItem.name })
-                              onFinishRename()
-                            }
-                            if (event.key === 'Escape') {
-                              onFinishRename()
-                            }
-                          }}
-                          className="w-full rounded border border-gray-300 px-2 py-1 text-sm"
-                        />
-                      ) : (
-                        <span
-                          className="truncate"
-                          tabIndex={0}
-                          onFocus={() => onFocusRenameTarget({ type: 'pin', id: pinRenameTargetId, layerId: layer.id })}
-                          onDoubleClick={(event) => {
-                            event.stopPropagation()
-                            onStartRename({ type: 'pin', id: pinRenameTargetId, layerId: layer.id })
-                          }}
-                        >
-                          {pinItem.name}
-                        </span>
-                      )}
-                    </button>
-
-                    <div className="relative" onClick={(event) => event.stopPropagation()}>
-                      <button type="button" className="rounded p-1 text-gray-500 hover:bg-gray-100" onClick={() => this.setState({ pinOptionsPinId: pinOptionsPinId === pinItem.id ? null : pinItem.id })}>⋯</button>
-                      {pinOptionsPinId === pinItem.id && (
-                        <div className="absolute right-0 top-7 z-20 w-28 rounded border border-gray-200 bg-white py-1 shadow">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              onStartRename({ type: 'pin', id: pinRenameTargetId, layerId: layer.id })
-                              this.setState({ pinOptionsPinId: null })
-                            }}
-                            className="block w-full px-3 py-1 text-left text-xs text-gray-700 hover:bg-gray-100"
-                          >
-                            이름 변경
-                          </button>
-                          <button type="button" onClick={() => projectStore.removePin(pinItem.id)} className="block w-full px-3 py-1 text-left text-xs text-red-500 hover:bg-gray-100">핀 삭제</button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {routeItem && (
-                    <div className="flex items-center gap-2 px-2 py-1 text-xs text-gray-500">
-                      <span>{TRANSPORT_PRESETS[routeItem.transport]?.icon ?? TRANSPORT_PRESETS.walk.icon}</span>
-                      <span className="truncate">{pinNameMap[routeItem.fromPinId]} → {pinNameMap[routeItem.toPinId]}</span>
-                    </div>
-                  )}
-                  {pinDropPreview?.targetPinId === pinItem.id && pinDropPreview.dropPosition === 'after' && <div className="mx-2 h-1 rounded bg-blue-500" />}
-                </div>
-              )
-            })}
-
-            {!!layerLines.length && (
-              <div className="mt-2 space-y-2 px-2">
-                {!!layerDrawnLines.length && (
-                  <div className="space-y-1">
-                    {layerDrawnLines.map((lineItem, lineIndex) => (
-                      <div key={lineItem.id} className="flex items-center gap-2 rounded bg-orange-50 px-2 py-1 text-xs text-orange-700">
-                        <span>🧵</span>
-                        <span className="truncate">{lineItem.name || (lineItem.shapeType === 'polygon' ? `도형 ${lineIndex + 1}` : `선 ${lineIndex + 1}`)}</span>
-                        <span className="ml-auto text-[11px] text-orange-500">{lineItem.points.length}점</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {!!layerMeasurementLines.length && (
-                  <div className="space-y-1">
-                    {layerMeasurementLines.map((lineItem, lineIndex) => (
-                      <div key={lineItem.id} className="flex items-center gap-2 rounded bg-blue-50 px-2 py-1 text-xs text-blue-700">
-                        <span>📏</span>
-                        <span className="truncate">측정 {lineIndex + 1}</span>
-                        <span className="ml-auto text-[11px] text-blue-500">{lineItem.points.length}점</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+            {layerObjectList.map((objectItem, objectIndex) =>
+              this.renderObjectRow(
+                layer,
+                objectItem,
+                objectIndex,
+                layerObjectList,
+                focusedRenameTarget,
+                editingRenameTarget,
+                onFocusRenameTarget,
+                onStartRename,
+                onFinishRename,
+                projectStore,
+                pinNameMap,
+                renameDraftsByTargetId,
+                objectOptionsTargetId,
+                iconPickerPinId,
+                objectDropPreview,
+              ),
             )}
 
-            {!!layerPins.length && (
+            {!!layerObjectList.length && (
               <div
-                className={`mx-2 h-1 rounded bg-blue-500 transition-opacity ${pinDropPreview?.targetPinId === '__end__' ? 'opacity-100' : 'opacity-0'}`}
+                className={`mx-2 h-1 rounded bg-blue-500 transition-opacity ${objectDropPreview?.targetObjectId === '__end__' ? 'opacity-100' : 'opacity-0'}`}
                 onDragOver={(event) => {
                   event.preventDefault()
                   event.stopPropagation()
-                  if (!dragPinId) return
-                  this.setState({ pinDropPreview: { targetPinId: '__end__', dropPosition: 'end' } })
+                  if (!dragObject) return
+                  this.setState({ objectDropPreview: { targetObjectId: '__end__', dropPosition: 'end' } })
                 }}
                 onDrop={(event) => {
                   event.preventDefault()
                   event.stopPropagation()
-                  if (!dragPinId || !layerPins.length) return
-                  projectStore.reorderPinsInLayer(layer.id, dragPinId, layerPins[layerPins.length - 1].id, 'end')
-                  this.setState({ dragPinId: null, pinDropPreview: null })
+                  if (!dragObject) return
+                  const endTargetObject = [...layerObjectList].reverse().find((objectItem) => objectItem.type === dragObject.type)
+                  if (!endTargetObject) return
+                  this.handleObjectDrop(layer.id, endTargetObject, 'end')
                 }}
               />
             )}
