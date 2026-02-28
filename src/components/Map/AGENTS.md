@@ -158,3 +158,6 @@
 [codex] 2026-02-28 핀 아이콘 필터 축약 상태 표시 보강 메모
 - `MapOverlays.jsx`에서 핀 필터가 접힌 상태일 때도 현재 활성 필터 아이콘(최대 2개)과 나머지 개수(`+N`)가 보이도록 프리뷰 UI를 추가함.
 - 핀 필터 패널의 초기화 텍스트 버튼을 SVG 아이콘 버튼(`/svg/filter-reset-alt.svg`)으로 교체하고, 기존 clear 액션 경로(`onClearPinIconFilter`)는 유지함.
+[codex] 2026-02-28 시간 필터 슬라이더 포인터 충돌 수정 메모
+- `src/components/Map/MapOverlays.jsx`의 시간 필터 양방향 range input에 `map-time-range-slider` 클래스를 적용함.
+- thumb만 포인터 이벤트를 받도록 CSS를 분리해, 좌/우 슬라이더가 겹치는 구간에서도 핸들이 안정적으로 드래그되도록 정리함.
