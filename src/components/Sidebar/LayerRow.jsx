@@ -61,14 +61,12 @@ class LayerRow extends React.Component {
     const { projectStore } = this.props
     const { dragObject } = this.state
     if (!dragObject) return
-    if (dragObject.type !== objectItem.type) return
-
-    if (dragObject.type === 'pin') {
-      projectStore.reorderPinsInLayer(layerId, dragObject.id, objectItem.data.id, dropPosition)
-    }
-    if (dragObject.type === 'line') {
-      projectStore.reorderLinesInLayer(layerId, dragObject.id, objectItem.data.id, dropPosition)
-    }
+    projectStore.reorderLayerObjectsInLayer(
+      layerId,
+      { type: dragObject.type, id: dragObject.id },
+      { type: objectItem.type, id: objectItem.data.id },
+      dropPosition,
+    )
 
     this.setState({ dragObject: null, objectDropPreview: null })
   }

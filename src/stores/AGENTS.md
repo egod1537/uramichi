@@ -21,3 +21,7 @@
 - 내부 구현은 `reorderPinsByLayer`와 동일 패턴의 `reorderLinesByLayer` 헬퍼로 구성해 같은 레이어의 선(line) 순서를 before/after/end 기준으로 재배치함.
 [codex] 2026-02-28 프로젝트 스토어 시간 필터 상태 메모
 - `useProjectStore`에 `setTimeFilterRange(timeFieldKey, nextTimeValue)` 액션을 추가해 시간 필터 범위를 스토어 단일 소스로 갱신하도록 정리함.
+
+[codex] 2026-02-28 레이어 오브젝트 통합 정렬 액션 메모
+- `useProjectStore`에 `reorderLayerObjectsInLayer(layerId, sourceObject, targetObject, dropPosition)` 액션을 추가해 핀/선을 같은 레이어 오브젝트 순서 기준으로 함께 재정렬하도록 연결함.
+- 내부 `reorderLayerObjectsByLayer` 헬퍼는 레이어의 pin+line 통합 목록에서 드롭 위치를 계산한 뒤, `pins`/`lines` 배열을 동일 기준 순서로 각각 갱신함.
