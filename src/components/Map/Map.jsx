@@ -355,6 +355,9 @@ function MapView() {
 
       if (event.placeId) {
         event.stop()
+        if (currentMode === TOOL_MODES.ADD_MARKER) {
+          return
+        }
         if (currentMode === TOOL_MODES.MEASURE_DISTANCE) {
           const modeEventContext = createModeEventContext(event)
           const modeHandler = mapClickModeHandlerMap[currentMode]
@@ -597,7 +600,7 @@ function MapView() {
         onRightClick={handleMapRightClick}
         options={{
           ...MAP_OPTIONS,
-          clickableIcons: currentMode !== TOOL_MODES.MEASURE_DISTANCE,
+          clickableIcons: currentMode !== TOOL_MODES.MEASURE_DISTANCE && currentMode !== TOOL_MODES.ADD_MARKER,
           disableDoubleClickZoom: currentMode === TOOL_MODES.DRAW_LINE,
         }}
       >
