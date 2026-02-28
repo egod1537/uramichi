@@ -30,3 +30,5 @@
 
 [codex] 2026-02-28 툴 모드 상수 Draw Line 제거 메모
 - `toolModes.js`에서 `DRAW_LINE` 상수를 제거해 선택 가능한 전역 툴 모드를 Select/Add Marker/Add Route로 정리함.
+[codex] 2026-02-28 toolModes Draw Line 재추가 메모
+- `toolModes.js`에 `DRAW_LINE: 'draw_line'` 모드를 재추가해 Toolbar/Map이 동일 모드 키를 공유하도록 맞춤.

@@ -161,7 +161,7 @@ class LayerRow extends React.Component {
                 ) : null}
               </span>
             ) : (
-              <span>{objectData.sourceType === 'measurement' ? '📏' : '🧵'}</span>
+              <span>{objectData.shapeType === 'polygon' ? '🔷' : objectData.sourceType === 'measurement' ? '📏' : '🧵'}</span>
             )}
 
             {isObjectRenameEditing ? (

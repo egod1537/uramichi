@@ -23,3 +23,5 @@
 [codex] 2026-02-28 Draw Line 툴 제거 메모
 - `Toolbar.jsx`에서 Draw Line 버튼(E)과 관련 토글 처리 로직을 제거함.
 - 키다운 단축키 및 단축키 모달 목록에서도 Draw Line 항목을 제거해 툴바 노출 모드와 일치시킴.
+[codex] 2026-02-28 Draw Line 단축키/버튼 재추가 메모
+- `Toolbar.jsx` 버튼 목록에 Draw Line(E)을 다시 추가하고, 키다운 처리(`E`) 및 단축키 모달 문구를 동일하게 갱신함.
