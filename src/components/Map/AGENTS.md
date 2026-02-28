@@ -131,3 +131,8 @@
 [codex] 2026-02-28 핀 추가 모드 POI 클릭 방해 차단 메모
 - `src/components/Map/Map.jsx`에서 `ADD_MARKER` 모드일 때 `event.placeId` 클릭을 `event.stop()` 후 즉시 반환하도록 처리해 커스텀 POI 오버레이가 열리지 않게 조정함.
 - 같은 파일의 GoogleMap 옵션에서 `ADD_MARKER` 모드에도 `clickableIcons: false`를 적용해 기본 랜드마크 클릭 이벤트 자체가 핀 추가를 방해하지 않도록 보강함.
+
+[codex] 2026-02-28 Map/PinPopup 클래스 본전환 메모
+- `Map.jsx`, `PinPopup.jsx`에서 `*View` 함수 래퍼를 제거하고, default export를 실제 구현 클래스 + `withStore` 주입 구조로 통일함.
+- `Map.jsx`의 로컬 상태/이펙트 로직(`useState/useEffect/useMemo/useRef/useCallback`)을 클래스 `state`, 생명주기(`componentDidMount/componentDidUpdate/componentWillUnmount`), 인스턴스 필드로 이관함.
+- POI 상세 조회/거리·선분 드래프트 프리뷰 계산도 클래스 메서드로 옮겨 Hook 호출 없이 동작하도록 정리함.

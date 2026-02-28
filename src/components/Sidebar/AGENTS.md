@@ -38,3 +38,8 @@
 - `Sidebar.jsx` 상단 헤더에 옵션(⋮) 버튼과 닫기 버튼을 같은 줄(`gap-1`)로 배치해 기존의 분리된 위치를 통합함.
 - 닫기 텍스트 버튼을 `/svg/sidebar-close.svg` 아이콘 버튼으로 교체해 UI 일관성을 맞춤.
 - `MapPanel.jsx`의 기존 우상단 옵션(⋮) 버튼은 중복을 피하기 위해 제거함.
+
+[codex] 2026-02-28 LayerRow 클래스 본전환 메모
+- `LayerRow.jsx`에서 `LayerRowView` 함수와 패스스루 클래스를 제거하고, 단일 클래스 구현 + `withStore` 주입으로 정리함.
+- 기존 훅 기반 로컬 UI 상태(메뉴/아이콘피커/드래그 프리뷰/이름변경 draft)와 ref 포커스 처리를 클래스 `state`/`createRef`/`componentDidUpdate`로 이관함.
+- 파일 내 Hook import/use 호출을 제거해 클래스 컴포넌트 경로만 남김.

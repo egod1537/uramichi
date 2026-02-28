@@ -1,9 +1,10 @@
-import React, { Component, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React from 'react'
 import { GoogleMap } from '@react-google-maps/api'
 import TOOL_MODES from '../../utils/toolModes'
 import { COLOR_PRESETS, MAP_DEFAULT_ZOOM, TIME_FILTER_DEFAULT_RANGE } from '../../utils/config'
 import useProjectStore from '../../stores/useProjectStore'
-import { handleLineMapClick, handleLineMapMouseMove } from './controllers/lineController'
+import withStore from '../../utils/withStore'
+import { handleLineMapClick, handleLineMapMouseMove, handleLineDraftComplete, handleLineMeasurePointDrag } from './controllers/lineController'
 import { handleMarkerMouseDown, handleMarkerMouseUp } from './controllers/markerController'
 import { handleMeasureMapClick } from './controllers/measureController'
 import { handleRouteMapClick } from './controllers/routeController'
@@ -11,21 +12,21 @@ import { handleSelectMapClick } from './controllers/selectController'
 import { syncDraftByMode } from './controllers/syncDraftByMode'
 import { ICON_FILTER_OPTIONS, getTravelPinIconKey } from '../../utils/opts'
 import RouteService from '../../utils/RouteService'
-import useLineInteraction from './measure/useLineInteraction'
-import useDistanceMeasureInteraction from './measure/useDistanceMeasureInteraction'
 import PoiDetailOverlay from './PoiDetailOverlay'
-import usePoiDetail from './hooks/usePoiDetail'
 import PinLayer from './layers/PinLayer'
 import LineLayer from './layers/LineLayer'
 import RouteLayer from './layers/RouteLayer'
 import MeasureLayer from './layers/MeasureLayer'
 import MapOverlays from './MapOverlays'
+import { formatDistanceLabel, getHaversineDistance, getMidpoint, getPathDistanceInMeters } from '../../utils/geo'
+import { LINE_DEFAULT_COLOR, LINE_DEFAULT_WIDTH } from '../../utils/lineStyle'
 import {
   ADD_MARKER_DRAG_THRESHOLD_PX,
   MAP_CONTAINER_STYLE,
   MAP_DEFAULT_CENTER,
   MAP_OPTIONS,
 } from './config'
+import { POLYGON_CLOSE_DISTANCE_METERS } from './measure/constants'
 
 const lineColorSequence = [COLOR_PRESETS.primaryBlue, COLOR_PRESETS.routeGreen, COLOR_PRESETS.measureOrange, '#8b5cf6']
 
@@ -35,646 +36,672 @@ const getNextLineColor = (currentColor) => {
   return lineColorSequence[(currentColorIndex + 1) % lineColorSequence.length]
 }
 
-function MapView() {
-  const mapInstanceRef = useRef(null)
-  const addMarkerMouseDownPositionRef = useRef(null)
-  const shouldIgnoreNextMapClickRef = useRef(false)
-  const rightClickCompleteLockRef = useRef(false)
-  const currentMode = useProjectStore((state) => state.currentMode)
-  const lines = useProjectStore((state) => state.lines)
-  const routePaths = useProjectStore((state) => state.routePaths)
-  const linePath = useProjectStore((state) => state.linePath)
-  const measurePath = useProjectStore((state) => state.measurePath)
-  const routeDraft = useProjectStore((state) => state.routeDraft)
-  const pins = useProjectStore((state) => state.pins)
-  const layers = useProjectStore((state) => state.layers)
-  const routes = useProjectStore((state) => state.routes)
-  const selectedPinId = useProjectStore((state) => state.selectedPinId)
-  const selectedPinIds = useProjectStore((state) => state.selectedPinIds)
-  const selectedLineId = useProjectStore((state) => state.selectedLineId)
-  const activeLayerId = useProjectStore((state) => state.activeLayerId)
-  const addMarker = useProjectStore((state) => state.addMarker)
-  const setMode = useProjectStore((state) => state.setMode)
-  const cancelDraftLine = useProjectStore((state) => state.cancelDraftLine)
-  const appendLinePoint = useProjectStore((state) => state.appendLinePoint)
-  const setLinePath = useProjectStore((state) => state.setLinePath)
-  const appendMeasurePoint = useProjectStore((state) => state.appendMeasurePoint)
-  const setMeasurePath = useProjectStore((state) => state.setMeasurePath)
-  const cancelDraftMeasure = useProjectStore((state) => state.cancelDraftMeasure)
-  const setRouteStart = useProjectStore((state) => state.setRouteStart)
-  const setRouteTravelMode = useProjectStore((state) => state.setRouteTravelMode)
-  const addRoute = useProjectStore((state) => state.addRoute)
-  const addLine = useProjectStore((state) => state.addLine)
-  const selectPin = useProjectStore((state) => state.selectPin)
-  const selectLine = useProjectStore((state) => state.selectLine)
-  const togglePinInSelection = useProjectStore((state) => state.togglePinInSelection)
-  const clearPinSelection = useProjectStore((state) => state.clearPinSelection)
-  const updateLine = useProjectStore((state) => state.updateLine)
-  const removeLine = useProjectStore((state) => state.removeLine)
-  const updatePin = useProjectStore((state) => state.updatePin)
-  const commitMarkerDrag = useProjectStore((state) => state.commitMarkerDrag)
-  const pinIconFilters = useProjectStore((state) => state.pinIconFilters)
-  const togglePinIconFilter = useProjectStore((state) => state.togglePinIconFilter)
-  const clearPinIconFilter = useProjectStore((state) => state.clearPinIconFilter)
-  const poiSearchRequest = useProjectStore((state) => state.poiSearchRequest)
-  const consumePoiSearchRequest = useProjectStore((state) => state.consumePoiSearchRequest)
-  const [isPinClickInProgress, setIsPinClickInProgress] = useState(false)
-  const removePins = useProjectStore((state) => state.removePins)
-  const [draggingPinId, setDraggingPinId] = useState(null)
-  const [hoverMeasurePoint, setHoverMeasurePoint] = useState(null)
-  const [draggingMeasurePointIndex, setDraggingMeasurePointIndex] = useState(null)
-  const [isPinFilterExpanded, setIsPinFilterExpanded] = useState(false)
-  const [isTimeFilterExpanded, setIsTimeFilterExpanded] = useState(false)
-  const [timeFilterRange, setTimeFilterRange] = useState(TIME_FILTER_DEFAULT_RANGE)
-  const [recentRouteInfo, setRecentRouteInfo] = useState(null)
-  const {
-    selectedPoiDetail,
-    requestPoiDetail,
-    clearPoiDetail,
-  } = usePoiDetail({ mapInstanceRef })
+const createLoadingPoiDetail = (placeId, position) => ({
+  placeId,
+  position,
+  name: '장소 정보 불러오는 중...',
+  address: '',
+  website: '',
+  phoneNumber: '',
+  rating: null,
+})
 
-  const visibleLayerIdSet = useMemo(
-    () => new Set(layers.filter((layerItem) => layerItem.visible).map((layerItem) => layerItem.id)),
-    [layers],
-  )
+const createErrorPoiDetail = (placeId, position, fallbackData = {}) => ({
+  placeId,
+  position,
+  name: fallbackData.name || '장소 정보를 찾을 수 없습니다',
+  address: fallbackData.address || '',
+  website: '',
+  phoneNumber: '',
+  rating: null,
+})
 
-  const visiblePins = useMemo(() => {
-    const layerVisiblePins = pins.filter((pinItem) => visibleLayerIdSet.has(pinItem.layerId))
-    if (!pinIconFilters.length) return layerVisiblePins
-    const activeIconSet = new Set(ICON_FILTER_OPTIONS.filter((filterItem) => pinIconFilters.includes(filterItem.key)).map((filterItem) => filterItem.key))
+class Map extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      isPinClickInProgress: false,
+      draggingPinId: null,
+      hoverMeasurePoint: null,
+      draggingMeasurePointIndex: null,
+      isPinFilterExpanded: false,
+      isTimeFilterExpanded: false,
+      timeFilterRange: TIME_FILTER_DEFAULT_RANGE,
+      recentRouteInfo: null,
+      selectedPoiDetail: null,
+      poiDetailStatus: 'idle',
+    }
+    this.mapInstance = null
+    this.shouldIgnoreNextMapClick = false
+    this.rightClickCompleteLock = false
+    this.mapContextMenuHandler = null
+  }
+
+  componentDidMount() {
+    window.addEventListener('keydown', this.handleDeleteKeyDown)
+  }
+
+  componentDidUpdate(previousProps) {
+    const previousStore = previousProps.projectStore
+    const currentStore = this.props.projectStore
+    const selectedPin = this.getSelectedPin(currentStore)
+    const previousSelectedPin = this.getSelectedPin(previousStore)
+
+    if (selectedPin && (!previousSelectedPin || previousSelectedPin.id !== selectedPin.id) && this.mapInstance) {
+      this.mapInstance.panTo(selectedPin.position)
+    }
+
+    if (previousStore?.poiSearchRequest !== currentStore.poiSearchRequest && currentStore.poiSearchRequest) {
+      this.handlePoiSearchRequest(currentStore)
+    }
+
+    if (previousStore?.currentMode !== currentStore.currentMode) {
+      syncDraftByMode({
+        currentMode: currentStore.currentMode,
+        actions: { cancelDraftMeasure: currentStore.cancelDraftMeasure, cancelDraftLine: currentStore.cancelDraftLine },
+      })
+    }
+
+    this.syncMapContextMenuListener()
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('keydown', this.handleDeleteKeyDown)
+    this.detachMapContextMenuListener()
+  }
+
+  getVisibleLayerIdSet = (projectStore) => new Set(projectStore.layers.filter((layerItem) => layerItem.visible).map((layerItem) => layerItem.id))
+
+  getVisiblePins = (projectStore) => {
+    const visibleLayerIdSet = this.getVisibleLayerIdSet(projectStore)
+    const layerVisiblePins = projectStore.pins.filter((pinItem) => visibleLayerIdSet.has(pinItem.layerId))
+    if (!projectStore.pinIconFilters.length) return layerVisiblePins
+    const activeIconSet = new Set(ICON_FILTER_OPTIONS.filter((filterItem) => projectStore.pinIconFilters.includes(filterItem.key)).map((filterItem) => filterItem.key))
     return layerVisiblePins.filter((pinItem) => activeIconSet.has(getTravelPinIconKey(pinItem.icon)))
-  }, [pinIconFilters, pins, visibleLayerIdSet])
-  const visibleLines = useMemo(() => lines.filter((lineItem) => visibleLayerIdSet.has(lineItem.layerId)), [lines, visibleLayerIdSet])
-  const lineSnapPointList = useMemo(
-    () => visibleLines.flatMap((lineItem) => lineItem.points),
-    [visibleLines],
-  )
-  const selectedLine = useMemo(
-    () => visibleLines.find((lineItem) => lineItem.id === selectedLineId) || null,
-    [selectedLineId, visibleLines],
-  )
+  }
 
-  const selectedPin = useMemo(
-    () => visiblePins.find((pinItem) => pinItem.id === selectedPinId) || null,
-    [selectedPinId, visiblePins],
-  )
+  getVisibleLines = (projectStore) => {
+    const visibleLayerIdSet = this.getVisibleLayerIdSet(projectStore)
+    return projectStore.lines.filter((lineItem) => visibleLayerIdSet.has(lineItem.layerId))
+  }
 
-  useEffect(() => {
-    if (mapInstanceRef.current && selectedPin) {
-      mapInstanceRef.current.panTo(selectedPin.position)
+  getSelectedPin = (projectStore) => this.getVisiblePins(projectStore).find((pinItem) => pinItem.id === projectStore.selectedPinId) || null
+
+  getSelectedLine = (projectStore) => this.getVisibleLines(projectStore).find((lineItem) => lineItem.id === projectStore.selectedLineId) || null
+
+  getLinePreviewPath = (projectStore) => {
+    const { linePath } = projectStore
+    const { hoverMeasurePoint } = this.state
+    if (!linePath.length || !hoverMeasurePoint) return []
+    return [...linePath, hoverMeasurePoint]
+  }
+
+  getPreviewMeasurePath = (projectStore) => {
+    const { measurePath } = projectStore
+    const { hoverMeasurePoint } = this.state
+    if (!measurePath.length || !hoverMeasurePoint) return []
+    return [...measurePath, hoverMeasurePoint]
+  }
+
+  getMeasureSegmentLabelDataList = (projectStore) =>
+    projectStore.measurePath.slice(1).map((currentPoint, pointIndex) => {
+      const previousPoint = projectStore.measurePath[pointIndex]
+      const segmentDistanceInMeters = getPathDistanceInMeters([previousPoint, currentPoint])
+      return {
+        id: `measure-segment-${pointIndex + 1}`,
+        position: getMidpoint(previousPoint, currentPoint),
+        label: formatDistanceLabel(segmentDistanceInMeters),
+      }
+    })
+
+  getMeasureTotalLabelData = (projectStore) => {
+    const totalDistanceInMeters = getPathDistanceInMeters(projectStore.measurePath)
+    if (!totalDistanceInMeters) return null
+    const terminalPoint = projectStore.measurePath[projectStore.measurePath.length - 1]
+    return { id: 'measure-total', position: terminalPoint, label: `총 ${formatDistanceLabel(totalDistanceInMeters)}` }
+  }
+
+  createLineEntity = (linePointPath, activeLayerId, lineCount) => {
+    const firstPoint = linePointPath[0]
+    const lastPoint = linePointPath[linePointPath.length - 1]
+    const isLoopClosed = linePointPath.length >= 3 && getHaversineDistance(firstPoint, lastPoint) <= POLYGON_CLOSE_DISTANCE_METERS
+    const shapeType = isLoopClosed ? 'polygon' : 'line'
+    const pointsForPolygon =
+      shapeType === 'polygon' && firstPoint && lastPoint && (firstPoint.lat !== lastPoint.lat || firstPoint.lng !== lastPoint.lng)
+        ? [...linePointPath, firstPoint]
+        : linePointPath
+
+    return {
+      id: `line-${Date.now()}-${lineCount + 1}`,
+      layerId: activeLayerId,
+      points: pointsForPolygon,
+      color: LINE_DEFAULT_COLOR,
+      width: LINE_DEFAULT_WIDTH,
+      shapeType,
+      sourceType: 'line',
     }
-  }, [selectedPin])
+  }
 
-  useEffect(() => {
-    if (!poiSearchRequest) return
+  clearPoiDetail = () => {
+    this.setState({ selectedPoiDetail: null, poiDetailStatus: 'idle' })
+  }
 
-    const searchPosition = poiSearchRequest.position
-    if (mapInstanceRef.current && searchPosition) {
-      mapInstanceRef.current.panTo(searchPosition)
-      mapInstanceRef.current.setZoom?.(16)
-    }
-
-    if (selectedPinId) {
-      selectPin(null)
-      clearPinSelection()
-    }
-
-    if (poiSearchRequest.placeId) {
-      requestPoiDetail(poiSearchRequest.placeId, searchPosition)
-      consumePoiSearchRequest()
+  requestPoiDetail = (placeId, position, fallbackData = {}) => {
+    if (!this.mapInstance || !window.google?.maps?.places?.PlacesService || !placeId) {
+      this.setState({
+        selectedPoiDetail: {
+          placeId: placeId || `search-${Date.now()}`,
+          position,
+          name: fallbackData.name || 'POI',
+          address: fallbackData.address || '',
+          website: '',
+          phoneNumber: '',
+          rating: typeof fallbackData.rating === 'number' ? fallbackData.rating : null,
+        },
+        poiDetailStatus: 'success',
+      })
       return
     }
 
-    requestPoiDetail(null, searchPosition, {
-      name: poiSearchRequest.name || 'POI',
-      address: poiSearchRequest.address || '',
-      rating: poiSearchRequest.rating,
+    this.setState({ selectedPoiDetail: createLoadingPoiDetail(placeId, position), poiDetailStatus: 'loading' })
+    const placeServiceInstance = new window.google.maps.places.PlacesService(this.mapInstance)
+    placeServiceInstance.getDetails(
+      {
+        placeId,
+        fields: ['place_id', 'name', 'formatted_address', 'website', 'international_phone_number', 'rating'],
+      },
+      (placeResult, placeStatus) => {
+        if (placeStatus !== window.google.maps.places.PlacesServiceStatus.OK || !placeResult) {
+          this.setState({ selectedPoiDetail: createErrorPoiDetail(placeId, position, fallbackData), poiDetailStatus: 'error' })
+          return
+        }
+        this.setState({
+          selectedPoiDetail: {
+            placeId,
+            position,
+            name: placeResult.name || '이름 없음',
+            address: placeResult.formatted_address || '',
+            website: placeResult.website || '',
+            phoneNumber: placeResult.international_phone_number || '',
+            rating: placeResult.rating ?? null,
+          },
+          poiDetailStatus: 'success',
+        })
+      },
+    )
+  }
+
+  handlePoiSearchRequest = (projectStore) => {
+    const searchPosition = projectStore.poiSearchRequest.position
+    if (this.mapInstance && searchPosition) {
+      this.mapInstance.panTo(searchPosition)
+      this.mapInstance.setZoom?.(16)
+    }
+    if (projectStore.selectedPinId) {
+      projectStore.selectPin(null)
+      projectStore.clearPinSelection()
+    }
+    if (projectStore.poiSearchRequest.placeId) {
+      this.requestPoiDetail(projectStore.poiSearchRequest.placeId, searchPosition)
+      projectStore.consumePoiSearchRequest()
+      return
+    }
+    this.requestPoiDetail(null, searchPosition, {
+      name: projectStore.poiSearchRequest.name || 'POI',
+      address: projectStore.poiSearchRequest.address || '',
+      rating: projectStore.poiSearchRequest.rating,
     })
-    consumePoiSearchRequest()
-  }, [
-    clearPinSelection,
-    consumePoiSearchRequest,
-    poiSearchRequest,
-    requestPoiDetail,
-    selectPin,
-    selectedPinId,
-  ])
+    projectStore.consumePoiSearchRequest()
+  }
 
-  useEffect(() => {
-    syncDraftByMode({ currentMode, actions: { cancelDraftMeasure, cancelDraftLine } })
-  }, [cancelDraftLine, cancelDraftMeasure, currentMode])
+  completeLineInteraction = () => {
+    const { projectStore } = this.props
+    handleLineDraftComplete({
+      currentMode: TOOL_MODES.DRAW_LINE,
+      state: {
+        linePath: projectStore.linePath,
+        activeLayerId: projectStore.activeLayerId,
+        layers: projectStore.layers,
+        lines: projectStore.lines,
+        createLineEntity: this.createLineEntity,
+      },
+      actions: {
+        setHoverMeasurePoint: (value) => this.setState({ hoverMeasurePoint: value }),
+        cancelDraftLine: projectStore.cancelDraftLine,
+        addLine: projectStore.addLine,
+        setMode: projectStore.setMode,
+      },
+    })
+  }
 
+  completeDistanceMeasureInteraction = (triggerType = 'default') => {
+    const { projectStore } = this.props
+    this.setState({ hoverMeasurePoint: null, draggingMeasurePointIndex: null })
+    projectStore.cancelDraftMeasure()
+    if (triggerType === 'contextmenu') {
+      projectStore.setMode?.(TOOL_MODES.MEASURE_DISTANCE)
+    }
+    if (triggerType === 'escape') {
+      projectStore.setMode?.(TOOL_MODES.SELECT)
+    }
+  }
 
-  const {
-    linePreviewPath,
-    completeLineInteraction,
-    handleLineDraftPointDrag,
-    handleLineDraftPointDragStart,
-    handleLineDraftPointDragEnd,
-    isLinePointDragging,
-  } = useLineInteraction({
-    linePath,
-    hoverMeasurePoint,
-    draggingMeasurePointIndex,
-    activeLayerId,
-    layers,
-    lines,
-    setHoverMeasurePoint,
-    cancelDraftLine,
-    addLine,
-    setLinePath,
-    setDraggingMeasurePointIndex,
-    setMode,
-  })
-
-  const {
-    measureSegmentLabelDataList,
-    measureTotalLabelData,
-    previewMeasurePath,
-    completeDistanceMeasureInteraction,
-    completeDistanceMeasureInteractionByContextMenu,
-    completeDistanceMeasureInteractionByEscape,
-    handleMeasurePointDrag,
-    handleMeasurePointDragStart,
-    handleMeasurePointDragEnd,
-    isMeasurePointDragging,
-  } = useDistanceMeasureInteraction({
-    measurePath,
-    hoverMeasurePoint,
-    draggingMeasurePointIndex,
-    setHoverMeasurePoint,
-    cancelDraftMeasure,
-    setMeasurePath,
-    setDraggingMeasurePointIndex,
-    setMode,
-  })
-
-  const isDraggingDraftPoint = isLinePointDragging || isMeasurePointDragging
-
-
-  const triggerMeasureComplete = useCallback((triggerType = 'default') => {
+  triggerMeasureComplete = (triggerType = 'default') => {
+    const { currentMode } = this.props.projectStore
     if (currentMode === TOOL_MODES.DRAW_LINE) {
-      completeLineInteraction()
+      this.completeLineInteraction()
       return
     }
     if (currentMode === TOOL_MODES.MEASURE_DISTANCE) {
-      if (triggerType === 'contextmenu') {
-        completeDistanceMeasureInteractionByContextMenu()
-        return
-      }
-      if (triggerType === 'escape') {
-        completeDistanceMeasureInteractionByEscape()
-        return
-      }
-      completeDistanceMeasureInteraction()
+      this.completeDistanceMeasureInteraction(triggerType)
     }
-  }, [
-    completeDistanceMeasureInteraction,
-    completeDistanceMeasureInteractionByContextMenu,
-    completeDistanceMeasureInteractionByEscape,
-    completeLineInteraction,
-    currentMode,
-  ])
+  }
 
-  const requestRoute = useCallback(
-    async (startPoint, endPoint, travelMode) => {
-      const resolvedLayerId = activeLayerId || layers[0]?.id || null
-      const routeEntity = await RouteService.createRouteEntityOrNull({
-        start: startPoint,
-        end: endPoint,
-        travelMode,
-        currentRoutes: routes,
-        activeLayerId: resolvedLayerId,
-      })
+  requestRoute = async (startPoint, endPoint, travelMode) => {
+    const { projectStore } = this.props
+    const resolvedLayerId = projectStore.activeLayerId || projectStore.layers[0]?.id || null
+    const routeEntity = await RouteService.createRouteEntityOrNull({
+      start: startPoint,
+      end: endPoint,
+      travelMode,
+      currentRoutes: projectStore.routes,
+      activeLayerId: resolvedLayerId,
+    })
+    if (!routeEntity) {
+      projectStore.setRouteStart(null)
+      return
+    }
+    projectStore.addRoute(routeEntity)
+    this.setState({ recentRouteInfo: routeEntity })
+  }
 
-      if (!routeEntity) {
-        setRouteStart(null)
-        return
-      }
+  createModeEventContext = (event) => {
+    const { projectStore } = this.props
+    const latitude = event?.latLng?.lat()
+    const longitude = event?.latLng?.lng()
+    const clickedPoint = latitude === undefined || longitude === undefined ? null : { lat: latitude, lng: longitude }
+    const visibleLines = this.getVisibleLines(projectStore)
+    const lineSnapPointList = [...projectStore.linePath, ...visibleLines.flatMap((lineItem) => lineItem.points)]
 
-      addRoute(routeEntity)
-      setRecentRouteInfo(routeEntity)
-    },
-    [activeLayerId, addRoute, layers, routes, setRouteStart],
-  )
-
-  const createModeEventContext = useCallback(
-    (event) => {
-      const latitude = event?.latLng?.lat()
-      const longitude = event?.latLng?.lng()
-      const clickedPoint = latitude === undefined || longitude === undefined ? null : { lat: latitude, lng: longitude }
-
-      return {
-        event,
+    return {
+      event,
+      clickedPoint,
+      currentMode: projectStore.currentMode,
+      state: {
         clickedPoint,
-        currentMode,
-        state: {
-          clickedPoint,
-          isPinClickInProgress,
-          routeDraft,
-          linePath,
-          measurePath,
-          draggingMeasurePointIndex: isDraggingDraftPoint ? 0 : null,
-          addMarkerDragThresholdPx: ADD_MARKER_DRAG_THRESHOLD_PX,
-        },
-        actions: {
-          setHoverMeasurePoint,
-          appendLinePoint,
-          appendMeasurePoint,
-          setRouteStart,
-          requestRoute,
-          setRecentRouteInfo,
-          selectPin,
-          selectLine,
-          clearPinSelection,
-          setIsPinClickInProgress,
-          addMarker,
-          setMode,
-          lineSnapPointList,
-        },
-        refs: {
-          addMarkerMouseDownPositionRef,
-        },
-      }
-    },
-    [
-      addMarker,
-      appendLinePoint,
-      appendMeasurePoint,
-      clearPinSelection,
-      currentMode,
-      isDraggingDraftPoint,
-      isPinClickInProgress,
-      linePath,
-      measurePath,
-      requestRoute,
-      routeDraft,
-      selectLine,
-      selectPin,
-      setHoverMeasurePoint,
-      setRouteStart,
-      setMode,
-      lineSnapPointList,
-    ],
-  )
+        isPinClickInProgress: this.state.isPinClickInProgress,
+        routeDraft: projectStore.routeDraft,
+        linePath: projectStore.linePath,
+        measurePath: projectStore.measurePath,
+        draggingMeasurePointIndex: this.state.draggingMeasurePointIndex !== null ? 0 : null,
+        addMarkerDragThresholdPx: ADD_MARKER_DRAG_THRESHOLD_PX,
+      },
+      actions: {
+        setHoverMeasurePoint: (value) => this.setState({ hoverMeasurePoint: value }),
+        appendLinePoint: projectStore.appendLinePoint,
+        appendMeasurePoint: projectStore.appendMeasurePoint,
+        setRouteStart: projectStore.setRouteStart,
+        requestRoute: this.requestRoute,
+        setRecentRouteInfo: (value) => this.setState({ recentRouteInfo: value }),
+        selectPin: projectStore.selectPin,
+        selectLine: projectStore.selectLine,
+        clearPinSelection: projectStore.clearPinSelection,
+        setIsPinClickInProgress: (value) => this.setState({ isPinClickInProgress: value }),
+        addMarker: projectStore.addMarker,
+        setMode: projectStore.setMode,
+        lineSnapPointList,
+      },
+      refs: {
+        addMarkerMouseDownPositionRef: this.addMarkerMouseDownPositionRef,
+      },
+    }
+  }
 
-  const mapClickModeHandlerMap = useMemo(
-    () => ({
+  handleMapClick = (event) => {
+    const { projectStore } = this.props
+    const mapClickModeHandlerMap = {
       [TOOL_MODES.DRAW_LINE]: handleLineMapClick,
       [TOOL_MODES.ADD_ROUTE]: handleRouteMapClick,
       [TOOL_MODES.SELECT]: handleSelectMapClick,
       [TOOL_MODES.MEASURE_DISTANCE]: handleMeasureMapClick,
-    }),
-    [],
-  )
+    }
+    const isLineOrMeasureMode = projectStore.currentMode === TOOL_MODES.DRAW_LINE || projectStore.currentMode === TOOL_MODES.MEASURE_DISTANCE
+    if (isLineOrMeasureMode && event?.domEvent?.type === 'contextmenu') return
+    if (isLineOrMeasureMode && event?.domEvent?.button !== 0) return
+    if (this.shouldIgnoreNextMapClick) {
+      this.shouldIgnoreNextMapClick = false
+      return
+    }
+    if (this.state.isPinClickInProgress) {
+      this.setState({ isPinClickInProgress: false })
+      return
+    }
 
-  const handleMapClick = useCallback(
-    (event) => {
-      const isLineOrMeasureMode =
-        currentMode === TOOL_MODES.DRAW_LINE || currentMode === TOOL_MODES.MEASURE_DISTANCE
-      const mapDomEventType = event?.domEvent?.type
-      const mapDomEventButton = event?.domEvent?.button
-
-      if (isLineOrMeasureMode && mapDomEventType === 'contextmenu') {
+    if (event.placeId) {
+      event.stop()
+      if (projectStore.currentMode === TOOL_MODES.ADD_MARKER) return
+      if (projectStore.currentMode === TOOL_MODES.MEASURE_DISTANCE) {
+        mapClickModeHandlerMap[projectStore.currentMode]?.(this.createModeEventContext(event))
         return
       }
-
-      if (isLineOrMeasureMode && mapDomEventButton !== 0) {
-        return
+      const latitudeFromPoi = event.latLng?.lat()
+      const longitudeFromPoi = event.latLng?.lng()
+      if (latitudeFromPoi === undefined || longitudeFromPoi === undefined) return
+      if (projectStore.selectedPinId) {
+        projectStore.selectPin(null)
+        projectStore.clearPinSelection()
       }
+      this.requestPoiDetail(event.placeId, { lat: latitudeFromPoi, lng: longitudeFromPoi })
+      return
+    }
 
-      if (shouldIgnoreNextMapClickRef.current) {
-        shouldIgnoreNextMapClickRef.current = false
-        return
-      }
+    if (this.state.selectedPoiDetail) this.clearPoiDetail()
+    mapClickModeHandlerMap[projectStore.currentMode]?.(this.createModeEventContext(event))
+  }
 
-      if (isPinClickInProgress) {
-        setIsPinClickInProgress(false)
-        return
-      }
+  handleMapRightClick = (event) => {
+    event?.domEvent?.preventDefault?.()
+    if (this.rightClickCompleteLock) return
+    this.rightClickCompleteLock = true
+    window.setTimeout(() => {
+      this.rightClickCompleteLock = false
+    }, 0)
+    this.shouldIgnoreNextMapClick = true
+    this.triggerMeasureComplete('contextmenu')
+  }
 
-      if (event.placeId) {
-        event.stop()
-        if (currentMode === TOOL_MODES.ADD_MARKER) {
-          return
-        }
-        if (currentMode === TOOL_MODES.MEASURE_DISTANCE) {
-          const modeEventContext = createModeEventContext(event)
-          const modeHandler = mapClickModeHandlerMap[currentMode]
-          if (!modeHandler) return
-          modeHandler(modeEventContext)
-          return
-        }
-        const latitudeFromPoi = event.latLng?.lat()
-        const longitudeFromPoi = event.latLng?.lng()
-        if (latitudeFromPoi === undefined || longitudeFromPoi === undefined) return
-        if (selectedPinId) {
-          selectPin(null)
-          clearPinSelection()
-        }
-        requestPoiDetail(event.placeId, { lat: latitudeFromPoi, lng: longitudeFromPoi })
-        return
-      }
-
-      if (selectedPoiDetail) {
-        clearPoiDetail()
-      }
-
-      const modeEventContext = createModeEventContext(event)
-      const modeHandler = mapClickModeHandlerMap[currentMode]
-      if (!modeHandler) return
-      modeHandler(modeEventContext)
-    },
-    [
-      clearPinSelection,
-      createModeEventContext,
-      currentMode,
-      mapClickModeHandlerMap,
-      requestPoiDetail,
-      selectPin,
-      selectedPoiDetail,
-      selectedPinId,
-      isPinClickInProgress,
-      clearPoiDetail,
-    ],
-  )
-
-  const handleMapRightClick = useCallback(
-    (event) => {
-      event?.domEvent?.preventDefault?.()
-      if (rightClickCompleteLockRef.current) return
-      rightClickCompleteLockRef.current = true
-      window.setTimeout(() => {
-        rightClickCompleteLockRef.current = false
-      }, 0)
-      shouldIgnoreNextMapClickRef.current = true
-      triggerMeasureComplete('contextmenu')
-    },
-    [triggerMeasureComplete],
-  )
-
-  useEffect(() => {
-    const mapDivElement = mapInstanceRef.current?.getDiv?.()
-    if (!mapDivElement) return undefined
-
-    const handleMapContextMenu = (event) => {
+  syncMapContextMenuListener = () => {
+    this.detachMapContextMenuListener()
+    const mapDivElement = this.mapInstance?.getDiv?.()
+    if (!mapDivElement) return
+    this.mapContextMenuHandler = (event) => {
       event.preventDefault()
-      if (rightClickCompleteLockRef.current) return
-      rightClickCompleteLockRef.current = true
+      if (this.rightClickCompleteLock) return
+      this.rightClickCompleteLock = true
       window.setTimeout(() => {
-        rightClickCompleteLockRef.current = false
+        this.rightClickCompleteLock = false
       }, 0)
-      shouldIgnoreNextMapClickRef.current = true
-      triggerMeasureComplete('contextmenu')
+      this.shouldIgnoreNextMapClick = true
+      this.triggerMeasureComplete('contextmenu')
+    }
+    mapDivElement.addEventListener('contextmenu', this.mapContextMenuHandler)
+  }
+
+  detachMapContextMenuListener = () => {
+    const mapDivElement = this.mapInstance?.getDiv?.()
+    if (!mapDivElement || !this.mapContextMenuHandler) return
+    mapDivElement.removeEventListener('contextmenu', this.mapContextMenuHandler)
+    this.mapContextMenuHandler = null
+  }
+
+  handleMapMouseDown = (event) => {
+    handleMarkerMouseDown(this.createModeEventContext(event))
+  }
+
+  handleMapMouseUp = (event) => {
+    handleMarkerMouseUp(this.createModeEventContext(event))
+  }
+
+  handleMapMouseMove = (event) => {
+    handleLineMapMouseMove(this.createModeEventContext(event))
+  }
+
+  handlePinClick = (pinId, event) => {
+    const { projectStore } = this.props
+    this.setState({ isPinClickInProgress: true })
+    if (this.state.selectedPoiDetail) this.clearPoiDetail()
+
+    if (projectStore.currentMode !== TOOL_MODES.SELECT) {
+      projectStore.selectPin(pinId)
+      return
     }
 
-    mapDivElement.addEventListener('contextmenu', handleMapContextMenu)
-    return () => {
-      mapDivElement.removeEventListener('contextmenu', handleMapContextMenu)
+    projectStore.selectLine(null)
+    if (event?.domEvent?.shiftKey || event?.domEvent?.ctrlKey || event?.domEvent?.metaKey) {
+      projectStore.togglePinInSelection(pinId)
+      return
     }
-  }, [triggerMeasureComplete])
+    projectStore.selectPin(pinId)
+  }
 
-  const handleMapMouseDown = useCallback((event) => {
-    handleMarkerMouseDown(createModeEventContext(event))
-  }, [createModeEventContext])
+  handleLineClick = (lineId) => {
+    const { projectStore } = this.props
+    if (projectStore.currentMode !== TOOL_MODES.SELECT) return
+    projectStore.selectPin(null)
+    projectStore.clearPinSelection()
+    projectStore.selectLine(lineId)
+  }
 
-  const handleMapMouseUp = useCallback((event) => {
-    handleMarkerMouseUp(createModeEventContext(event))
-  }, [createModeEventContext])
+  handleAddPoiToMap = (poiDetail) => {
+    const { projectStore } = this.props
+    if (!poiDetail?.position) return
+    const poiRating = typeof poiDetail.rating === 'number' ? poiDetail.rating.toFixed(1) : null
+    projectStore.addMarker(poiDetail.position, {
+      name: poiDetail.name || 'POI',
+      category: 'tour',
+      memo: poiRating ? `Rating: ${poiRating}` : '',
+    })
+    projectStore.selectPin(null)
+    projectStore.clearPinSelection()
+    this.clearPoiDetail()
+  }
 
-  const handleMapMouseMove = useCallback(
-    (event) => {
-      handleLineMapMouseMove(createModeEventContext(event))
-    },
-    [createModeEventContext],
-  )
+  handlePinDragStart = (pinId) => {
+    if (this.props.projectStore.currentMode !== TOOL_MODES.SELECT) return
+    this.setState({ draggingPinId: pinId })
+  }
 
-  const handlePinClick = useCallback(
-    (pinId, event) => {
-      setIsPinClickInProgress(true)
-      if (selectedPoiDetail) {
-        clearPoiDetail()
-      }
+  handlePinDrag = (pinId, event) => {
+    const { projectStore } = this.props
+    if (projectStore.currentMode !== TOOL_MODES.SELECT) return
+    const latitude = event.latLng?.lat()
+    const longitude = event.latLng?.lng()
+    if (latitude === undefined || longitude === undefined) return
+    projectStore.updatePin(pinId, { position: { lat: latitude, lng: longitude } })
+  }
 
-      if (currentMode !== TOOL_MODES.SELECT) {
-        selectPin(pinId)
-        return
-      }
+  handlePinDragEnd = (pinId, event) => {
+    const { projectStore } = this.props
+    if (projectStore.currentMode !== TOOL_MODES.SELECT) return
+    const latitude = event.latLng?.lat()
+    const longitude = event.latLng?.lng()
+    if (latitude === undefined || longitude === undefined) {
+      this.setState({ draggingPinId: null })
+      return
+    }
+    projectStore.updatePin(pinId, { position: { lat: latitude, lng: longitude } })
+    projectStore.commitMarkerDrag()
+    this.setState({ draggingPinId: null })
+  }
 
-      selectLine(null)
-      if (event?.domEvent?.shiftKey || event?.domEvent?.ctrlKey || event?.domEvent?.metaKey) {
-        togglePinInSelection(pinId)
-        return
-      }
-      selectPin(pinId)
-    },
-    [clearPoiDetail, currentMode, selectLine, selectPin, selectedPoiDetail, togglePinInSelection, setIsPinClickInProgress],
-  )
+  handleLineDraftPointDragStart = (pointIndex) => {
+    this.setState({ draggingMeasurePointIndex: pointIndex })
+  }
 
-  const handleLineClick = useCallback(
-    (lineId) => {
-      if (currentMode !== TOOL_MODES.SELECT) return
-      selectPin(null)
-      clearPinSelection()
-      selectLine(lineId)
-    },
-    [clearPinSelection, currentMode, selectLine, selectPin],
-  )
+  handleLineDraftPointDrag = (pointIndex, event) => {
+    const { projectStore } = this.props
+    handleLineMeasurePointDrag({
+      currentMode: TOOL_MODES.DRAW_LINE,
+      pointIndex,
+      clickedPoint: (() => {
+        const latitude = event?.latLng?.lat()
+        const longitude = event?.latLng?.lng()
+        return latitude === undefined || longitude === undefined ? null : { lat: latitude, lng: longitude }
+      })(),
+      state: { linePath: projectStore.linePath },
+      actions: { setLinePath: projectStore.setLinePath, lineSnapPointList: [...projectStore.linePath, ...projectStore.lines.flatMap((lineItem) => lineItem.points)] },
+    })
+  }
 
-  const handleAddPoiToMap = useCallback(
-    (poiDetail) => {
-      if (!poiDetail?.position) return
-      const poiRating = typeof poiDetail.rating === 'number' ? poiDetail.rating.toFixed(1) : null
-      addMarker(poiDetail.position, {
-        name: poiDetail.name || 'POI',
-        category: 'tour',
-        memo: poiRating ? `Rating: ${poiRating}` : '',
-      })
-      selectPin(null)
-      clearPinSelection()
-      clearPoiDetail()
-    },
-    [addMarker, clearPinSelection, clearPoiDetail, selectPin],
-  )
+  handleLineDraftPointDragEnd = (pointIndex, event) => {
+    this.handleLineDraftPointDrag(pointIndex, event)
+    this.setState({ draggingMeasurePointIndex: null })
+  }
 
-  const handlePinDragStart = useCallback(
-    (pinId) => {
-      if (currentMode !== TOOL_MODES.SELECT) return
-      setDraggingPinId(pinId)
-    },
-    [currentMode],
-  )
+  handleMeasurePointDragStart = (pointIndex) => {
+    this.setState({ draggingMeasurePointIndex: pointIndex })
+  }
 
-  const handlePinDrag = useCallback(
-    (pinId, event) => {
-      if (currentMode !== TOOL_MODES.SELECT) return
-      const latitude = event.latLng?.lat()
-      const longitude = event.latLng?.lng()
-      if (latitude === undefined || longitude === undefined) return
-      updatePin(pinId, { position: { lat: latitude, lng: longitude } })
-    },
-    [currentMode, updatePin],
-  )
+  handleMeasurePointDrag = (pointIndex, event) => {
+    const { projectStore } = this.props
+    const latitude = event?.latLng?.lat()
+    const longitude = event?.latLng?.lng()
+    if (latitude === undefined || longitude === undefined) return
+    const nextMeasurePointList = projectStore.measurePath.map((measurePointItem, measurePointIndex) =>
+      measurePointIndex === pointIndex ? { lat: latitude, lng: longitude } : measurePointItem,
+    )
+    projectStore.setMeasurePath(nextMeasurePointList)
+  }
 
-  const handlePinDragEnd = useCallback(
-    (pinId, event) => {
-      if (currentMode !== TOOL_MODES.SELECT) return
-      const latitude = event.latLng?.lat()
-      const longitude = event.latLng?.lng()
-      if (latitude === undefined || longitude === undefined) {
-        setDraggingPinId(null)
-        return
-      }
-      const nextPosition = { lat: latitude, lng: longitude }
-      updatePin(pinId, { position: nextPosition })
-      commitMarkerDrag()
-      setDraggingPinId(null)
-    },
-    [commitMarkerDrag, currentMode, updatePin],
-  )
+  handleMeasurePointDragEnd = (pointIndex, event) => {
+    this.handleMeasurePointDrag(pointIndex, event)
+    this.setState({ draggingMeasurePointIndex: null })
+  }
 
-  useEffect(() => {
-    const handleDeleteKeyDown = (event) => {
-      const eventTarget = event.target
-      const isInputControlTarget =
-        eventTarget instanceof HTMLElement
-        && (eventTarget.tagName === 'INPUT'
-          || eventTarget.tagName === 'TEXTAREA'
-          || eventTarget.tagName === 'SELECT'
-          || eventTarget.isContentEditable)
-      if (isInputControlTarget && event.key !== 'Escape') return
+  handleDeleteKeyDown = (event) => {
+    const { projectStore } = this.props
+    const eventTarget = event.target
+    const isInputControlTarget =
+      eventTarget instanceof HTMLElement
+      && (eventTarget.tagName === 'INPUT'
+        || eventTarget.tagName === 'TEXTAREA'
+        || eventTarget.tagName === 'SELECT'
+        || eventTarget.isContentEditable)
+    if (isInputControlTarget && event.key !== 'Escape') return
 
-      if (event.key === 'Escape') {
-        triggerMeasureComplete('escape')
-      }
+    if (event.key === 'Escape') this.triggerMeasureComplete('escape')
+    if (projectStore.currentMode !== TOOL_MODES.SELECT) return
 
-      if (currentMode !== TOOL_MODES.SELECT) return
-
-      if (event.key === 'Delete' || event.key === 'Backspace') {
-        if (selectedPinIds.length) {
-          event.preventDefault()
-          removePins(selectedPinIds)
-          return
-        }
-        if (selectedLineId) {
-          event.preventDefault()
-          removeLine(selectedLineId)
-        }
-      }
-
-      if (event.key.toLowerCase() === 'c' && selectedLine) {
+    if (event.key === 'Delete' || event.key === 'Backspace') {
+      if (projectStore.selectedPinIds.length) {
         event.preventDefault()
-        updateLine(selectedLine.id, { color: getNextLineColor(selectedLine.color) })
+        projectStore.removePins(projectStore.selectedPinIds)
+        return
+      }
+      if (projectStore.selectedLineId) {
+        event.preventDefault()
+        projectStore.removeLine(projectStore.selectedLineId)
       }
     }
 
-    window.addEventListener('keydown', handleDeleteKeyDown)
-    return () => window.removeEventListener('keydown', handleDeleteKeyDown)
-  }, [
-    currentMode,
-    removeLine,
-    removePins,
-    selectedLine,
-    selectedLineId,
-    selectedPinIds,
-    updateLine,
-    triggerMeasureComplete,
-  ])
+    if (event.key.toLowerCase() === 'c') {
+      const selectedLine = this.getSelectedLine(projectStore)
+      if (!selectedLine) return
+      event.preventDefault()
+      projectStore.updateLine(selectedLine.id, { color: getNextLineColor(selectedLine.color) })
+    }
+  }
 
-  return (
-    <>
-      <GoogleMap
-        mapContainerStyle={MAP_CONTAINER_STYLE}
-        center={MAP_DEFAULT_CENTER}
-        zoom={MAP_DEFAULT_ZOOM}
-        onLoad={(loadedMap) => {
-          mapInstanceRef.current = loadedMap
-        }}
-        onUnmount={() => {
-          mapInstanceRef.current = null
-        }}
-        onClick={handleMapClick}
-        onMouseUp={handleMapMouseUp}
-        onMouseMove={handleMapMouseMove}
-        onMouseDown={handleMapMouseDown}
-        onRightClick={handleMapRightClick}
-        options={{
-          ...MAP_OPTIONS,
-          clickableIcons: currentMode !== TOOL_MODES.MEASURE_DISTANCE && currentMode !== TOOL_MODES.ADD_MARKER,
-          disableDoubleClickZoom: currentMode === TOOL_MODES.DRAW_LINE,
-        }}
-      >
-        <PinLayer
-          pins={visiblePins}
-          selectedPin={selectedPoiDetail ? null : selectedPin}
-          selectedPinId={selectedPinId}
-          currentMode={currentMode}
-          isPinInteractionBlocked={currentMode === TOOL_MODES.MEASURE_DISTANCE}
-          draggingPinId={draggingPinId}
-          onPinMouseDown={() => setIsPinClickInProgress(true)}
-          onPinClick={handlePinClick}
-          onPinDragStart={handlePinDragStart}
-          onPinDrag={handlePinDrag}
-          onPinDragEnd={handlePinDragEnd}
-        />
-
-        <PoiDetailOverlay poiDetail={selectedPoiDetail} onClose={clearPoiDetail} onAddPoiToMap={handleAddPoiToMap} />
-
-        <LineLayer
-          lines={visibleLines}
-          currentMode={currentMode}
-          selectedLineId={selectedLineId}
-          linePath={linePath}
-          previewLinePath={linePreviewPath}
-          onLineClick={handleLineClick}
-          onLinePointDragStart={handleLineDraftPointDragStart}
-          onLinePointDrag={handleLineDraftPointDrag}
-          onLinePointDragEnd={handleLineDraftPointDragEnd}
-        />
-
-        <RouteLayer routePaths={routePaths} />
-
-        <MeasureLayer
-          currentMode={currentMode}
-          measurePath={measurePath}
-          previewMeasurePath={previewMeasurePath}
-          measureSegmentLabelDataList={measureSegmentLabelDataList}
-          measureTotalLabelData={measureTotalLabelData}
-          onMeasurePointDragStart={handleMeasurePointDragStart}
-          onMeasurePointDrag={handleMeasurePointDrag}
-          onMeasurePointDragEnd={handleMeasurePointDragEnd}
-        />
-      </GoogleMap>
-
-      <MapOverlays
-        currentMode={currentMode}
-        isTimeFilterExpanded={isTimeFilterExpanded}
-        isPinFilterExpanded={isPinFilterExpanded}
-        pinIconFilters={pinIconFilters}
-        routeDraft={routeDraft}
-        recentRouteInfo={recentRouteInfo}
-        timeFilterRange={timeFilterRange}
-        onSetTimeFilterExpanded={setIsTimeFilterExpanded}
-        onSetTimeFilterRange={(timeFieldKey, nextTimeValue) => {
-          setTimeFilterRange((previousTimeFilterRange) => ({
-            ...previousTimeFilterRange,
-            [timeFieldKey]: nextTimeValue,
-          }))
-        }}
-        onClearPinIconFilter={clearPinIconFilter}
-        onTogglePinIconFilter={togglePinIconFilter}
-        onSetPinFilterExpanded={setIsPinFilterExpanded}
-        onSetRouteTravelMode={setRouteTravelMode}
-        onCloseRouteSummary={() => setRecentRouteInfo(null)}
-      />
-    </>
-  )
-}
-
-class Map extends Component {
   render() {
-    return <MapView {...this.props} />
+    const { projectStore } = this.props
+    const {
+      isTimeFilterExpanded,
+      isPinFilterExpanded,
+      timeFilterRange,
+      recentRouteInfo,
+      draggingPinId,
+      selectedPoiDetail,
+    } = this.state
+
+    const visiblePins = this.getVisiblePins(projectStore)
+    const visibleLines = this.getVisibleLines(projectStore)
+    const selectedPin = this.getSelectedPin(projectStore)
+
+    return (
+      <>
+        <GoogleMap
+          mapContainerStyle={MAP_CONTAINER_STYLE}
+          center={MAP_DEFAULT_CENTER}
+          zoom={MAP_DEFAULT_ZOOM}
+          onLoad={(loadedMap) => {
+            this.mapInstance = loadedMap
+            this.syncMapContextMenuListener()
+          }}
+          onUnmount={() => {
+            this.detachMapContextMenuListener()
+            this.mapInstance = null
+          }}
+          onClick={this.handleMapClick}
+          onMouseUp={this.handleMapMouseUp}
+          onMouseMove={this.handleMapMouseMove}
+          onMouseDown={this.handleMapMouseDown}
+          onRightClick={this.handleMapRightClick}
+          options={{
+            ...MAP_OPTIONS,
+            clickableIcons: projectStore.currentMode !== TOOL_MODES.MEASURE_DISTANCE && projectStore.currentMode !== TOOL_MODES.ADD_MARKER,
+            disableDoubleClickZoom: projectStore.currentMode === TOOL_MODES.DRAW_LINE,
+          }}
+        >
+          <PinLayer
+            pins={visiblePins}
+            selectedPin={selectedPoiDetail ? null : selectedPin}
+            selectedPinId={projectStore.selectedPinId}
+            currentMode={projectStore.currentMode}
+            isPinInteractionBlocked={projectStore.currentMode === TOOL_MODES.MEASURE_DISTANCE}
+            draggingPinId={draggingPinId}
+            onPinMouseDown={() => this.setState({ isPinClickInProgress: true })}
+            onPinClick={this.handlePinClick}
+            onPinDragStart={this.handlePinDragStart}
+            onPinDrag={this.handlePinDrag}
+            onPinDragEnd={this.handlePinDragEnd}
+          />
+
+          <PoiDetailOverlay poiDetail={selectedPoiDetail} onClose={this.clearPoiDetail} onAddPoiToMap={this.handleAddPoiToMap} />
+
+          <LineLayer
+            lines={visibleLines}
+            currentMode={projectStore.currentMode}
+            selectedLineId={projectStore.selectedLineId}
+            linePath={projectStore.linePath}
+            previewLinePath={this.getLinePreviewPath(projectStore)}
+            onLineClick={this.handleLineClick}
+            onLinePointDragStart={this.handleLineDraftPointDragStart}
+            onLinePointDrag={this.handleLineDraftPointDrag}
+            onLinePointDragEnd={this.handleLineDraftPointDragEnd}
+          />
+
+          <RouteLayer routePaths={projectStore.routePaths} />
+
+          <MeasureLayer
+            currentMode={projectStore.currentMode}
+            measurePath={projectStore.measurePath}
+            previewMeasurePath={this.getPreviewMeasurePath(projectStore)}
+            measureSegmentLabelDataList={this.getMeasureSegmentLabelDataList(projectStore)}
+            measureTotalLabelData={this.getMeasureTotalLabelData(projectStore)}
+            onMeasurePointDragStart={this.handleMeasurePointDragStart}
+            onMeasurePointDrag={this.handleMeasurePointDrag}
+            onMeasurePointDragEnd={this.handleMeasurePointDragEnd}
+          />
+        </GoogleMap>
+
+        <MapOverlays
+          currentMode={projectStore.currentMode}
+          isTimeFilterExpanded={isTimeFilterExpanded}
+          isPinFilterExpanded={isPinFilterExpanded}
+          pinIconFilters={projectStore.pinIconFilters}
+          routeDraft={projectStore.routeDraft}
+          recentRouteInfo={recentRouteInfo}
+          timeFilterRange={timeFilterRange}
+          onSetTimeFilterExpanded={(nextValue) => this.setState({ isTimeFilterExpanded: nextValue })}
+          onSetTimeFilterRange={(timeFieldKey, nextTimeValue) => {
+            this.setState((previousState) => ({
+              timeFilterRange: {
+                ...previousState.timeFilterRange,
+                [timeFieldKey]: nextTimeValue,
+              },
+            }))
+          }}
+          onClearPinIconFilter={projectStore.clearPinIconFilter}
+          onTogglePinIconFilter={projectStore.togglePinIconFilter}
+          onSetPinFilterExpanded={(nextValue) => this.setState({ isPinFilterExpanded: nextValue })}
+          onSetRouteTravelMode={projectStore.setRouteTravelMode}
+          onCloseRouteSummary={() => this.setState({ recentRouteInfo: null })}
+        />
+      </>
+    )
   }
 }
 
-export default Map
+const ConnectedMap = withStore(Map, { projectStore: useProjectStore })
+
+export default ConnectedMap
