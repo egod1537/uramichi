@@ -330,7 +330,7 @@ class LayerRow extends React.Component {
                     {layerDrawnLines.map((lineItem, lineIndex) => (
                       <div key={lineItem.id} className="flex items-center gap-2 rounded bg-orange-50 px-2 py-1 text-xs text-orange-700">
                         <span>🧵</span>
-                        <span className="truncate">{lineItem.shapeType === 'polygon' ? `도형 ${lineIndex + 1}` : `선분 ${lineIndex + 1}`}</span>
+                        <span className="truncate">{lineItem.name || (lineItem.shapeType === 'polygon' ? `도형 ${lineIndex + 1}` : `선 ${lineIndex + 1}`)}</span>
                         <span className="ml-auto text-[11px] text-orange-500">{lineItem.points.length}점</span>
                       </div>
                     ))}

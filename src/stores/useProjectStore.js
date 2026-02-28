@@ -291,8 +291,11 @@ const useProjectStore = create((set) => ({
         }
       }
 
+      const normalizedShapeType = lineData.shapeType || 'line'
       const normalizedLineData = {
         ...lineData,
+        shapeType: normalizedShapeType,
+        name: lineData.name || (normalizedShapeType === 'polygon' ? `도형 ${state.lines.length + 1}` : `선 ${state.lines.length + 1}`),
         layerId: resolvedLayerId,
         sourceType: lineData.sourceType || 'line',
       }

@@ -14,3 +14,5 @@
 [codex] 2026-02-28 선/거리 도구 상태 제거 메모
 - `useProjectStore` 스냅샷 구조에서 선/거리 드래프트 경로(`linePath`, `measurePath`)를 제외하고, 관련 draft 액션(`startDraft*`, `appendDraft*`, `cancelDraft*`, `appendLinePoint`, `setLinePath`, `appendMeasurePoint`, `setMeasurePath`)을 제거함.
 - 모드 전환/리셋 시 거리 측정 드래프트를 유지·초기화하던 분기를 제거해 Select/Add Marker/Add Route 중심 상태 전환만 남김.
+[codex] 2026-02-28 line 기본 이름 정규화 메모
+- `useProjectStore.addLine`에서 입력 `shapeType/name`이 누락된 경우를 보정해, 선은 `선 N`, 도형은 `도형 N` 기본 이름을 자동 부여하도록 정규화함.

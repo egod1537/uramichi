@@ -49,3 +49,5 @@
 [codex] 2026-02-28 Sidebar 헤더 한줄 병합 메모
 - `Sidebar.jsx`의 별도 상단 헤더 바를 제거하고, `MapPanel.jsx` 첫 줄에 제목/옵션/닫기 버튼을 같은 행으로 배치해 상단 한 줄 낭비를 줄임.
 - `MapPanel`이 `onCloseSidebar` props를 받아 닫기 아이콘 버튼 클릭 시 사이드바를 닫도록 연결함.
+[codex] 2026-02-28 선/도형 이름 표시 메모
+- `LayerRow.jsx`의 레이어 선 목록 라벨을 자동 번호 우선에서 `lineItem.name` 우선 표시로 변경해 저장된 선/도형 이름이 사이드바에 직접 노출되도록 조정함.
