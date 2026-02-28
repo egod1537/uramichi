@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from 'react'
+import React from 'react'
 import LayerRow from './LayerRow'
 import useProjectStore from '../../stores/useProjectStore'
+import withStore from '../../utils/withStore'
 import { ICON_FILTER_OPTIONS, getTravelPinIconKey } from '../../utils/opts'
 
 const findPinNameByPosition = (pinList, targetPosition) => {
@@ -12,200 +13,212 @@ const findPinNameByPosition = (pinList, targetPosition) => {
   return matchedPin?.name || `${targetPosition.lat.toFixed(3)}, ${targetPosition.lng.toFixed(3)}`
 }
 
-function LayerPanel() {
-  const layers = useProjectStore((state) => state.layers)
-  const pins = useProjectStore((state) => state.pins)
-  const routes = useProjectStore((state) => state.routes)
-  const lines = useProjectStore((state) => state.lines)
-  const selectedPinIds = useProjectStore((state) => state.selectedPinIds)
-  const removePins = useProjectStore((state) => state.removePins)
-  const movePinsToLayer = useProjectStore((state) => state.movePinsToLayer)
-  const reorderLayers = useProjectStore((state) => state.reorderLayers)
-  const pinIconFilters = useProjectStore((state) => state.pinIconFilters)
-  const togglePinIconFilter = useProjectStore((state) => state.togglePinIconFilter)
-  const clearPinIconFilter = useProjectStore((state) => state.clearPinIconFilter)
-  const [targetLayerId, setTargetLayerId] = useState('')
-  const [dragLayerId, setDragLayerId] = useState(null)
-  const [layerDropPreview, setLayerDropPreview] = useState(null)
-  const [focusedRenameTarget, setFocusedRenameTarget] = useState(null)
-  const [editingRenameTarget, setEditingRenameTarget] = useState(null)
-
-  const selectedPinCount = selectedPinIds.length
-
-  const filteredPins = useMemo(() => {
-    if (!pinIconFilters.length) return pins
-    const activeIconSet = new Set(ICON_FILTER_OPTIONS.filter((filterItem) => pinIconFilters.includes(filterItem.key)).map((filterItem) => filterItem.key))
-    return pins.filter((pinItem) => activeIconSet.has(getTravelPinIconKey(pinItem.icon)))
-  }, [pinIconFilters, pins])
-
-  const movableLayerOptions = useMemo(() => {
-    if (!selectedPinIds.length) return layers
-    const selectedLayerIdSet = new Set(pins.filter((pinItem) => selectedPinIds.includes(pinItem.id)).map((pinItem) => pinItem.layerId))
-    return layers.filter((layerItem) => !selectedLayerIdSet.has(layerItem.id))
-  }, [layers, pins, selectedPinIds])
-
-  const routeSummaryList = useMemo(
-    () =>
-      routes.map((routeItem) => ({
-        id: routeItem.id,
-        label: `${findPinNameByPosition(pins, routeItem.start)} → ${findPinNameByPosition(pins, routeItem.end)}`,
-      })),
-    [pins, routes],
-  )
-
-  useEffect(() => {
-    const handleF2Keydown = (event) => {
-      if (event.key !== 'F2') return
-      if (!focusedRenameTarget?.id) return
-      event.preventDefault()
-      setEditingRenameTarget(focusedRenameTarget)
+class LayerPanel extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      targetLayerId: '',
+      dragLayerId: null,
+      layerDropPreview: null,
+      focusedRenameTarget: null,
+      editingRenameTarget: null,
     }
-
-    window.addEventListener('keydown', handleF2Keydown)
-    return () => window.removeEventListener('keydown', handleF2Keydown)
-  }, [focusedRenameTarget])
-
-  if (!layers.length) {
-    return <div className="flex-1 overflow-y-auto p-4 text-sm text-gray-500">레이어가 없습니다.</div>
   }
 
-  return (
-    <div className="flex-1 overflow-y-auto px-2 py-2">
-      <div className="mb-2 rounded-md border border-gray-200 bg-white p-2">
-        <div className="mb-2 flex items-center justify-between">
-          <p className="text-xs font-semibold text-gray-500">핀 아이콘 필터</p>
-          <button
-            type="button"
-            onClick={clearPinIconFilter}
-            className="text-xs text-gray-500 hover:text-gray-700 disabled:opacity-30"
-            disabled={!pinIconFilters.length}
-          >
-            초기화
-          </button>
-        </div>
-        <div className="flex flex-wrap gap-1">
-          {ICON_FILTER_OPTIONS.map((filterItem) => {
-            const isActive = pinIconFilters.includes(filterItem.key)
-            return (
-              <button
-                key={filterItem.key}
-                type="button"
-                onClick={() => togglePinIconFilter(filterItem.key)}
-                className={`rounded-full border px-2 py-0.5 text-xs ${isActive ? 'border-blue-400 bg-blue-50 text-blue-700' : 'border-gray-200 bg-white text-gray-600'}`}
-              >
-                <img src={filterItem.svgPath} alt={filterItem.label} className="h-4 w-4" /> {filterItem.label}
-              </button>
-            )
-          })}
-        </div>
-      </div>
+  componentDidMount() {
+    window.addEventListener('keydown', this.handleF2Keydown)
+  }
 
-      <div className="mb-2 space-y-2 rounded-md border border-gray-200 bg-gray-50 p-2">
-        <p className="text-sm text-gray-700">선택된 핀 {selectedPinCount}개</p>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            disabled={!selectedPinCount}
-            onClick={() => removePins(selectedPinIds)}
-            className="rounded border border-red-300 px-2 py-1 text-xs text-red-600 disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            일괄 삭제
-          </button>
-          <select
-            value={targetLayerId}
-            disabled={!selectedPinCount}
-            onChange={(event) => setTargetLayerId(event.target.value)}
-            className="min-w-0 flex-1 rounded border border-gray-300 bg-white px-2 py-1 text-xs text-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            <option value="">이동할 레이어 선택</option>
-            {movableLayerOptions.map((layerItem) => (
-              <option key={layerItem.id} value={layerItem.id}>
-                {layerItem.name}
-              </option>
-            ))}
-          </select>
-          <button
-            type="button"
-            disabled={!selectedPinCount || !targetLayerId}
-            onClick={() => {
-              movePinsToLayer(selectedPinIds, targetLayerId)
-              setTargetLayerId('')
-            }}
-            className="rounded border border-blue-300 px-2 py-1 text-xs text-blue-600 disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            일괄 이동
-          </button>
-        </div>
-      </div>
+  componentWillUnmount() {
+    window.removeEventListener('keydown', this.handleF2Keydown)
+  }
 
-      {!!routeSummaryList.length && (
+  handleF2Keydown = (event) => {
+    const { focusedRenameTarget } = this.state
+    if (event.key !== 'F2') return
+    if (!focusedRenameTarget?.id) return
+    event.preventDefault()
+    this.setState({ editingRenameTarget: focusedRenameTarget })
+  }
+
+  render() {
+    const { projectStore } = this.props
+    const {
+      layers,
+      pins,
+      routes,
+      lines,
+      selectedPinIds,
+      removePins,
+      movePinsToLayer,
+      reorderLayers,
+      pinIconFilters,
+      togglePinIconFilter,
+      clearPinIconFilter,
+    } = projectStore
+
+    const { targetLayerId, dragLayerId, layerDropPreview, focusedRenameTarget, editingRenameTarget } = this.state
+
+    const selectedPinCount = selectedPinIds.length
+    const filteredPins = !pinIconFilters.length
+      ? pins
+      : pins.filter((pinItem) => {
+        const activeIconSet = new Set(
+          ICON_FILTER_OPTIONS.filter((filterItem) => pinIconFilters.includes(filterItem.key)).map((filterItem) => filterItem.key),
+        )
+        return activeIconSet.has(getTravelPinIconKey(pinItem.icon))
+      })
+
+    const movableLayerOptions = !selectedPinIds.length
+      ? layers
+      : layers.filter((layerItem) => {
+        const selectedLayerIdSet = new Set(pins.filter((pinItem) => selectedPinIds.includes(pinItem.id)).map((pinItem) => pinItem.layerId))
+        return !selectedLayerIdSet.has(layerItem.id)
+      })
+
+    const routeSummaryList = routes.map((routeItem) => ({
+      id: routeItem.id,
+      label: `${findPinNameByPosition(pins, routeItem.start)} → ${findPinNameByPosition(pins, routeItem.end)}`,
+    }))
+
+    if (!layers.length) {
+      return <div className="flex-1 overflow-y-auto p-4 text-sm text-gray-500">레이어가 없습니다.</div>
+    }
+
+    return (
+      <div className="flex-1 overflow-y-auto px-2 py-2">
         <div className="mb-2 rounded-md border border-gray-200 bg-white p-2">
-          <p className="mb-1 text-xs font-semibold text-gray-500">경로</p>
-          <ul className="space-y-1">
-            {routeSummaryList.map((routeSummaryItem) => (
-              <li key={routeSummaryItem.id} className="truncate text-sm text-gray-700">
-                {routeSummaryItem.label}
-              </li>
-            ))}
-          </ul>
+          <div className="mb-2 flex items-center justify-between">
+            <p className="text-xs font-semibold text-gray-500">핀 아이콘 필터</p>
+            <button
+              type="button"
+              onClick={clearPinIconFilter}
+              className="text-xs text-gray-500 hover:text-gray-700 disabled:opacity-30"
+              disabled={!pinIconFilters.length}
+            >
+              초기화
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-1">
+            {ICON_FILTER_OPTIONS.map((filterItem) => {
+              const isActive = pinIconFilters.includes(filterItem.key)
+              return (
+                <button
+                  key={filterItem.key}
+                  type="button"
+                  onClick={() => togglePinIconFilter(filterItem.key)}
+                  className={`rounded-full border px-2 py-0.5 text-xs ${isActive ? 'border-blue-400 bg-blue-50 text-blue-700' : 'border-gray-200 bg-white text-gray-600'}`}
+                >
+                  <img src={filterItem.svgPath} alt={filterItem.label} className="h-4 w-4" /> {filterItem.label}
+                </button>
+              )
+            })}
+          </div>
         </div>
-      )}
 
-      {layers.map((layerItem) => (
-        <LayerRow
-          key={layerItem.id}
-          layer={layerItem}
-          filteredPins={filteredPins}
-          lines={lines}
-          isDraggingLayer={dragLayerId === layerItem.id}
-          layerDropPreview={layerDropPreview}
-          onLayerDragStart={(layerId) => setDragLayerId(layerId)}
-          onLayerDragEnd={() => {
-            setDragLayerId(null)
-            setLayerDropPreview(null)
-          }}
-          onLayerDragOver={(targetLayerId, dropPosition) => {
-            if (!dragLayerId || dragLayerId === targetLayerId) {
-              setLayerDropPreview(null)
-              return
-            }
-            setLayerDropPreview({ targetLayerId, dropPosition })
-          }}
-          onLayerDrop={(targetLayerId, dropPosition) => {
+        <div className="mb-2 space-y-2 rounded-md border border-gray-200 bg-gray-50 p-2">
+          <p className="text-sm text-gray-700">선택된 핀 {selectedPinCount}개</p>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              disabled={!selectedPinCount}
+              onClick={() => removePins(selectedPinIds)}
+              className="rounded border border-red-300 px-2 py-1 text-xs text-red-600 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              일괄 삭제
+            </button>
+            <select
+              value={targetLayerId}
+              disabled={!selectedPinCount}
+              onChange={(event) => this.setState({ targetLayerId: event.target.value })}
+              className="min-w-0 flex-1 rounded border border-gray-300 bg-white px-2 py-1 text-xs text-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <option value="">이동할 레이어 선택</option>
+              {movableLayerOptions.map((layerItem) => (
+                <option key={layerItem.id} value={layerItem.id}>
+                  {layerItem.name}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              disabled={!selectedPinCount || !targetLayerId}
+              onClick={() => {
+                movePinsToLayer(selectedPinIds, targetLayerId)
+                this.setState({ targetLayerId: '' })
+              }}
+              className="rounded border border-blue-300 px-2 py-1 text-xs text-blue-600 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              일괄 이동
+            </button>
+          </div>
+        </div>
+
+        {!!routeSummaryList.length && (
+          <div className="mb-2 rounded-md border border-gray-200 bg-white p-2">
+            <p className="mb-1 text-xs font-semibold text-gray-500">경로</p>
+            <ul className="space-y-1">
+              {routeSummaryList.map((routeSummaryItem) => (
+                <li key={routeSummaryItem.id} className="truncate text-sm text-gray-700">
+                  {routeSummaryItem.label}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {layers.map((layerItem) => (
+          <LayerRow
+            key={layerItem.id}
+            layer={layerItem}
+            filteredPins={filteredPins}
+            lines={lines}
+            isDraggingLayer={dragLayerId === layerItem.id}
+            layerDropPreview={layerDropPreview}
+            onLayerDragStart={(layerId) => this.setState({ dragLayerId: layerId })}
+            onLayerDragEnd={() => {
+              this.setState({ dragLayerId: null, layerDropPreview: null })
+            }}
+            onLayerDragOver={(nextTargetLayerId, dropPosition) => {
+              if (!dragLayerId || dragLayerId === nextTargetLayerId) {
+                this.setState({ layerDropPreview: null })
+                return
+              }
+              this.setState({ layerDropPreview: { targetLayerId: nextTargetLayerId, dropPosition } })
+            }}
+            onLayerDrop={(nextTargetLayerId, dropPosition) => {
+              if (!dragLayerId) return
+              reorderLayers(dragLayerId, nextTargetLayerId, dropPosition)
+              this.setState({ dragLayerId: null, layerDropPreview: null })
+            }}
+            focusedRenameTarget={focusedRenameTarget}
+            editingRenameTarget={editingRenameTarget}
+            onFocusRenameTarget={(nextTarget) => this.setState({ focusedRenameTarget: nextTarget })}
+            onStartRename={(renameTarget) => {
+              this.setState({ focusedRenameTarget: renameTarget, editingRenameTarget: renameTarget })
+            }}
+            onFinishRename={() => this.setState({ editingRenameTarget: null })}
+          />
+        ))}
+        <div
+          className={`h-1 rounded bg-blue-500 transition-opacity ${layerDropPreview?.targetLayerId === '__end__' ? 'opacity-100' : 'opacity-0'}`}
+          onDragOver={(event) => {
+            event.preventDefault()
+            event.stopPropagation()
             if (!dragLayerId) return
-            reorderLayers(dragLayerId, targetLayerId, dropPosition)
-            setDragLayerId(null)
-            setLayerDropPreview(null)
+            this.setState({ layerDropPreview: { targetLayerId: '__end__', dropPosition: 'end' } })
           }}
-          focusedRenameTarget={focusedRenameTarget}
-          editingRenameTarget={editingRenameTarget}
-          onFocusRenameTarget={setFocusedRenameTarget}
-          onStartRename={(renameTarget) => {
-            setFocusedRenameTarget(renameTarget)
-            setEditingRenameTarget(renameTarget)
+          onDrop={(event) => {
+            event.preventDefault()
+            event.stopPropagation()
+            if (!dragLayerId || !layers.length) return
+            reorderLayers(dragLayerId, layers[layers.length - 1].id, 'end')
+            this.setState({ dragLayerId: null, layerDropPreview: null })
           }}
-          onFinishRename={() => setEditingRenameTarget(null)}
         />
-      ))}
-      <div
-        className={`h-1 rounded bg-blue-500 transition-opacity ${layerDropPreview?.targetLayerId === '__end__' ? 'opacity-100' : 'opacity-0'}`}
-        onDragOver={(event) => {
-          event.preventDefault()
-          event.stopPropagation()
-          if (!dragLayerId) return
-          setLayerDropPreview({ targetLayerId: '__end__', dropPosition: 'end' })
-        }}
-        onDrop={(event) => {
-          event.preventDefault()
-          event.stopPropagation()
-          if (!dragLayerId || !layers.length) return
-          reorderLayers(dragLayerId, layers[layers.length - 1].id, 'end')
-          setDragLayerId(null)
-          setLayerDropPreview(null)
-        }}
-      />
-    </div>
-  )
+      </div>
+    )
+  }
 }
 
-export default LayerPanel
+export default withStore(LayerPanel, { projectStore: useProjectStore })

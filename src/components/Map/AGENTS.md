@@ -125,3 +125,5 @@
 [codex] 2026-02-27 Map 전역 config 연동 메모
 - `Map.jsx`의 기본 줌/시간 필터 기본값은 `src/utils/config.js`에서 import해 사용함.
 - Map 하위 config(`src/components/Map/config.js`)는 전역 `MAP_DEFAULT_CENTER`를 재사용하도록 연결함.
+[codex] 2026-02-28 클래스 래퍼 전환 메모
+- `Map.jsx`, `PinPopup.jsx`의 기본 export를 `React.Component` 기반 클래스 래퍼로 전환하고, 기존 훅 기반 렌더 로직은 `*View` 함수로 유지해 동작 변화 없이 클래스 컴포넌트 진입점을 맞춤.
