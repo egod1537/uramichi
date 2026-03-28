@@ -1,0 +1,15 @@
+:root {
+  --color-app: #eef3f8;
+  --color-surface: #f5f8fc;
+  --color-ink: #15253a;
+  --color-muted: #62738a;
+  --color-line: #d9e2ed;
+  --color-accent: #2f6fed;
+  --color-accent-soft: #eaf1ff;
+  --color-category-attraction: #ff8a3d;
+  --color-category-food: #22a65b;
+  --color-category-shopping: #ec4899;
+  --color-category-accommodation: #9a63f7;
+  --color-category-transport: #2f6fed;
+  --color-category-night: #4f46e5;
+}
